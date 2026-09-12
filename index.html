@@ -395,8 +395,7 @@
   document.getElementById('formBackBtn').onclick = showHome;
 
   document.getElementById('refreshBtn').onclick = () => {
-    document.getElementById('count').textContent = "Chargement...";
-    loadRecipes();
+    location.reload();
   };
 
   document.addEventListener('visibilitychange', () => {
