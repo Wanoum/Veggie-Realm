@@ -208,6 +208,51 @@
   .course-item input[type="checkbox"] { width: 18px; height: 18px; }
   .course-item.checked { color: #999; text-decoration: line-through; }
   .course-qty { margin-left: auto; font-family: Georgia, serif; color: #6b6b68; white-space: nowrap; }
+  .subtabs {
+    display: flex;
+    background: #EFEDE6;
+    border-radius: 10px;
+    padding: 3px;
+    margin: 12px 0 18px;
+  }
+  .subtab-btn {
+    flex: 1;
+    padding: 8px 0;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #6b6b68;
+  }
+  .subtab-btn.active { background: white; color: #2C2C2A; font-weight: 600; }
+  .plan-summary {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .plan-summary .summary-chip {
+    font-size: 12px;
+    background: var(--bg-accent, #E6F1FB);
+    color: #0C447C;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+  .plan-recipe-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    border: 0.5px solid #ddd;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  .plan-recipe-row .plan-recipe-name { font-size: 14px; font-weight: 500; }
+  .plan-recipe-row .plan-recipe-tags { font-size: 11px; color: #999; margin-top: 2px; }
+  .plan-stepper { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .plan-stepper button { width: 28px; height: 28px; border-radius: 50%; border: 0.5px solid #ccc; background: white; font-size: 15px; }
+  .plan-stepper span { min-width: 14px; text-align: center; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -290,15 +335,20 @@
 </nav>
 
 <div id="planningView" style="display:none;">
-  <h1>Planning de la semaine</h1>
-  <div id="planningDays"></div>
-  <button type="button" id="generateCoursesBtn" class="primary-btn">🛒 Générer la liste de courses</button>
-</div>
+  <h1>Planning</h1>
+  <div class="subtabs">
+    <button id="subtabRecipes" class="subtab-btn active">Recettes</button>
+    <button id="subtabCourses" class="subtab-btn">Liste de courses</button>
+  </div>
 
-<div id="coursesView" style="display:none;">
-  <button id="coursesBackBtn">&larr; Retour au planning</button>
-  <h1>Liste de courses</h1>
-  <div id="coursesList"></div>
+  <div id="planningRecipesPanel">
+    <div id="planSummary" class="plan-summary"></div>
+    <div id="planningRecipeList"></div>
+  </div>
+
+  <div id="planningCoursesPanel" style="display:none;">
+    <div id="coursesList"></div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -416,7 +466,6 @@
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('formView').style.display = 'none';
     document.getElementById('planningView').style.display = 'none';
-    document.getElementById('coursesView').style.display = 'none';
     document.getElementById('navHome').classList.remove('active');
     document.getElementById('navAdd').classList.remove('active');
     document.getElementById('navPlanning').classList.remove('active');
@@ -442,17 +491,16 @@
     document.getElementById('planningView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('navPlanning').classList.add('active');
-    renderPlanning();
+    renderPlanningRecipes();
   }
 
   document.getElementById('navHome').onclick = showHome;
   document.getElementById('navAdd').onclick = showForm;
   document.getElementById('navPlanning').onclick = showPlanning;
   document.getElementById('formBackBtn').onclick = showHome;
-  document.getElementById('coursesBackBtn').onclick = showPlanning;
 
   document.getElementById('refreshBtn').onclick = () => {
-    location.reload();
+    location.href = location.pathname + '?t=' + Date.now();
   };
 
   document.addEventListener('visibilitychange', () => {
@@ -632,117 +680,120 @@
 
   resetForm();
 
-  // ---- Planning de la semaine ----
-  const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
-  let mealPlan = {}; // { lundi: { recipe_id, servings }, ... }
+  // ---- Planning (sélection par compteur) ----
+  let mealPlan = {}; // { recipe_id: count }
 
   async function loadMealPlan() {
     const { data, error } = await sb.from('meal_plan').select('*');
     if (error) { console.error(error); return; }
     mealPlan = {};
-    (data || []).forEach(row => { mealPlan[row.day] = { recipe_id: row.recipe_id, servings: row.servings }; });
+    (data || []).forEach(row => { mealPlan[row.recipe_id] = row.count; });
   }
 
-  function renderPlanning() {
-    const container = document.getElementById('planningDays');
-    container.innerHTML = DAYS.map(day => {
-      const plan = mealPlan[day];
-      const recipeOptions = recipes.map(r =>
-        `<option value="${r.id}" ${plan && plan.recipe_id === r.id ? 'selected' : ''}>${r.title}</option>`
-      ).join('');
-      const servings = plan ? plan.servings : 4;
+  function renderPlanningRecipes() {
+    // Résumé par tag
+    const tagCounts = {};
+    recipes.forEach(r => {
+      const count = mealPlan[r.id] || 0;
+      if (count > 0) {
+        (r.tags || []).forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + count; });
+      }
+    });
+    const summaryEl = document.getElementById('planSummary');
+    const chips = Object.entries(tagCounts);
+    summaryEl.innerHTML = chips.length
+      ? chips.map(([tag, n]) => `<span class="summary-chip">${n} × #${tag}</span>`).join('')
+      : '<span style="font-size:13px;color:#999;">Aucune recette sélectionnée pour l\'instant.</span>';
+
+    // Liste des recettes avec stepper
+    const listEl = document.getElementById('planningRecipeList');
+    listEl.innerHTML = recipes.map(r => {
+      const count = mealPlan[r.id] || 0;
       return `
-        <div class="day-row">
-          <div class="day-name">${day}</div>
-          <select data-day="${day}" class="day-select">
-            <option value="">— Aucune recette —</option>
-            ${recipeOptions}
-          </select>
-          <div class="servings-mini" style="${plan && plan.recipe_id ? '' : 'display:none;'}" data-servings-box="${day}">
-            <span style="font-size:13px;color:#6b6b68;">Portions</span>
-            <button type="button" data-day-servings="${day}" data-delta="-1">−</button>
-            <span data-servings-value="${day}" style="font-weight:600;">${servings}</span>
-            <button type="button" data-day-servings="${day}" data-delta="1">+</button>
+        <div class="plan-recipe-row">
+          <div>
+            <div class="plan-recipe-name">${r.title}</div>
+            <div class="plan-recipe-tags">${(r.tags || []).map(t => '#' + t).join(' ')}</div>
+          </div>
+          <div class="plan-stepper">
+            <button type="button" data-plan-recipe="${r.id}" data-delta="-1">−</button>
+            <span data-plan-count="${r.id}">${count}</span>
+            <button type="button" data-plan-recipe="${r.id}" data-delta="1">+</button>
           </div>
         </div>
       `;
     }).join('');
 
-    document.querySelectorAll('.day-select').forEach(sel => {
-      sel.onchange = async (e) => {
-        const day = e.target.dataset.day;
-        const recipeId = e.target.value || null;
-        const servings = (mealPlan[day] && mealPlan[day].servings) || 4;
-        mealPlan[day] = { recipe_id: recipeId, servings };
-        if (recipeId) {
-          await sb.from('meal_plan').upsert({ day, recipe_id: recipeId, servings });
-        } else {
-          await sb.from('meal_plan').delete().eq('day', day);
-          delete mealPlan[day];
-        }
-        renderPlanning();
-      };
-    });
-
-    document.querySelectorAll('[data-day-servings]').forEach(btn => {
+    document.querySelectorAll('[data-plan-recipe]').forEach(btn => {
       btn.onclick = async (e) => {
-        const day = e.target.dataset.day;
+        const recipeId = e.target.dataset.planRecipe;
         const delta = Number(e.target.dataset.delta);
-        if (!mealPlan[day]) return;
-        const newVal = Math.max(1, mealPlan[day].servings + delta);
-        mealPlan[day].servings = newVal;
-        document.querySelector(`[data-servings-value="${day}"]`).textContent = newVal;
-        await sb.from('meal_plan').upsert({ day, recipe_id: mealPlan[day].recipe_id, servings: newVal });
+        const newVal = Math.max(0, (mealPlan[recipeId] || 0) + delta);
+        mealPlan[recipeId] = newVal;
+
+        if (newVal === 0) {
+          await sb.from('meal_plan').delete().eq('recipe_id', recipeId);
+        } else {
+          await sb.from('meal_plan').upsert({ recipe_id: recipeId, count: newVal });
+        }
+        renderPlanningRecipes();
       };
     });
   }
 
-  document.getElementById('generateCoursesBtn').onclick = () => {
+  function renderCoursesList() {
     const aggregated = {}; // key: "name|unit" -> { name, unit, quantity }
-    let hasAnyPlan = false;
+    let hasAnySelection = false;
 
-    DAYS.forEach(day => {
-      const plan = mealPlan[day];
-      if (!plan || !plan.recipe_id) return;
-      const recipe = recipes.find(r => r.id === plan.recipe_id);
-      if (!recipe) return;
-      hasAnyPlan = true;
-      const base = recipe.servings || 4;
-      const targetServings = plan.servings || 4;
-      (recipe.ingredients || []).forEach(ing => {
+    recipes.forEach(r => {
+      const count = mealPlan[r.id] || 0;
+      if (count === 0) return;
+      hasAnySelection = true;
+      (r.ingredients || []).forEach(ing => {
         const key = ing.name.toLowerCase().trim() + '|' + (ing.unit || '');
-        const scaledQty = ing.quantity != null ? ing.quantity * targetServings / base : null;
+        const scaledQty = ing.quantity != null ? ing.quantity * count : null;
         if (!aggregated[key]) {
           aggregated[key] = { name: ing.name, unit: ing.unit, quantity: scaledQty };
-        } else if (scaledQty != null && aggregated[key].quantity != null) {
-          aggregated[key].quantity += scaledQty;
         } else if (scaledQty != null) {
-          aggregated[key].quantity = scaledQty;
+          aggregated[key].quantity = (aggregated[key].quantity || 0) + scaledQty;
         }
       });
     });
 
     const listEl = document.getElementById('coursesList');
-    if (!hasAnyPlan) {
-      listEl.innerHTML = '<div class="empty">Aucune recette planifiée cette semaine.</div>';
-    } else {
-      const items = Object.values(aggregated).sort((a, b) => a.name.localeCompare(b.name));
-      listEl.innerHTML = items.map((item, idx) => {
-        const qDisplay = item.quantity != null
-          ? (Number.isInteger(item.quantity) ? item.quantity : item.quantity.toFixed(1).replace(/[.]0$/, ''))
-          : '';
-        return `
-          <label class="course-item" id="course-${idx}">
-            <input type="checkbox" onchange="document.getElementById('course-${idx}').classList.toggle('checked', this.checked)" />
-            <span>${item.name}</span>
-            <span class="course-qty">${qDisplay} ${item.unit || ''}</span>
-          </label>
-        `;
-      }).join('');
+    if (!hasAnySelection) {
+      listEl.innerHTML = '<div class="empty">Sélectionne des recettes dans l\'onglet "Recettes" pour générer ta liste de courses.</div>';
+      return;
     }
+    const items = Object.values(aggregated).sort((a, b) => a.name.localeCompare(b.name));
+    listEl.innerHTML = items.map((item, idx) => {
+      const qDisplay = item.quantity != null
+        ? (Number.isInteger(item.quantity) ? item.quantity : item.quantity.toFixed(1).replace(/[.]0$/, ''))
+        : '';
+      return `
+        <label class="course-item" id="course-${idx}">
+          <input type="checkbox" onchange="document.getElementById('course-${idx}').classList.toggle('checked', this.checked)" />
+          <span>${item.name}</span>
+          <span class="course-qty">${qDisplay} ${item.unit || ''}</span>
+        </label>
+      `;
+    }).join('');
+  }
 
-    document.getElementById('planningView').style.display = 'none';
-    document.getElementById('coursesView').style.display = 'block';
+  document.getElementById('subtabRecipes').onclick = () => {
+    document.getElementById('subtabRecipes').classList.add('active');
+    document.getElementById('subtabCourses').classList.remove('active');
+    document.getElementById('planningRecipesPanel').style.display = 'block';
+    document.getElementById('planningCoursesPanel').style.display = 'none';
+    renderPlanningRecipes();
+  };
+
+  document.getElementById('subtabCourses').onclick = () => {
+    document.getElementById('subtabCourses').classList.add('active');
+    document.getElementById('subtabRecipes').classList.remove('active');
+    document.getElementById('planningCoursesPanel').style.display = 'block';
+    document.getElementById('planningRecipesPanel').style.display = 'none';
+    renderCoursesList();
   };
 
   loadMealPlan();
