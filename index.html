@@ -253,6 +253,16 @@
   .plan-stepper { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .plan-stepper button { width: 28px; height: 28px; border-radius: 50%; border: 0.5px solid #ccc; background: white; font-size: 15px; }
   .plan-stepper span { min-width: 14px; text-align: center; font-weight: 600; }
+  .tag-filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .filter-chip {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 0.5px solid #ccc;
+    background: white;
+    color: #555;
+  }
+  .filter-chip.active { background: #2C2C2A; color: white; border-color: #2C2C2A; }
 </style>
 </head>
 <body>
@@ -262,6 +272,8 @@
     <h1>Mes recettes</h1>
     <button id="refreshBtn" style="background:white;border:0.5px solid #ccc;border-radius:8px;padding:6px 12px;font-size:13px;">↻ Rafraîchir</button>
   </div>
+  <input id="searchInput" class="field-input" placeholder="Rechercher une recette..." style="margin:10px 0;" />
+  <div id="tagFilters" class="tag-filters"></div>
   <p class="count" id="count">Chargement...</p>
   <div id="cards"></div>
 </div>
@@ -371,14 +383,53 @@
     renderList();
   }
 
+  let activeTagFilters = new Set();
+  let searchQuery = '';
+
+  function renderTagFilters() {
+    const allTags = [...new Set(recipes.flatMap(r => r.tags || []))].sort();
+    const container = document.getElementById('tagFilters');
+    if (allTags.length === 0) { container.innerHTML = ''; return; }
+    container.innerHTML = allTags.map(t => `
+      <button type="button" class="filter-chip ${activeTagFilters.has(t) ? 'active' : ''}" data-tag="${t}">#${t}</button>
+    `).join('');
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+      chip.onclick = () => {
+        const tag = chip.dataset.tag;
+        if (activeTagFilters.has(tag)) activeTagFilters.delete(tag);
+        else activeTagFilters.add(tag);
+        renderList();
+      };
+    });
+  }
+
+  function getFilteredIndices() {
+    return recipes
+      .map((r, i) => i)
+      .filter(i => {
+        const r = recipes[i];
+        const matchesSearch = !searchQuery || r.title.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesTags = activeTagFilters.size === 0 || (r.tags || []).some(t => activeTagFilters.has(t));
+        return matchesSearch && matchesTags;
+      });
+  }
+
   function renderList() {
-    document.getElementById('count').textContent = recipes.length + " recette" + (recipes.length > 1 ? "s" : "");
+    renderTagFilters();
+    const filteredIndices = getFilteredIndices();
+    document.getElementById('count').textContent = filteredIndices.length + " recette" + (filteredIndices.length > 1 ? "s" : "");
     const cardsEl = document.getElementById('cards');
     if (recipes.length === 0) {
       cardsEl.innerHTML = '<div class="empty">Aucune recette pour l\'instant.</div>';
       return;
     }
-    cardsEl.innerHTML = recipes.map((r, i) => `
+    if (filteredIndices.length === 0) {
+      cardsEl.innerHTML = '<div class="empty">Aucun résultat pour ces critères.</div>';
+      return;
+    }
+    cardsEl.innerHTML = filteredIndices.map(i => {
+      const r = recipes[i];
+      return `
       <div class="card" onclick="showDetail(${i})">
         <div class="card-inner">
           <div class="card-thumb">
@@ -392,8 +443,14 @@
           </div>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
+
+  document.getElementById('searchInput').oninput = (e) => {
+    searchQuery = e.target.value;
+    renderList();
+  };
 
   let currentDetailIndex = null;
 
