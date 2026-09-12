@@ -322,6 +322,7 @@
   <h2>Ingrédients</h2>
   <div id="f_ingredients"></div>
   <button type="button" id="addIngBtn" class="secondary-btn">+ Ajouter un ingrédient</button>
+  <datalist id="ingredientNamesList"></datalist>
 
   <h2>Étapes</h2>
   <label class="field-label">Étapes (une par ligne)</label>
@@ -581,9 +582,10 @@
     document.getElementById('f_oven').value = r.oven_temp_celsius || '';
     document.getElementById('f_notes').value = r.notes || '';
     ingRows = (r.ingredients || []).map(ing => ({
-      quantity: ing.quantity ?? '', unit: ing.unit ?? '', name: ing.name ?? ''
+      qtyUnitText: [ing.quantity, ing.unit].filter(v => v != null && v !== '').join(' '),
+      name: ing.name ?? ''
     }));
-    if (ingRows.length === 0) ingRows = [{ quantity: '', unit: '', name: '' }];
+    if (ingRows.length === 0) ingRows = [{ qtyUnitText: '', name: '' }];
     document.getElementById('f_steps').value = (r.steps || []).join('\n');
     renderIngRows();
     document.getElementById('detailView').style.display = 'none';
@@ -602,20 +604,71 @@
     showHome();
   };
 
+  // ---- Normalisation ingrédients / unités ----
+  const UNIT_CANON = {
+    'paquet': 'sachet', 'paquets': 'sachet', 'sachets': 'sachet',
+    'grammes': 'g', 'gramme': 'g',
+    'kilo': 'kg', 'kilos': 'kg', 'kilogramme': 'kg', 'kilogrammes': 'kg',
+    'litres': 'l', 'litre': 'l',
+    'millilitres': 'ml', 'millilitre': 'ml',
+    'cas': 'c.à.s', 'cuillere a soupe': 'c.à.s', 'cuillères à soupe': 'c.à.s', 'cuillere a soupes': 'c.à.s',
+    'cac': 'c.à.c', 'cuillere a cafe': 'c.à.c', 'cuillères à café': 'c.à.c',
+    'pieces': 'pièce', 'piece': 'pièce', 'pièces': 'pièce',
+    'tasses': 'tasse',
+    'pincees': 'pincée', 'pincee': 'pincée', 'pincées': 'pincée'
+  };
+
+  function canonicalizeUnit(raw) {
+    if (!raw) return null;
+    let u = normalize(raw); // lowercase, trim, sans accents
+    if (UNIT_CANON[u]) return UNIT_CANON[u];
+    // essaie sans le "s" final (pluriel simple) si pas déjà reconnu
+    if (u.endsWith('s') && UNIT_CANON[u.slice(0, -1)]) return UNIT_CANON[u.slice(0, -1)];
+    return raw.trim();
+  }
+
+  function canonicalizeIngredientName(raw) {
+    const trimmed = raw.trim();
+    const key = normalize(trimmed).replace(/s$/, ''); // ignore pluriel simple
+    const known = getKnownIngredientNames();
+    const match = known.find(n => normalize(n).replace(/s$/, '') === key);
+    return match || trimmed;
+  }
+
+  function getKnownIngredientNames() {
+    const set = new Set();
+    recipes.forEach(r => (r.ingredients || []).forEach(ing => { if (ing.name) set.add(ing.name); }));
+    return [...set];
+  }
+
+  function parseQtyUnit(text) {
+    const t = (text || '').trim();
+    if (!t) return { quantity: null, unit: null };
+    const match = t.match(/^([\d]+[.,]?[\d]*)\s*(.*)$/);
+    if (match) {
+      const quantity = parseFloat(match[1].replace(',', '.'));
+      const unitRaw = match[2].trim();
+      return { quantity: isNaN(quantity) ? null : quantity, unit: unitRaw ? canonicalizeUnit(unitRaw) : null };
+    }
+    // pas de nombre trouvé : tout est traité comme une unité (ex: "pincée")
+    return { quantity: null, unit: canonicalizeUnit(t) };
+  }
+
+  function refreshIngredientDatalist() {
+    const list = document.getElementById('ingredientNamesList');
+    if (list) list.innerHTML = getKnownIngredientNames().map(n => `<option value="${n}"></option>`).join('');
+  }
+
   function renderIngRows() {
-    document.getElementById('f_ingredients').innerHTML = ingRows.map((_, idx) => {
-      const units = ['', 'g', 'kg', 'ml', 'cl', 'l', 'c.à.s', 'c.à.c', 'pièce', 'sachet', 'paquet', 'pincée', 'tasse'];
-      const currentUnit = ingRows[idx].unit ?? '';
-      const optionsHtml = units.map(u => `<option value="${u}" ${u === currentUnit ? 'selected' : ''}>${u === '' ? 'Unité' : u}</option>`).join('');
-      return `
+    refreshIngredientDatalist();
+    document.getElementById('f_ingredients').innerHTML = ingRows.map((_, idx) => `
       <div class="row-item">
-        <input class="qty-input" type="number" step="any" placeholder="Qté" data-idx="${idx}" data-field="quantity" value="${ingRows[idx].quantity ?? ''}" />
-        <select class="unit-input" data-idx="${idx}" data-field="unit">${optionsHtml}</select>
-        <input placeholder="Nom de l'ingrédient" data-idx="${idx}" data-field="name" value="${ingRows[idx].name ?? ''}" />
+        <input class="qty-input" placeholder="Qté (ex: 200g)" data-idx="${idx}" data-field="qtyUnitText" value="${ingRows[idx].qtyUnitText ?? ''}" />
+        <input placeholder="Nom de l'ingrédient" list="ingredientNamesList" data-idx="${idx}" data-field="name" value="${ingRows[idx].name ?? ''}" />
         <button type="button" class="remove-row" data-remove-ing="${idx}">✕</button>
-      </div>`;
-    }).join('');
-    document.querySelectorAll('#f_ingredients input, #f_ingredients select').forEach(inp => {
+      </div>`
+    ).join('');
+    document.querySelectorAll('#f_ingredients input').forEach(inp => {
       const handler = (e) => {
         const idx = e.target.dataset.idx, field = e.target.dataset.field;
         ingRows[idx][field] = e.target.value;
@@ -632,7 +685,7 @@
   }
 
   document.getElementById('addIngBtn').onclick = () => {
-    ingRows.push({ quantity: '', unit: '', name: '' });
+    ingRows.push({ qtyUnitText: '', name: '' });
     renderIngRows();
   };
 
@@ -648,7 +701,7 @@
     document.getElementById('f_notes').value = '';
     document.getElementById('f_steps').value = '';
     document.getElementById('formError').textContent = '';
-    ingRows = [{ quantity: '', unit: '', name: '' }];
+    ingRows = [{ qtyUnitText: '', name: '' }];
     renderIngRows();
   }
 
@@ -667,11 +720,14 @@
 
     const ingredients = ingRows
       .filter(ing => ing.name && ing.name.trim())
-      .map(ing => ({
-        name: ing.name.trim(),
-        quantity: ing.quantity !== '' && ing.quantity != null ? Number(ing.quantity) : null,
-        unit: ing.unit ? ing.unit.trim() : null
-      }));
+      .map(ing => {
+        const { quantity, unit } = parseQtyUnit(ing.qtyUnitText);
+        return {
+          name: canonicalizeIngredientName(ing.name),
+          quantity,
+          unit
+        };
+      });
 
     const steps = document.getElementById('f_steps').value
       .split('\n').map(s => s.trim()).filter(Boolean);
