@@ -263,6 +263,22 @@
     color: #555;
   }
   .filter-chip.active { background: #2C2C2A; color: white; border-color: #2C2C2A; }
+  .autocomplete-box {
+    position: absolute;
+    background: white;
+    border: 0.5px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    z-index: 200;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+  .autocomplete-item {
+    padding: 9px 12px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .autocomplete-item:hover, .autocomplete-item.highlighted { background: #F5F3EE; }
 </style>
 </head>
 <body>
@@ -320,9 +336,8 @@
   <input id="f_notes" class="field-input" placeholder="Ex: Attention aux oeufs avec le chocolat chaud !" />
 
   <h2>Ingrédients</h2>
-  <div id="f_ingredients"></div>
+  <div id="f_ingredients" style="position:relative;"></div>
   <button type="button" id="addIngBtn" class="secondary-btn">+ Ajouter un ingrédient</button>
-  <datalist id="ingredientNamesList"></datalist>
 
   <h2>Étapes</h2>
   <label class="field-label">Étapes (une par ligne)</label>
@@ -654,17 +669,44 @@
     return { quantity: null, unit: canonicalizeUnit(t) };
   }
 
-  function refreshIngredientDatalist() {
-    const list = document.getElementById('ingredientNamesList');
-    if (list) list.innerHTML = getKnownIngredientNames().map(n => `<option value="${n}"></option>`).join('');
+  let acBox = null;
+
+  function closeAutocomplete() {
+    if (acBox) { acBox.remove(); acBox = null; }
+  }
+
+  function openAutocomplete(inputEl, idx) {
+    const query = normalize(inputEl.value);
+    const matches = getKnownIngredientNames()
+      .filter(n => query && normalize(n).includes(query) && normalize(n) !== query)
+      .slice(0, 6);
+
+    closeAutocomplete();
+    if (matches.length === 0) return;
+
+    acBox = document.createElement('div');
+    acBox.className = 'autocomplete-box';
+    acBox.style.left = inputEl.offsetLeft + 'px';
+    acBox.style.top = (inputEl.offsetTop + inputEl.offsetHeight + 2) + 'px';
+    acBox.style.width = inputEl.offsetWidth + 'px';
+    acBox.innerHTML = matches.map(n => `<div class="autocomplete-item" data-value="${n}">${n}</div>`).join('');
+    inputEl.parentElement.appendChild(acBox);
+
+    acBox.querySelectorAll('.autocomplete-item').forEach(item => {
+      item.onmousedown = (e) => {
+        e.preventDefault();
+        inputEl.value = item.dataset.value;
+        ingRows[idx].name = item.dataset.value;
+        closeAutocomplete();
+      };
+    });
   }
 
   function renderIngRows() {
-    refreshIngredientDatalist();
     document.getElementById('f_ingredients').innerHTML = ingRows.map((_, idx) => `
-      <div class="row-item">
+      <div class="row-item" style="position:relative;">
         <input class="qty-input" placeholder="Qté (ex: 200g)" data-idx="${idx}" data-field="qtyUnitText" value="${ingRows[idx].qtyUnitText ?? ''}" />
-        <input placeholder="Nom de l'ingrédient" list="ingredientNamesList" data-idx="${idx}" data-field="name" value="${ingRows[idx].name ?? ''}" />
+        <input class="ing-name-input" placeholder="Nom de l'ingrédient" autocomplete="off" data-idx="${idx}" data-field="name" value="${ingRows[idx].name ?? ''}" />
         <button type="button" class="remove-row" data-remove-ing="${idx}">✕</button>
       </div>`
     ).join('');
@@ -675,6 +717,11 @@
       };
       inp.oninput = handler;
       inp.onchange = handler;
+    });
+    document.querySelectorAll('.ing-name-input').forEach(inp => {
+      inp.addEventListener('input', () => openAutocomplete(inp, Number(inp.dataset.idx)));
+      inp.addEventListener('focus', () => openAutocomplete(inp, Number(inp.dataset.idx)));
+      inp.addEventListener('blur', () => setTimeout(closeAutocomplete, 150));
     });
     document.querySelectorAll('[data-remove-ing]').forEach(btn => {
       btn.onclick = (e) => {
@@ -844,7 +891,7 @@
       if (count === 0) return;
       hasAnySelection = true;
       (r.ingredients || []).forEach(ing => {
-        const nameKey = normalize(ing.name);
+        const nameKey = normalize(ing.name).replace(/s$/, '');
         const unitKey = normalize(ing.unit);
         const scaledQty = ing.quantity != null ? ing.quantity * count : null;
 
