@@ -23,10 +23,24 @@
     background: white;
     border: 0.5px solid #ddd;
     border-radius: 12px;
-    padding: 14px 16px;
+    padding: 12px 14px;
     margin-bottom: 10px;
     cursor: pointer;
   }
+  .card-inner { display: flex; align-items: center; gap: 12px; }
+  .card-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    background: #EFEDE6;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    overflow: hidden;
+  }
+  .card-thumb img { width: 100%; height: 100%; object-fit: cover; }
   .card h3 { margin: 0 0 6px; font-size: 15px; font-weight: 600; }
   .tags { display: flex; gap: 6px; flex-wrap: wrap; }
   .tag {
@@ -145,9 +159,16 @@
     align-items: center;
     margin-bottom: 8px;
   }
-  .row-item input { flex: 1; }
-  .row-item .qty-input { max-width: 70px; }
-  .row-item .unit-input { max-width: 70px; }
+  .row-item input, .row-item select {
+    padding: 10px 12px;
+    border: 0.5px solid #ccc;
+    border-radius: 8px;
+    font-size: 15px;
+    background: white;
+  }
+  .row-item input { flex: 2; min-width: 0; }
+  .row-item .qty-input { flex: 1; }
+  .row-item .unit-input { flex: 1.3; }
   .remove-row {
     background: none;
     border: none;
@@ -194,6 +215,9 @@
 
   <label class="field-label">Titre</label>
   <input id="f_title" class="field-input" placeholder="Ex: Gâteau au yaourt" />
+
+  <label class="field-label">Photo (lien URL, optionnel)</label>
+  <input id="f_photo" class="field-input" placeholder="https://..." />
 
   <label class="field-label">Tags (séparés par une virgule)</label>
   <input id="f_tags" class="field-input" placeholder="Ex: dessert, goûter" />
@@ -267,8 +291,17 @@
     }
     cardsEl.innerHTML = recipes.map((r, i) => `
       <div class="card" onclick="showDetail(${i})">
-        <h3>${r.title}</h3>
-        <div class="tags">${(r.tags || []).map(t => `<span class="tag">#${t}</span>`).join('')}</div>
+        <div class="card-inner">
+          <div class="card-thumb">
+            ${r.photo_url
+              ? `<img src="${r.photo_url}" alt="" onerror="this.parentElement.innerHTML='🍽️'" />`
+              : '🍽️'}
+          </div>
+          <div style="flex:1;min-width:0;">
+            <h3>${r.title}</h3>
+            <div class="tags">${(r.tags || []).map(t => `<span class="tag">#${t}</span>`).join('')}</div>
+          </div>
+        </div>
       </div>
     `).join('');
   }
@@ -307,6 +340,7 @@
       : '';
 
     document.getElementById('detailContent').innerHTML = `
+      ${r.photo_url ? `<img src="${r.photo_url}" alt="" style="width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin-bottom:14px;" onerror="this.style.display='none'" />` : ''}
       <h1>${r.title}</h1>
       <div class="tags">${(r.tags || []).map(t => `<span class="tag">#${t}</span>`).join('')}</div>
       ${meta.length ? `<p style="font-size:13px;color:#6b6b68;">${meta.join(' · ')}</p>` : ''}
@@ -381,6 +415,7 @@
     editingId = r.id;
     document.getElementById('formTitle').textContent = "Modifier la recette";
     document.getElementById('f_title').value = r.title || '';
+    document.getElementById('f_photo').value = r.photo_url || '';
     document.getElementById('f_tags').value = (r.tags || []).join(', ');
     document.getElementById('f_servings').value = r.servings || 4;
     document.getElementById('f_cook').value = r.cook_time_minutes || '';
@@ -410,19 +445,25 @@
   };
 
   function renderIngRows() {
-    document.getElementById('f_ingredients').innerHTML = ingRows.map((_, idx) => `
+    document.getElementById('f_ingredients').innerHTML = ingRows.map((_, idx) => {
+      const units = ['', 'g', 'kg', 'ml', 'cl', 'l', 'c.à.s', 'c.à.c', 'pièce', 'sachet', 'paquet', 'pincée', 'tasse'];
+      const currentUnit = ingRows[idx].unit ?? '';
+      const optionsHtml = units.map(u => `<option value="${u}" ${u === currentUnit ? 'selected' : ''}>${u === '' ? 'Unité' : u}</option>`).join('');
+      return `
       <div class="row-item">
         <input class="qty-input" type="number" step="any" placeholder="Qté" data-idx="${idx}" data-field="quantity" value="${ingRows[idx].quantity ?? ''}" />
-        <input class="unit-input" placeholder="Unité" data-idx="${idx}" data-field="unit" value="${ingRows[idx].unit ?? ''}" />
+        <select class="unit-input" data-idx="${idx}" data-field="unit">${optionsHtml}</select>
         <input placeholder="Nom de l'ingrédient" data-idx="${idx}" data-field="name" value="${ingRows[idx].name ?? ''}" />
         <button type="button" class="remove-row" data-remove-ing="${idx}">✕</button>
-      </div>
-    `).join('');
-    document.querySelectorAll('#f_ingredients input').forEach(inp => {
-      inp.oninput = (e) => {
+      </div>`;
+    }).join('');
+    document.querySelectorAll('#f_ingredients input, #f_ingredients select').forEach(inp => {
+      const handler = (e) => {
         const idx = e.target.dataset.idx, field = e.target.dataset.field;
         ingRows[idx][field] = e.target.value;
       };
+      inp.oninput = handler;
+      inp.onchange = handler;
     });
     document.querySelectorAll('[data-remove-ing]').forEach(btn => {
       btn.onclick = (e) => {
@@ -464,6 +505,7 @@
     editingId = null;
     document.getElementById('formTitle').textContent = "Nouvelle recette";
     document.getElementById('f_title').value = '';
+    document.getElementById('f_photo').value = '';
     document.getElementById('f_tags').value = '';
     document.getElementById('f_servings').value = 4;
     document.getElementById('f_cook').value = '';
@@ -501,6 +543,7 @@
 
     const payload = {
       title,
+      photo_url: document.getElementById('f_photo').value.trim() || null,
       tags,
       servings: Number(document.getElementById('f_servings').value) || 4,
       cook_time_minutes: document.getElementById('f_cook').value ? Number(document.getElementById('f_cook').value) : null,
