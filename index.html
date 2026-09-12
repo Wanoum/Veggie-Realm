@@ -82,20 +82,88 @@
     font-size: 13px;
     margin-bottom: 14px;
   }
-  #addBtn {
+  #bottomNav {
     position: fixed;
-    bottom: 24px;
-    right: 24px;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    background: white;
+    border-top: 0.5px solid #ddd;
+    padding: 6px 0 max(6px, env(safe-area-inset-bottom));
+    z-index: 100;
+  }
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: none;
+    border: none;
+    padding: 6px 0;
+    font-size: 11px;
+    color: #999;
+  }
+  .nav-btn.active { color: #2C2C2A; font-weight: 600; }
+  .nav-icon { font-size: 20px; line-height: 1; }
+  body { padding-bottom: 90px; }
+  .empty { text-align: center; color: #6b6b68; padding: 40px 0; font-size: 14px; }
+  .field-label { display:block; font-size:13px; color:#6b6b68; margin:14px 0 4px; }
+  .field-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 0.5px solid #ccc;
+    border-radius: 8px;
+    font-size: 15px;
+    background: white;
+  }
+  .secondary-btn {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    border: 1px dashed #999;
+    border-radius: 8px;
+    background: transparent;
+    color: #555;
+    font-size: 14px;
+  }
+  .primary-btn {
+    width: 100%;
+    padding: 13px;
+    margin-top: 24px;
+    border: none;
+    border-radius: 8px;
     background: #2C2C2A;
     color: white;
-    font-size: 26px;
-    border: none;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    font-size: 15px;
+    font-weight: 600;
   }
-  .empty { text-align: center; color: #6b6b68; padding: 40px 0; font-size: 14px; }
+  .row-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .row-item input { flex: 1; }
+  .row-item .qty-input { max-width: 70px; }
+  .row-item .unit-input { max-width: 70px; }
+  .remove-row {
+    background: none;
+    border: none;
+    color: #B3261E;
+    font-size: 18px;
+    padding: 4px 8px;
+  }
+  .step-item textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 0.5px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 44px;
+  }
 </style>
 </head>
 <body>
@@ -114,7 +182,55 @@
   <div id="detailContent"></div>
 </div>
 
-<button id="addBtn" title="Ajouter une recette (bientôt)">+</button>
+<div id="formView" style="display:none;">
+  <button id="formBackBtn">&larr; Annuler</button>
+  <h1>Nouvelle recette</h1>
+
+  <label class="field-label">Titre</label>
+  <input id="f_title" class="field-input" placeholder="Ex: Gâteau au yaourt" />
+
+  <label class="field-label">Tags (séparés par une virgule)</label>
+  <input id="f_tags" class="field-input" placeholder="Ex: dessert, goûter" />
+
+  <label class="field-label">Portions de référence</label>
+  <input id="f_servings" class="field-input" type="number" value="4" />
+
+  <div style="display:flex; gap:10px;">
+    <div style="flex:1;">
+      <label class="field-label">Temps de cuisson (min)</label>
+      <input id="f_cook" class="field-input" type="number" />
+    </div>
+    <div style="flex:1;">
+      <label class="field-label">Température four (°C)</label>
+      <input id="f_oven" class="field-input" type="number" />
+    </div>
+  </div>
+
+  <label class="field-label">Note (optionnel)</label>
+  <input id="f_notes" class="field-input" placeholder="Ex: Attention aux oeufs avec le chocolat chaud !" />
+
+  <h2>Ingrédients</h2>
+  <div id="f_ingredients"></div>
+  <button type="button" id="addIngBtn" class="secondary-btn">+ Ajouter un ingrédient</button>
+
+  <h2>Étapes</h2>
+  <div id="f_steps"></div>
+  <button type="button" id="addStepBtn" class="secondary-btn">+ Ajouter une étape</button>
+
+  <button type="button" id="saveBtn" class="primary-btn">Enregistrer la recette</button>
+  <p id="formError" style="color:#B3261E;font-size:13px;"></p>
+</div>
+
+<nav id="bottomNav">
+  <button id="navHome" class="nav-btn active">
+    <span class="nav-icon">⌂</span>
+    <span>Accueil</span>
+  </button>
+  <button id="navAdd" class="nav-btn">
+    <span class="nav-icon">+</span>
+    <span>Ajouter</span>
+  </button>
+</nav>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -156,7 +272,7 @@
     currentServings[i] = r.servings || 4;
     document.getElementById('listView').style.display = 'none';
     document.getElementById('detailView').style.display = 'block';
-    document.getElementById('addBtn').style.display = 'none';
+    document.getElementById('bottomNav').style.display = 'none';
     renderDetail(i);
   }
 
@@ -210,12 +326,29 @@
   document.getElementById('backBtn').onclick = () => {
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('listView').style.display = 'block';
-    document.getElementById('addBtn').style.display = 'block';
+    document.getElementById('bottomNav').style.display = 'flex';
   };
 
-  document.getElementById('addBtn').onclick = () => {
-    alert("L'ajout de recette arrive dans une prochaine version !");
-  };
+  function showHome() {
+    document.getElementById('detailView').style.display = 'none';
+    document.getElementById('formView').style.display = 'none';
+    document.getElementById('listView').style.display = 'block';
+    document.getElementById('bottomNav').style.display = 'flex';
+    document.getElementById('navHome').classList.add('active');
+    document.getElementById('navAdd').classList.remove('active');
+  }
+
+  function showForm() {
+    document.getElementById('listView').style.display = 'none';
+    document.getElementById('detailView').style.display = 'none';
+    document.getElementById('formView').style.display = 'block';
+    document.getElementById('navHome').classList.remove('active');
+    document.getElementById('navAdd').classList.add('active');
+  }
+
+  document.getElementById('navHome').onclick = showHome;
+  document.getElementById('navAdd').onclick = showForm;
+  document.getElementById('formBackBtn').onclick = showHome;
 
   document.getElementById('refreshBtn').onclick = () => {
     document.getElementById('count').textContent = "Chargement...";
@@ -227,6 +360,130 @@
       loadRecipes();
     }
   });
+
+  // ---- Gestion du formulaire d'ajout ----
+  let ingRows = [];
+  let stepRows = [];
+
+  function renderIngRows() {
+    document.getElementById('f_ingredients').innerHTML = ingRows.map((_, idx) => `
+      <div class="row-item">
+        <input class="qty-input" type="number" step="any" placeholder="Qté" data-idx="${idx}" data-field="quantity" value="${ingRows[idx].quantity ?? ''}" />
+        <input class="unit-input" placeholder="Unité" data-idx="${idx}" data-field="unit" value="${ingRows[idx].unit ?? ''}" />
+        <input placeholder="Nom de l'ingrédient" data-idx="${idx}" data-field="name" value="${ingRows[idx].name ?? ''}" />
+        <button type="button" class="remove-row" data-remove-ing="${idx}">✕</button>
+      </div>
+    `).join('');
+    document.querySelectorAll('#f_ingredients input').forEach(inp => {
+      inp.oninput = (e) => {
+        const idx = e.target.dataset.idx, field = e.target.dataset.field;
+        ingRows[idx][field] = e.target.value;
+      };
+    });
+    document.querySelectorAll('[data-remove-ing]').forEach(btn => {
+      btn.onclick = (e) => {
+        ingRows.splice(Number(e.target.dataset.removeIng), 1);
+        renderIngRows();
+      };
+    });
+  }
+
+  function renderStepRows() {
+    document.getElementById('f_steps').innerHTML = stepRows.map((_, idx) => `
+      <div class="row-item step-item">
+        <textarea placeholder="Étape ${idx + 1}" data-idx="${idx}">${stepRows[idx] ?? ''}</textarea>
+        <button type="button" class="remove-row" data-remove-step="${idx}">✕</button>
+      </div>
+    `).join('');
+    document.querySelectorAll('#f_steps textarea').forEach(ta => {
+      ta.oninput = (e) => { stepRows[e.target.dataset.idx] = e.target.value; };
+    });
+    document.querySelectorAll('[data-remove-step]').forEach(btn => {
+      btn.onclick = (e) => {
+        stepRows.splice(Number(e.target.dataset.removeStep), 1);
+        renderStepRows();
+      };
+    });
+  }
+
+  document.getElementById('addIngBtn').onclick = () => {
+    ingRows.push({ quantity: '', unit: '', name: '' });
+    renderIngRows();
+  };
+
+  document.getElementById('addStepBtn').onclick = () => {
+    stepRows.push('');
+    renderStepRows();
+  };
+
+  function resetForm() {
+    document.getElementById('f_title').value = '';
+    document.getElementById('f_tags').value = '';
+    document.getElementById('f_servings').value = 4;
+    document.getElementById('f_cook').value = '';
+    document.getElementById('f_oven').value = '';
+    document.getElementById('f_notes').value = '';
+    document.getElementById('formError').textContent = '';
+    ingRows = [{ quantity: '', unit: '', name: '' }];
+    stepRows = [''];
+    renderIngRows();
+    renderStepRows();
+  }
+
+  document.getElementById('saveBtn').onclick = async () => {
+    const title = document.getElementById('f_title').value.trim();
+    const errEl = document.getElementById('formError');
+    errEl.textContent = '';
+
+    if (!title) {
+      errEl.textContent = "Le titre est obligatoire.";
+      return;
+    }
+
+    const tags = document.getElementById('f_tags').value
+      .split(',').map(t => t.trim()).filter(Boolean);
+
+    const ingredients = ingRows
+      .filter(ing => ing.name && ing.name.trim())
+      .map(ing => ({
+        name: ing.name.trim(),
+        quantity: ing.quantity !== '' && ing.quantity != null ? Number(ing.quantity) : null,
+        unit: ing.unit ? ing.unit.trim() : null
+      }));
+
+    const steps = stepRows.map(s => s.trim()).filter(Boolean);
+
+    const payload = {
+      title,
+      tags,
+      servings: Number(document.getElementById('f_servings').value) || 4,
+      cook_time_minutes: document.getElementById('f_cook').value ? Number(document.getElementById('f_cook').value) : null,
+      oven_temp_celsius: document.getElementById('f_oven').value ? Number(document.getElementById('f_oven').value) : null,
+      notes: document.getElementById('f_notes').value.trim() || null,
+      ingredients,
+      steps
+    };
+
+    document.getElementById('saveBtn').textContent = "Enregistrement...";
+    document.getElementById('saveBtn').disabled = true;
+
+    const { error } = await sb.from('recipes').insert(payload);
+
+    document.getElementById('saveBtn').textContent = "Enregistrer la recette";
+    document.getElementById('saveBtn').disabled = false;
+
+    if (error) {
+      errEl.textContent = "Erreur lors de l'enregistrement : " + error.message;
+      console.error(error);
+      return;
+    }
+
+    resetForm();
+    await loadRecipes();
+    showHome();
+  };
+
+  resetForm();
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
