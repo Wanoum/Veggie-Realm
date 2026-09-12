@@ -185,6 +185,29 @@
     resize: vertical;
     min-height: 44px;
   }
+  .day-row {
+    background: white;
+    border: 0.5px solid #ddd;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .day-row .day-name { font-size: 13px; color: #6b6b68; margin-bottom: 6px; text-transform: capitalize; }
+  .day-row select { width: 100%; padding: 9px 10px; border: 0.5px solid #ccc; border-radius: 8px; font-size: 14px; background: white; margin-bottom: 6px; }
+  .day-row .servings-mini { display: flex; align-items: center; gap: 10px; }
+  .day-row .servings-mini button { width: 26px; height: 26px; border-radius: 50%; border: 0.5px solid #ccc; background: white; font-size: 14px; }
+  .course-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-top: 0.5px solid #e0dfd8;
+    font-size: 14px;
+  }
+  .course-item:first-child { border-top: none; }
+  .course-item input[type="checkbox"] { width: 18px; height: 18px; }
+  .course-item.checked { color: #999; text-decoration: line-through; }
+  .course-qty { margin-left: auto; font-family: Georgia, serif; color: #6b6b68; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -256,11 +279,27 @@
     <span class="nav-icon">⌂</span>
     <span>Accueil</span>
   </button>
+  <button id="navPlanning" class="nav-btn">
+    <span class="nav-icon">📅</span>
+    <span>Planning</span>
+  </button>
   <button id="navAdd" class="nav-btn">
     <span class="nav-icon">+</span>
     <span>Ajouter</span>
   </button>
 </nav>
+
+<div id="planningView" style="display:none;">
+  <h1>Planning de la semaine</h1>
+  <div id="planningDays"></div>
+  <button type="button" id="generateCoursesBtn" class="primary-btn">🛒 Générer la liste de courses</button>
+</div>
+
+<div id="coursesView" style="display:none;">
+  <button id="coursesBackBtn">&larr; Retour au planning</button>
+  <h1>Liste de courses</h1>
+  <div id="coursesList"></div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -372,27 +411,45 @@
     document.getElementById('bottomNav').style.display = 'flex';
   };
 
-  function showHome() {
+  function hideAllViews() {
+    document.getElementById('listView').style.display = 'none';
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('formView').style.display = 'none';
+    document.getElementById('planningView').style.display = 'none';
+    document.getElementById('coursesView').style.display = 'none';
+    document.getElementById('navHome').classList.remove('active');
+    document.getElementById('navAdd').classList.remove('active');
+    document.getElementById('navPlanning').classList.remove('active');
+  }
+
+  function showHome() {
+    hideAllViews();
     document.getElementById('listView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('navHome').classList.add('active');
-    document.getElementById('navAdd').classList.remove('active');
   }
 
   function showForm() {
-    document.getElementById('listView').style.display = 'none';
-    document.getElementById('detailView').style.display = 'none';
+    hideAllViews();
     document.getElementById('formView').style.display = 'block';
-    document.getElementById('navHome').classList.remove('active');
+    document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('navAdd').classList.add('active');
     resetForm();
   }
 
+  function showPlanning() {
+    hideAllViews();
+    document.getElementById('planningView').style.display = 'block';
+    document.getElementById('bottomNav').style.display = 'flex';
+    document.getElementById('navPlanning').classList.add('active');
+    renderPlanning();
+  }
+
   document.getElementById('navHome').onclick = showHome;
   document.getElementById('navAdd').onclick = showForm;
+  document.getElementById('navPlanning').onclick = showPlanning;
   document.getElementById('formBackBtn').onclick = showHome;
+  document.getElementById('coursesBackBtn').onclick = showPlanning;
 
   document.getElementById('refreshBtn').onclick = () => {
     location.reload();
@@ -574,6 +631,121 @@
   };
 
   resetForm();
+
+  // ---- Planning de la semaine ----
+  const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+  let mealPlan = {}; // { lundi: { recipe_id, servings }, ... }
+
+  async function loadMealPlan() {
+    const { data, error } = await sb.from('meal_plan').select('*');
+    if (error) { console.error(error); return; }
+    mealPlan = {};
+    (data || []).forEach(row => { mealPlan[row.day] = { recipe_id: row.recipe_id, servings: row.servings }; });
+  }
+
+  function renderPlanning() {
+    const container = document.getElementById('planningDays');
+    container.innerHTML = DAYS.map(day => {
+      const plan = mealPlan[day];
+      const recipeOptions = recipes.map(r =>
+        `<option value="${r.id}" ${plan && plan.recipe_id === r.id ? 'selected' : ''}>${r.title}</option>`
+      ).join('');
+      const servings = plan ? plan.servings : 4;
+      return `
+        <div class="day-row">
+          <div class="day-name">${day}</div>
+          <select data-day="${day}" class="day-select">
+            <option value="">— Aucune recette —</option>
+            ${recipeOptions}
+          </select>
+          <div class="servings-mini" style="${plan && plan.recipe_id ? '' : 'display:none;'}" data-servings-box="${day}">
+            <span style="font-size:13px;color:#6b6b68;">Portions</span>
+            <button type="button" data-day-servings="${day}" data-delta="-1">−</button>
+            <span data-servings-value="${day}" style="font-weight:600;">${servings}</span>
+            <button type="button" data-day-servings="${day}" data-delta="1">+</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    document.querySelectorAll('.day-select').forEach(sel => {
+      sel.onchange = async (e) => {
+        const day = e.target.dataset.day;
+        const recipeId = e.target.value || null;
+        const servings = (mealPlan[day] && mealPlan[day].servings) || 4;
+        mealPlan[day] = { recipe_id: recipeId, servings };
+        if (recipeId) {
+          await sb.from('meal_plan').upsert({ day, recipe_id: recipeId, servings });
+        } else {
+          await sb.from('meal_plan').delete().eq('day', day);
+          delete mealPlan[day];
+        }
+        renderPlanning();
+      };
+    });
+
+    document.querySelectorAll('[data-day-servings]').forEach(btn => {
+      btn.onclick = async (e) => {
+        const day = e.target.dataset.day;
+        const delta = Number(e.target.dataset.delta);
+        if (!mealPlan[day]) return;
+        const newVal = Math.max(1, mealPlan[day].servings + delta);
+        mealPlan[day].servings = newVal;
+        document.querySelector(`[data-servings-value="${day}"]`).textContent = newVal;
+        await sb.from('meal_plan').upsert({ day, recipe_id: mealPlan[day].recipe_id, servings: newVal });
+      };
+    });
+  }
+
+  document.getElementById('generateCoursesBtn').onclick = () => {
+    const aggregated = {}; // key: "name|unit" -> { name, unit, quantity }
+    let hasAnyPlan = false;
+
+    DAYS.forEach(day => {
+      const plan = mealPlan[day];
+      if (!plan || !plan.recipe_id) return;
+      const recipe = recipes.find(r => r.id === plan.recipe_id);
+      if (!recipe) return;
+      hasAnyPlan = true;
+      const base = recipe.servings || 4;
+      const targetServings = plan.servings || 4;
+      (recipe.ingredients || []).forEach(ing => {
+        const key = ing.name.toLowerCase().trim() + '|' + (ing.unit || '');
+        const scaledQty = ing.quantity != null ? ing.quantity * targetServings / base : null;
+        if (!aggregated[key]) {
+          aggregated[key] = { name: ing.name, unit: ing.unit, quantity: scaledQty };
+        } else if (scaledQty != null && aggregated[key].quantity != null) {
+          aggregated[key].quantity += scaledQty;
+        } else if (scaledQty != null) {
+          aggregated[key].quantity = scaledQty;
+        }
+      });
+    });
+
+    const listEl = document.getElementById('coursesList');
+    if (!hasAnyPlan) {
+      listEl.innerHTML = '<div class="empty">Aucune recette planifiée cette semaine.</div>';
+    } else {
+      const items = Object.values(aggregated).sort((a, b) => a.name.localeCompare(b.name));
+      listEl.innerHTML = items.map((item, idx) => {
+        const qDisplay = item.quantity != null
+          ? (Number.isInteger(item.quantity) ? item.quantity : item.quantity.toFixed(1).replace(/[.]0$/, ''))
+          : '';
+        return `
+          <label class="course-item" id="course-${idx}">
+            <input type="checkbox" onchange="document.getElementById('course-${idx}').classList.toggle('checked', this.checked)" />
+            <span>${item.name}</span>
+            <span class="course-qty">${qDisplay} ${item.unit || ''}</span>
+          </label>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('planningView').style.display = 'none';
+    document.getElementById('coursesView').style.display = 'block';
+  };
+
+  loadMealPlan();
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
