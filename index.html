@@ -117,13 +117,13 @@
 <script>
   const SUPABASE_URL = "https://bhsftmcluaqztkfnwobx.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoc2Z0bWNsdWFxenRrZm53b2J4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyMTE1ODgsImV4cCI6MjEwNDc4NzU4OH0.ovrCW7IRhkH8tfMYyExNp6zKt60EJMpJLcehlastIAI";
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   let recipes = [];
   let currentServings = {};
 
   async function loadRecipes() {
-    const { data, error } = await supabase.from('recipes').select('*').order('created_at', { ascending: false });
+    const { data, error } = await sb.from('recipes').select('*').order('created_at', { ascending: false });
     if (error) {
       document.getElementById('count').textContent = "Erreur de chargement";
       console.error(error);
