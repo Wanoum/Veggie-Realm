@@ -178,13 +178,19 @@
 </div>
 
 <div id="detailView" style="display:none;">
-  <button id="backBtn">&larr; Retour</button>
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <button id="backBtn">&larr; Retour</button>
+    <div style="display:flex;gap:8px;">
+      <button id="editBtn" style="background:white;border:0.5px solid #ccc;border-radius:8px;padding:8px 14px;font-size:14px;">Modifier</button>
+      <button id="deleteBtn" style="background:white;border:0.5px solid #B3261E;color:#B3261E;border-radius:8px;padding:8px 14px;font-size:14px;">Supprimer</button>
+    </div>
+  </div>
   <div id="detailContent"></div>
 </div>
 
 <div id="formView" style="display:none;">
   <button id="formBackBtn">&larr; Annuler</button>
-  <h1>Nouvelle recette</h1>
+  <h1 id="formTitle">Nouvelle recette</h1>
 
   <label class="field-label">Titre</label>
   <input id="f_title" class="field-input" placeholder="Ex: Gâteau au yaourt" />
@@ -267,7 +273,10 @@
     `).join('');
   }
 
+  let currentDetailIndex = null;
+
   function showDetail(i) {
+    currentDetailIndex = i;
     const r = recipes[i];
     currentServings[i] = r.servings || 4;
     document.getElementById('listView').style.display = 'none';
@@ -344,6 +353,7 @@
     document.getElementById('formView').style.display = 'block';
     document.getElementById('navHome').classList.remove('active');
     document.getElementById('navAdd').classList.add('active');
+    resetForm();
   }
 
   document.getElementById('navHome').onclick = showHome;
@@ -361,9 +371,43 @@
     }
   });
 
-  // ---- Gestion du formulaire d'ajout ----
+  // ---- Gestion du formulaire d'ajout / édition ----
   let ingRows = [];
   let stepRows = [];
+  let editingId = null;
+
+  document.getElementById('editBtn').onclick = () => {
+    const r = recipes[currentDetailIndex];
+    editingId = r.id;
+    document.getElementById('formTitle').textContent = "Modifier la recette";
+    document.getElementById('f_title').value = r.title || '';
+    document.getElementById('f_tags').value = (r.tags || []).join(', ');
+    document.getElementById('f_servings').value = r.servings || 4;
+    document.getElementById('f_cook').value = r.cook_time_minutes || '';
+    document.getElementById('f_oven').value = r.oven_temp_celsius || '';
+    document.getElementById('f_notes').value = r.notes || '';
+    ingRows = (r.ingredients || []).map(ing => ({
+      quantity: ing.quantity ?? '', unit: ing.unit ?? '', name: ing.name ?? ''
+    }));
+    if (ingRows.length === 0) ingRows = [{ quantity: '', unit: '', name: '' }];
+    stepRows = (r.steps && r.steps.length > 0) ? [...r.steps] : [''];
+    renderIngRows();
+    renderStepRows();
+    document.getElementById('detailView').style.display = 'none';
+    document.getElementById('formView').style.display = 'block';
+  };
+
+  document.getElementById('deleteBtn').onclick = async () => {
+    const r = recipes[currentDetailIndex];
+    if (!confirm(`Supprimer "${r.title}" ? Cette action est irréversible.`)) return;
+    const { error } = await sb.from('recipes').delete().eq('id', r.id);
+    if (error) {
+      alert("Erreur lors de la suppression : " + error.message);
+      return;
+    }
+    await loadRecipes();
+    showHome();
+  };
 
   function renderIngRows() {
     document.getElementById('f_ingredients').innerHTML = ingRows.map((_, idx) => `
@@ -417,6 +461,8 @@
   };
 
   function resetForm() {
+    editingId = null;
+    document.getElementById('formTitle').textContent = "Nouvelle recette";
     document.getElementById('f_title').value = '';
     document.getElementById('f_tags').value = '';
     document.getElementById('f_servings').value = 4;
@@ -467,7 +513,9 @@
     document.getElementById('saveBtn').textContent = "Enregistrement...";
     document.getElementById('saveBtn').disabled = true;
 
-    const { error } = await sb.from('recipes').insert(payload);
+    const { error } = editingId
+      ? await sb.from('recipes').update(payload).eq('id', editingId)
+      : await sb.from('recipes').insert(payload);
 
     document.getElementById('saveBtn').textContent = "Enregistrer la recette";
     document.getElementById('saveBtn').disabled = false;
