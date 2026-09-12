@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#F5F3EE" />
 <style>
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; touch-action: manipulation; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: #F5F3EE;
@@ -153,6 +153,7 @@
     currentServings[i] = r.servings || 4;
     document.getElementById('listView').style.display = 'none';
     document.getElementById('detailView').style.display = 'block';
+    document.getElementById('addBtn').style.display = 'none';
     renderDetail(i);
   }
 
@@ -206,6 +207,7 @@
   document.getElementById('backBtn').onclick = () => {
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('listView').style.display = 'block';
+    document.getElementById('addBtn').style.display = 'block';
   };
 
   document.getElementById('addBtn').onclick = () => {
