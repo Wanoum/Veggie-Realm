@@ -101,7 +101,10 @@
 <body>
 
 <div id="listView">
-  <h1>Mes recettes</h1>
+  <div style="display:flex;align-items:center;justify-content:space-between;">
+    <h1>Mes recettes</h1>
+    <button id="refreshBtn" style="background:white;border:0.5px solid #ccc;border-radius:8px;padding:6px 12px;font-size:13px;">↻ Rafraîchir</button>
+  </div>
   <p class="count" id="count">Chargement...</p>
   <div id="cards"></div>
 </div>
@@ -213,6 +216,17 @@
   document.getElementById('addBtn').onclick = () => {
     alert("L'ajout de recette arrive dans une prochaine version !");
   };
+
+  document.getElementById('refreshBtn').onclick = () => {
+    document.getElementById('count').textContent = "Chargement...";
+    loadRecipes();
+  };
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && document.getElementById('listView').style.display !== 'none') {
+      loadRecipes();
+    }
+  });
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
