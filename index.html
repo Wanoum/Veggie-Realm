@@ -324,8 +324,8 @@
   <button type="button" id="addIngBtn" class="secondary-btn">+ Ajouter un ingrédient</button>
 
   <h2>Étapes</h2>
-  <div id="f_steps"></div>
-  <button type="button" id="addStepBtn" class="secondary-btn">+ Ajouter une étape</button>
+  <label class="field-label">Étapes (une par ligne)</label>
+  <textarea id="f_steps" class="field-input" style="min-height:140px;resize:vertical;" placeholder="Préchauffer le four à 180°.&#10;Mélanger le beurre et le sucre.&#10;Ajouter la farine..."></textarea>
 
   <button type="button" id="saveBtn" class="primary-btn">Enregistrer la recette</button>
   <p id="formError" style="color:#B3261E;font-size:13px;"></p>
@@ -383,7 +383,7 @@
     renderList();
   }
 
-  let activeTagFilters = new Set();
+  let activeTagFilter = null;
   let searchQuery = '';
 
   function renderTagFilters() {
@@ -391,13 +391,12 @@
     const container = document.getElementById('tagFilters');
     if (allTags.length === 0) { container.innerHTML = ''; return; }
     container.innerHTML = allTags.map(t => `
-      <button type="button" class="filter-chip ${activeTagFilters.has(t) ? 'active' : ''}" data-tag="${t}">#${t}</button>
+      <button type="button" class="filter-chip ${activeTagFilter === t ? 'active' : ''}" data-tag="${t}">#${t}</button>
     `).join('');
     document.querySelectorAll('.filter-chip').forEach(chip => {
       chip.onclick = () => {
         const tag = chip.dataset.tag;
-        if (activeTagFilters.has(tag)) activeTagFilters.delete(tag);
-        else activeTagFilters.add(tag);
+        activeTagFilter = (activeTagFilter === tag) ? null : tag;
         renderList();
       };
     });
@@ -409,8 +408,8 @@
       .filter(i => {
         const r = recipes[i];
         const matchesSearch = !searchQuery || r.title.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesTags = activeTagFilters.size === 0 || (r.tags || []).some(t => activeTagFilters.has(t));
-        return matchesSearch && matchesTags;
+        const matchesTag = !activeTagFilter || (r.tags || []).includes(activeTagFilter);
+        return matchesSearch && matchesTag;
       });
   }
 
@@ -568,7 +567,6 @@
 
   // ---- Gestion du formulaire d'ajout / édition ----
   let ingRows = [];
-  let stepRows = [];
   let editingId = null;
 
   document.getElementById('editBtn').onclick = () => {
@@ -586,9 +584,8 @@
       quantity: ing.quantity ?? '', unit: ing.unit ?? '', name: ing.name ?? ''
     }));
     if (ingRows.length === 0) ingRows = [{ quantity: '', unit: '', name: '' }];
-    stepRows = (r.steps && r.steps.length > 0) ? [...r.steps] : [''];
+    document.getElementById('f_steps').value = (r.steps || []).join('\n');
     renderIngRows();
-    renderStepRows();
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('formView').style.display = 'block';
   };
@@ -634,32 +631,9 @@
     });
   }
 
-  function renderStepRows() {
-    document.getElementById('f_steps').innerHTML = stepRows.map((_, idx) => `
-      <div class="row-item step-item">
-        <textarea placeholder="Étape ${idx + 1}" data-idx="${idx}">${stepRows[idx] ?? ''}</textarea>
-        <button type="button" class="remove-row" data-remove-step="${idx}">✕</button>
-      </div>
-    `).join('');
-    document.querySelectorAll('#f_steps textarea').forEach(ta => {
-      ta.oninput = (e) => { stepRows[e.target.dataset.idx] = e.target.value; };
-    });
-    document.querySelectorAll('[data-remove-step]').forEach(btn => {
-      btn.onclick = (e) => {
-        stepRows.splice(Number(e.target.dataset.removeStep), 1);
-        renderStepRows();
-      };
-    });
-  }
-
   document.getElementById('addIngBtn').onclick = () => {
     ingRows.push({ quantity: '', unit: '', name: '' });
     renderIngRows();
-  };
-
-  document.getElementById('addStepBtn').onclick = () => {
-    stepRows.push('');
-    renderStepRows();
   };
 
   function resetForm() {
@@ -672,11 +646,10 @@
     document.getElementById('f_cook').value = '';
     document.getElementById('f_oven').value = '';
     document.getElementById('f_notes').value = '';
+    document.getElementById('f_steps').value = '';
     document.getElementById('formError').textContent = '';
     ingRows = [{ quantity: '', unit: '', name: '' }];
-    stepRows = [''];
     renderIngRows();
-    renderStepRows();
   }
 
   document.getElementById('saveBtn').onclick = async () => {
@@ -700,7 +673,8 @@
         unit: ing.unit ? ing.unit.trim() : null
       }));
 
-    const steps = stepRows.map(s => s.trim()).filter(Boolean);
+    const steps = document.getElementById('f_steps').value
+      .split('\n').map(s => s.trim()).filter(Boolean);
 
     const payload = {
       title,
@@ -798,8 +772,15 @@
     });
   }
 
+  function normalize(str) {
+    return (str || '')
+      .toLowerCase()
+      .trim()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // retire les accents
+  }
+
   function renderCoursesList() {
-    const aggregated = {}; // key: "name|unit" -> { name, unit, quantity }
+    const aggregated = {}; // key: normalized name -> { displayName, units: { unitKey: { label, quantity } } }
     let hasAnySelection = false;
 
     recipes.forEach(r => {
@@ -807,12 +788,17 @@
       if (count === 0) return;
       hasAnySelection = true;
       (r.ingredients || []).forEach(ing => {
-        const key = ing.name.toLowerCase().trim() + '|' + (ing.unit || '');
+        const nameKey = normalize(ing.name);
+        const unitKey = normalize(ing.unit);
         const scaledQty = ing.quantity != null ? ing.quantity * count : null;
-        if (!aggregated[key]) {
-          aggregated[key] = { name: ing.name, unit: ing.unit, quantity: scaledQty };
+
+        if (!aggregated[nameKey]) {
+          aggregated[nameKey] = { displayName: ing.name.trim(), units: {} };
+        }
+        if (!aggregated[nameKey].units[unitKey]) {
+          aggregated[nameKey].units[unitKey] = { label: ing.unit || '', quantity: scaledQty };
         } else if (scaledQty != null) {
-          aggregated[key].quantity = (aggregated[key].quantity || 0) + scaledQty;
+          aggregated[nameKey].units[unitKey].quantity = (aggregated[nameKey].units[unitKey].quantity || 0) + scaledQty;
         }
       });
     });
@@ -822,16 +808,18 @@
       listEl.innerHTML = '<div class="empty">Sélectionne des recettes dans l\'onglet "Recettes" pour générer ta liste de courses.</div>';
       return;
     }
-    const items = Object.values(aggregated).sort((a, b) => a.name.localeCompare(b.name));
+    const items = Object.values(aggregated).sort((a, b) => a.displayName.localeCompare(b.displayName));
     listEl.innerHTML = items.map((item, idx) => {
-      const qDisplay = item.quantity != null
-        ? (Number.isInteger(item.quantity) ? item.quantity : item.quantity.toFixed(1).replace(/[.]0$/, ''))
-        : '';
+      const qtyParts = Object.values(item.units).map(u => {
+        if (u.quantity == null) return u.label;
+        const qDisplay = Number.isInteger(u.quantity) ? u.quantity : u.quantity.toFixed(1).replace(/[.]0$/, '');
+        return `${qDisplay} ${u.label}`.trim();
+      }).filter(Boolean);
       return `
         <label class="course-item" id="course-${idx}">
           <input type="checkbox" onchange="document.getElementById('course-${idx}').classList.toggle('checked', this.checked)" />
-          <span>${item.name}</span>
-          <span class="course-qty">${qDisplay} ${item.unit || ''}</span>
+          <span>${item.displayName}</span>
+          <span class="course-qty">${qtyParts.join(' + ')}</span>
         </label>
       `;
     }).join('');
