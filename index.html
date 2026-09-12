@@ -677,8 +677,16 @@
 
   function openAutocomplete(inputEl, idx) {
     const query = normalize(inputEl.value);
+    const seen = new Set();
     const matches = getKnownIngredientNames()
-      .filter(n => query && normalize(n).includes(query) && normalize(n) !== query)
+      .filter(n => {
+        const norm = normalize(n);
+        if (!query || !norm.includes(query) || norm === query) return false;
+        const singularKey = norm.replace(/s$/, '');
+        if (seen.has(singularKey)) return false;
+        seen.add(singularKey);
+        return true;
+      })
       .slice(0, 6);
 
     closeAutocomplete();
