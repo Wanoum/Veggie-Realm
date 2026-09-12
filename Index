@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Mes recettes</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#F5F3EE" />
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #F5F3EE;
+    color: #2C2C2A;
+    margin: 0;
+    padding: 16px;
+    padding-bottom: 40px;
+  }
+  h1 { font-size: 20px; font-weight: 600; margin: 8px 0 4px; }
+  h2 { font-size: 16px; font-weight: 600; margin: 20px 0 8px; }
+  .count { font-size: 13px; color: #6b6b68; margin-bottom: 16px; }
+  .card {
+    background: white;
+    border: 0.5px solid #ddd;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+  .card h3 { margin: 0 0 6px; font-size: 15px; font-weight: 600; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag {
+    font-size: 11px;
+    background: #E6F1FB;
+    color: #0C447C;
+    padding: 2px 8px;
+    border-radius: 8px;
+  }
+  #backBtn {
+    background: white;
+    border: 0.5px solid #ccc;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  .servings-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #EFEDE6;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 16px 0;
+  }
+  .servings-box button {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 0.5px solid #ccc;
+    background: white;
+    font-size: 16px;
+  }
+  .ing-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-top: 0.5px solid #e0dfd8;
+  }
+  .ing-row:first-child { border-top: none; }
+  .ing-qty {
+    font-family: Georgia, serif;
+    color: #6b6b68;
+    white-space: nowrap;
+  }
+  ol { padding-left: 20px; }
+  ol li { margin-bottom: 8px; line-height: 1.5; }
+  .notice {
+    background: #FAEEDA;
+    color: #633806;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+  #addBtn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #2C2C2A;
+    color: white;
+    font-size: 26px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .empty { text-align: center; color: #6b6b68; padding: 40px 0; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div id="listView">
+  <h1>Mes recettes</h1>
+  <p class="count" id="count">Chargement...</p>
+  <div id="cards"></div>
+</div>
+
+<div id="detailView" style="display:none;">
+  <button id="backBtn">&larr; Retour</button>
+  <div id="detailContent"></div>
+</div>
+
+<button id="addBtn" title="Ajouter une recette (bientôt)">+</button>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://bhsftmcluaqztkfnwobx.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoc2Z0bWNsdWFxenRrZm53b2J4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyMTE1ODgsImV4cCI6MjEwNDc4NzU4OH0.ovrCW7IRhkH8tfMYyExNp6zKt60EJMpJLcehlastIAI";
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let recipes = [];
+  let currentServings = {};
+
+  async function loadRecipes() {
+    const { data, error } = await supabase.from('recipes').select('*').order('created_at', { ascending: false });
+    if (error) {
+      document.getElementById('count').textContent = "Erreur de chargement";
+      console.error(error);
+      return;
+    }
+    recipes = data;
+    renderList();
+  }
+
+  function renderList() {
+    document.getElementById('count').textContent = recipes.length + " recette" + (recipes.length > 1 ? "s" : "");
+    const cardsEl = document.getElementById('cards');
+    if (recipes.length === 0) {
+      cardsEl.innerHTML = '<div class="empty">Aucune recette pour l\'instant.</div>';
+      return;
+    }
+    cardsEl.innerHTML = recipes.map((r, i) => `
+      <div class="card" onclick="showDetail(${i})">
+        <h3>${r.title}</h3>
+        <div class="tags">${(r.tags || []).map(t => `<span class="tag">#${t}</span>`).join('')}</div>
+      </div>
+    `).join('');
+  }
+
+  function showDetail(i) {
+    const r = recipes[i];
+    currentServings[i] = r.servings || 4;
+    document.getElementById('listView').style.display = 'none';
+    document.getElementById('detailView').style.display = 'block';
+    renderDetail(i);
+  }
+
+  function renderDetail(i) {
+    const r = recipes[i];
+    const base = r.servings || 4;
+    const s = currentServings[i];
+    const meta = [];
+    if (r.cook_time_minutes) meta.push(r.cook_time_minutes + " min");
+    if (r.oven_temp_celsius) meta.push(r.oven_temp_celsius + "°");
+
+    const ingredientsHtml = (r.ingredients || []).map(ing => {
+      const q = ing.quantity != null ? (ing.quantity * s / base) : null;
+      const qDisplay = q != null ? (Number.isInteger(q) ? q : q.toFixed(1).replace(/[.]0$/, '')) : '';
+      return `<div class="ing-row">
+        <span>${ing.name}${ing.note ? ' <span style="color:#999;font-size:12px;">(' + ing.note + ')</span>' : ''}</span>
+        <span class="ing-qty">${qDisplay} ${ing.unit || ''}</span>
+      </div>`;
+    }).join('');
+
+    const stepsHtml = (r.steps && r.steps.length > 0)
+      ? '<h2>Étapes</h2><ol>' + r.steps.map(st => `<li>${st}</li>`).join('') + '</ol>'
+      : '';
+
+    document.getElementById('detailContent').innerHTML = `
+      <h1>${r.title}</h1>
+      <div class="tags">${(r.tags || []).map(t => `<span class="tag">#${t}</span>`).join('')}</div>
+      ${meta.length ? `<p style="font-size:13px;color:#6b6b68;">${meta.join(' · ')}</p>` : ''}
+      ${r.notes ? `<div class="notice">${r.notes}</div>` : ''}
+      <div class="servings-box">
+        <span style="font-size:14px;color:#6b6b68;">Portions</span>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <button onclick="changeServings(${i}, -1)">−</button>
+          <span style="font-weight:600;min-width:16px;text-align:center;">${s}</span>
+          <button onclick="changeServings(${i}, 1)">+</button>
+        </div>
+      </div>
+      <h2>Ingrédients</h2>
+      ${ingredientsHtml}
+      ${stepsHtml}
+    `;
+  }
+
+  function changeServings(i, delta) {
+    const newVal = currentServings[i] + delta;
+    if (newVal < 1) return;
+    currentServings[i] = newVal;
+    renderDetail(i);
+  }
+
+  document.getElementById('backBtn').onclick = () => {
+    document.getElementById('detailView').style.display = 'none';
+    document.getElementById('listView').style.display = 'block';
+  };
+
+  document.getElementById('addBtn').onclick = () => {
+    alert("L'ajout de recette arrive dans une prochaine version !");
+  };
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+
+  loadRecipes();
+</script>
+</body>
+</html>
