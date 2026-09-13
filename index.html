@@ -2,14 +2,16 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>Mes recettes</title>
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#F4F2ED" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2/dist/tabler-icons.min.css" />
 <style>
   * { box-sizing: border-box; touch-action: manipulation; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 18px;
     background: #F4F2ED;
     color: #2B2A28;
     margin: 0;
@@ -86,30 +88,14 @@
   }
   .ing-row {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 9px 0;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 11px 0;
+    border-bottom: 1px solid #EAE7DE;
   }
-  .ing-row-icon {
-    width: 42px; height: 42px;
-    border-radius: 13px;
-    border: 1.5px solid #DAD5C8;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-  }
-  .ing-row-name { font-family: Georgia, serif; font-size: 14.5px; color: #2B2A28; margin: 0; }
-  .ing-row-qty { font-size: 12px; color: #9C9884; margin: 2px 0 0; }
-  .ing-check {
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    border: 1.5px solid #D8D4C8;
-    flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px;
-    color: white;
-  }
-  .ing-check.checked { background: #3D5A34; border-color: #3D5A34; }
+  .ing-row-name { font-family: Georgia, serif; font-size: 15px; color: #2B2A28; margin: 0; }
+  .ing-row-note { color: #6B6862; font-size: 13px; }
+  .ing-row-qty { font-family: Georgia, serif; font-size: 14px; color: #6B6862; white-space: nowrap; margin-left: 12px; }
   ol { padding-left: 20px; }
   ol li { margin-bottom: 10px; line-height: 1.6; font-size: 14.5px; }
   .notice {
@@ -143,11 +129,13 @@
     font-size: 10.5px;
     color: #B8B4AA;
   }
-  .nav-btn.active { color: #C4623C; font-weight: 600; }
+  .nav-btn { color: #2B2A28; opacity: 0.4; }
+  .nav-btn.active { opacity: 1; font-weight: 600; }
+  .icon { font-size: 20px; line-height: 1; color: #2B2A28; }
   .nav-icon { font-size: 20px; line-height: 1; }
   .fab-search {
     position: fixed;
-    bottom: 78px;
+    bottom: calc(72px + env(safe-area-inset-bottom));
     right: 22px;
     width: 50px; height: 50px;
     border-radius: 50%;
@@ -156,7 +144,10 @@
     border: none;
     font-size: 18px;
     box-shadow: 0 4px 14px rgba(196,98,60,0.35);
-    z-index: 90;
+    z-index: 150;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .empty { text-align: center; color: #9C9884; padding: 40px 0; font-size: 14px; grid-column: 1 / -1; }
   .field-label { display:block; font-size:13px; color:#9C9884; margin:14px 0 4px; }
@@ -324,7 +315,7 @@
 <div id="listView">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
     <h1 style="margin-bottom:0;">Mes recettes</h1>
-    <button id="refreshBtn" class="icon-btn">↻</button>
+    <button id="refreshBtn" class="icon-btn"><i class="ti ti-refresh icon"></i></button>
   </div>
   <input id="searchInput" class="field-input" placeholder="Rechercher une recette..." style="margin:10px 0;display:none;" />
   <div id="tagFilters" class="tag-filters"></div>
@@ -332,14 +323,13 @@
   <div id="cards" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;"></div>
 </div>
 
-<button id="searchFab" class="fab-search">⌕</button>
+<button id="searchFab" class="fab-search"><i class="ti ti-search icon" style="color:white;"></i></button>
 
 <div id="detailView" style="display:none;margin:-18px -18px 0;">
   <div id="detailContent"></div>
 </div>
 
 <div id="formView" style="display:none;">
-  <button id="formBackBtn">&larr; Annuler</button>
   <h1 id="formTitle">Nouvelle recette</h1>
 
   <label class="field-label">Titre</label>
@@ -386,15 +376,15 @@
 
 <nav id="bottomNav">
   <button id="navHome" class="nav-btn active">
-    <span class="nav-icon">⌂</span>
+    <i class="ti ti-home nav-icon"></i>
     <span>Accueil</span>
   </button>
   <button id="navPlanning" class="nav-btn">
-    <span class="nav-icon">📅</span>
+    <i class="ti ti-calendar nav-icon"></i>
     <span>Planning</span>
   </button>
   <button id="navAdd" class="nav-btn">
-    <span class="nav-icon">+</span>
+    <i class="ti ti-plus nav-icon"></i>
     <span>Ajouter</span>
   </button>
 </nav>
@@ -490,7 +480,7 @@
             : '🍽️'}
         </div>
         <h3>${r.title}</h3>
-        ${totalTime > 0 ? `<span class="meta-pill">⏱ ${totalTime} min</span>` : ''}
+        ${totalTime > 0 ? `<span class="meta-pill"><i class="ti ti-clock" style="font-size:13px;color:#2B2A28;"></i> ${totalTime} min</span>` : ''}
       </div>
     `;
     }).join('');
@@ -510,28 +500,10 @@
 
   let currentDetailIndex = null;
 
-  const INGREDIENT_ICONS = [
-    [['beurre'], '🧈'], [['farine'], '🌾'], [['oeuf', 'œuf'], '🥚'],
-    [['sucre'], '🍬'], [['chocolat', 'cacao'], '🍫'], [['poire'], '🍐'],
-    [['pomme'], '🍎'], [['citron'], '🍋'], [['lait'], '🥛'], [['crème', 'creme'], '🥛'],
-    [['fraise'], '🍓'], [['banane'], '🍌'], [['noisette'], '🌰'], [['amande'], '🌰'],
-    [['levure'], '🫧'], [['cannelle', 'épice', 'epice', 'vanille'], '✨'],
-    [['sel'], '🧂'], [['huile'], '🫙'], [['fromage', 'mascarpone'], '🧀'],
-    [['café', 'cafe'], '☕'], [['spéculos', 'speculos', 'biscuit'], '🍪']
-  ];
-  function iconForIngredient(name) {
-    const n = normalize(name);
-    const found = INGREDIENT_ICONS.find(([keys]) => keys.some(k => n.includes(k)));
-    return found ? found[1] : '🥄';
-  }
-
-  let checkedIngredients = {};
-
   function showDetail(i) {
     currentDetailIndex = i;
     const r = recipes[i];
     currentServings[i] = r.servings || 4;
-    checkedIngredients = {};
     document.getElementById('listView').style.display = 'none';
     document.getElementById('detailView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'none';
@@ -544,22 +516,17 @@
     const base = r.servings || 4;
     const s = currentServings[i];
     const metaPills = [];
-    if (r.prep_time_minutes) metaPills.push(`<span class="meta-pill">⏱ ${r.prep_time_minutes} min</span>`);
-    if (r.cook_time_minutes) metaPills.push(`<span class="meta-pill">🔥 ${r.cook_time_minutes} min</span>`);
-    if (r.oven_temp_celsius) metaPills.push(`<span class="meta-pill">🌡 ${r.oven_temp_celsius}°</span>`);
+    if (r.prep_time_minutes) metaPills.push(`<span class="meta-pill"><i class="ti ti-clock" style="font-size:13px;color:#2B2A28;"></i> ${r.prep_time_minutes} min</span>`);
+    if (r.cook_time_minutes) metaPills.push(`<span class="meta-pill"><i class="ti ti-flame" style="font-size:13px;color:#2B2A28;"></i> ${r.cook_time_minutes} min</span>`);
+    if (r.oven_temp_celsius) metaPills.push(`<span class="meta-pill"><i class="ti ti-temperature" style="font-size:13px;color:#2B2A28;"></i> ${r.oven_temp_celsius}°</span>`);
 
-    const ingredientsHtml = (r.ingredients || []).map((ing, idx) => {
+    const ingredientsHtml = (r.ingredients || []).map(ing => {
       const q = ing.quantity != null ? (ing.quantity * s / base) : null;
       const qDisplay = q != null ? (Number.isInteger(q) ? q : q.toFixed(1).replace(/[.]0$/, '')) : '';
-      const isChecked = !!checkedIngredients[idx];
       return `
       <div class="ing-row">
-        <div class="ing-row-icon">${iconForIngredient(ing.name)}</div>
-        <div style="flex:1;">
-          <p class="ing-row-name">${ing.name}${ing.note ? ' <span style="color:#B8B4AA;font-size:12px;">(' + ing.note + ')</span>' : ''}</p>
-          <p class="ing-row-qty">${qDisplay} ${ing.unit || ''}</p>
-        </div>
-        <div class="ing-check ${isChecked ? 'checked' : ''}" onclick="toggleIngredientCheck(${idx})">${isChecked ? '✓' : ''}</div>
+        <span class="ing-row-name">${ing.name}${ing.note ? ' <span class="ing-row-note">(' + ing.note + ')</span>' : ''}</span>
+        <span class="ing-row-qty">${qDisplay} ${ing.unit || ''}</span>
       </div>`;
     }).join('');
 
@@ -570,10 +537,10 @@
     document.getElementById('detailContent').innerHTML = `
       <div style="height:260px;background:#E8E4D8;position:relative;">
         ${r.photo_url ? `<img src="${r.photo_url}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />` : ''}
-        <button class="icon-btn" style="position:absolute;top:18px;left:18px;background:rgba(255,255,255,0.9);" onclick="goBackFromDetail()">←</button>
+        <button class="icon-btn" style="position:absolute;top:18px;left:18px;background:rgba(255,255,255,0.9);" onclick="goBackFromDetail()"><i class="ti ti-arrow-left icon"></i></button>
         <div style="position:absolute;top:18px;right:18px;display:flex;gap:8px;">
-          <button class="icon-btn" style="background:rgba(255,255,255,0.9);" onclick="editCurrentRecipe()">✎</button>
-          <button class="icon-btn" style="background:rgba(255,255,255,0.9);color:#B3261E;" onclick="deleteCurrentRecipe()">🗑</button>
+          <button class="icon-btn" style="background:rgba(255,255,255,0.9);" onclick="editCurrentRecipe()"><i class="ti ti-edit icon"></i></button>
+          <button class="icon-btn" style="background:rgba(255,255,255,0.9);" onclick="deleteCurrentRecipe()"><i class="ti ti-trash icon"></i></button>
         </div>
       </div>
       <div style="background:#F4F2ED;border-radius:22px 22px 0 0;margin-top:-18px;position:relative;padding:20px 18px 24px;">
@@ -596,11 +563,6 @@
         ${stepsHtml}
       </div>
     `;
-  }
-
-  function toggleIngredientCheck(idx) {
-    checkedIngredients[idx] = !checkedIngredients[idx];
-    renderDetail(currentDetailIndex);
   }
 
   function changeServings(i, delta) {
@@ -655,7 +617,6 @@
   document.getElementById('navHome').onclick = showHome;
   document.getElementById('navAdd').onclick = showForm;
   document.getElementById('navPlanning').onclick = showPlanning;
-  document.getElementById('formBackBtn').onclick = showHome;
 
   document.getElementById('refreshBtn').onclick = () => {
     location.href = location.pathname + '?t=' + Date.now();
@@ -692,6 +653,7 @@
     renderIngRows();
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('formView').style.display = 'block';
+    document.getElementById('bottomNav').style.display = 'flex';
   }
 
   async function deleteCurrentRecipe() {
