@@ -6,12 +6,12 @@
 <title>Mes recettes</title>
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#F4F2ED" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2/dist/tabler-icons.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 <style>
   * { box-sizing: border-box; touch-action: manipulation; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 18px;
+    font-size: 16px;
     background: #F4F2ED;
     color: #2B2A28;
     margin: 0;
@@ -20,7 +20,7 @@
   .serif { font-family: Georgia, 'Times New Roman', serif; }
   h1 { font-family: Georgia, 'Times New Roman', serif; font-size: 26px; font-weight: 500; margin: 4px 0 16px; color: #2B2A28; }
   h2 { font-family: Georgia, 'Times New Roman', serif; font-size: 18px; font-weight: 500; margin: 22px 0 12px; color: #2B2A28; }
-  .count { font-size: 13px; color: #9C9884; margin-bottom: 14px; }
+  .count { font-size: 13px; color: #5A574E; margin-bottom: 14px; }
   .icon-btn {
     width: 38px; height: 38px;
     border-radius: 12px;
@@ -44,7 +44,7 @@
   .card h3 { margin: 0 0 6px; font-size: 13.5px; font-weight: 600; line-height: 1.3; color: #2B2A28; }
   .card-thumb { display: none; }
   .meta-pill {
-    font-size: 10.5px;
+    font-size: 12px;
     padding: 3px 9px;
     border-radius: 20px;
     background: #E4E9D8;
@@ -55,7 +55,7 @@
   }
   .tags { display: flex; gap: 5px; flex-wrap: wrap; }
   .tag {
-    font-size: 10.5px;
+    font-size: 12px;
     background: #E4E9D8;
     color: #4A5A38;
     padding: 3px 9px;
@@ -126,8 +126,8 @@
     background: none;
     border: none;
     padding: 4px 0;
-    font-size: 10.5px;
-    color: #B8B4AA;
+    font-size: 12px;
+    color: #5A574E;
   }
   .nav-btn { color: #2B2A28; opacity: 0.4; }
   .nav-btn.active { opacity: 1; font-weight: 600; }
@@ -149,8 +149,8 @@
     align-items: center;
     justify-content: center;
   }
-  .empty { text-align: center; color: #9C9884; padding: 40px 0; font-size: 14px; grid-column: 1 / -1; }
-  .field-label { display:block; font-size:13px; color:#9C9884; margin:14px 0 4px; }
+  .empty { text-align: center; color: #5A574E; padding: 40px 0; font-size: 14px; grid-column: 1 / -1; }
+  .field-label { display:block; font-size:13px; color:#5A574E; margin:14px 0 4px; }
   .field-input {
     width: 100%;
     padding: 11px 13px;
@@ -220,7 +220,7 @@
     padding: 12px 14px;
     margin-bottom: 10px;
   }
-  .day-row .day-name { font-size: 13px; color: #9C9884; margin-bottom: 6px; text-transform: capitalize; }
+  .day-row .day-name { font-size: 13px; color: #5A574E; margin-bottom: 6px; text-transform: capitalize; }
   .day-row select { width: 100%; padding: 9px 10px; border: 1px solid #EBE8E1; border-radius: 10px; font-size: 14px; background: white; margin-bottom: 6px; }
   .day-row .servings-mini { display: flex; align-items: center; gap: 10px; }
   .day-row .servings-mini button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #EBE8E1; background: white; font-size: 14px; }
@@ -234,8 +234,8 @@
   }
   .course-item:first-child { border-top: none; }
   .course-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: #3D5A34; }
-  .course-item.checked { color: #B8B4AA; text-decoration: line-through; }
-  .course-qty { margin-left: auto; font-family: Georgia, serif; color: #9C9884; white-space: nowrap; }
+  .course-item.checked { color: #5A574E; text-decoration: line-through; }
+  .course-qty { margin-left: auto; font-family: Georgia, serif; color: #5A574E; white-space: nowrap; }
   .subtabs {
     display: flex;
     background: #EDEAE1;
@@ -250,22 +250,23 @@
     background: transparent;
     border-radius: 10px;
     font-size: 14px;
-    color: #9C9884;
+    color: #5A574E;
   }
   .subtab-btn.active { background: white; color: #2B2A28; font-weight: 600; }
   .plan-summary {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
   }
-  .plan-summary .summary-chip {
-    font-size: 12px;
+  .meal-category-card {
     background: #E4E9D8;
-    color: #4A5A38;
-    padding: 4px 10px;
-    border-radius: 20px;
+    border-radius: 16px;
+    padding: 14px 6px;
+    text-align: center;
   }
+  .meal-category-number { font-family: Georgia, serif; font-size: 24px; font-weight: 600; color: #2B2A28; margin: 0; }
+  .meal-category-label { font-size: 11px; color: #403D36; margin: 4px 0 0; }
   .plan-recipe-row {
     display: flex;
     align-items: center;
@@ -277,19 +278,22 @@
     margin-bottom: 8px;
   }
   .plan-recipe-row .plan-recipe-name { font-size: 14px; font-weight: 500; }
-  .plan-recipe-row .plan-recipe-tags { font-size: 11px; color: #B8B4AA; margin-top: 2px; }
+  .plan-recipe-row .plan-recipe-tags { font-size: 12px; color: #5A574E; margin-top: 2px; }
   .plan-stepper { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .plan-stepper button { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #EBE8E1; background: white; font-size: 15px; }
   .plan-stepper span { min-width: 14px; text-align: center; font-weight: 600; }
   .tag-filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; overflow-x: auto; }
   .filter-chip {
-    font-size: 13px;
-    padding: 8px 16px;
-    border-radius: 20px;
+    font-size: 14px;
+    padding: 11px 18px;
+    border-radius: 24px;
     border: 1px solid #EBE8E1;
     background: white;
-    color: #6B6862;
+    color: #403D36;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
   }
   .filter-chip.active { background: #2B2A28; color: white; border-color: #2B2A28; }
   .autocomplete-box {
@@ -315,15 +319,18 @@
 <div id="listView">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
     <h1 style="margin-bottom:0;">Mes recettes</h1>
-    <button id="refreshBtn" class="icon-btn"><i class="ti ti-refresh icon"></i></button>
+    <button id="refreshBtn" class="icon-btn"><i class="bi bi-arrow-clockwise icon"></i></button>
   </div>
-  <input id="searchInput" class="field-input" placeholder="Rechercher une recette..." style="margin:10px 0;display:none;" />
+  <div style="position:relative;display:none;margin:10px 0;" id="searchWrap">
+    <input id="searchInput" class="field-input" placeholder="Rechercher une recette..." style="padding-right:40px;" />
+    <button id="clearSearchBtn" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;padding:6px;color:#5A574E;"><i class="bi bi-x-circle-fill"></i></button>
+  </div>
   <div id="tagFilters" class="tag-filters"></div>
   <p class="count" id="count">Chargement...</p>
   <div id="cards" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;"></div>
 </div>
 
-<button id="searchFab" class="fab-search"><i class="ti ti-search icon" style="color:white;"></i></button>
+<button id="searchFab" class="fab-search"><i class="bi bi-search icon" style="color:white;"></i></button>
 
 <div id="detailView" style="display:none;margin:-18px -18px 0;">
   <div id="detailContent"></div>
@@ -376,21 +383,24 @@
 
 <nav id="bottomNav">
   <button id="navHome" class="nav-btn active">
-    <i class="ti ti-home nav-icon"></i>
+    <i class="bi bi-house nav-icon"></i>
     <span>Accueil</span>
   </button>
   <button id="navPlanning" class="nav-btn">
-    <i class="ti ti-calendar nav-icon"></i>
+    <i class="bi bi-calendar3 nav-icon"></i>
     <span>Planning</span>
   </button>
   <button id="navAdd" class="nav-btn">
-    <i class="ti ti-plus nav-icon"></i>
+    <i class="bi bi-plus-lg nav-icon"></i>
     <span>Ajouter</span>
   </button>
 </nav>
 
 <div id="planningView" style="display:none;">
-  <h1>Planning</h1>
+  <div style="display:flex;align-items:center;justify-content:space-between;">
+    <h1 style="margin-bottom:0;">Planning</h1>
+    <button id="resetPlanningBtn" class="icon-btn"><i class="bi bi-arrow-counterclockwise icon"></i></button>
+  </div>
   <div class="subtabs">
     <button id="subtabRecipes" class="subtab-btn active">Recettes</button>
     <button id="subtabCourses" class="subtab-btn">Liste de courses</button>
@@ -434,7 +444,7 @@
     const container = document.getElementById('tagFilters');
     if (allTags.length === 0) { container.innerHTML = ''; return; }
     container.innerHTML = allTags.map(t => `
-      <button type="button" class="filter-chip ${activeTagFilter === t ? 'active' : ''}" data-tag="${t}">#${t}</button>
+      <button type="button" class="filter-chip ${activeTagFilter === t ? 'active' : ''}" data-tag="${t}"><i class="bi bi-tag"></i> ${t}</button>
     `).join('');
     document.querySelectorAll('.filter-chip').forEach(chip => {
       chip.onclick = () => {
@@ -472,25 +482,33 @@
     cardsEl.innerHTML = filteredIndices.map(i => {
       const r = recipes[i];
       const totalTime = (r.prep_time_minutes || 0) + (r.cook_time_minutes || 0);
+      const photo = r.photo_url || `https://loremflickr.com/300/200/${encodeURIComponent(r.title.split(' ')[0])},food`;
       return `
       <div class="card" onclick="showDetail(${i})">
         <div class="card-photo">
-          ${r.photo_url
-            ? `<img src="${r.photo_url}" alt="" onerror="this.parentElement.innerHTML='🍽️'" />`
-            : '🍽️'}
+          <img src="${photo}" alt="" onerror="this.parentElement.innerHTML='<i class=&quot;bi bi-egg-fried&quot; style=&quot;font-size:28px;color:#B8B4AA;&quot;></i>'" />
         </div>
         <h3>${r.title}</h3>
-        ${totalTime > 0 ? `<span class="meta-pill"><i class="ti ti-clock" style="font-size:13px;color:#2B2A28;"></i> ${totalTime} min</span>` : ''}
+        ${totalTime > 0 ? `<span class="meta-pill"><i class="bi bi-clock" style="font-size:13px;color:#2B2A28;"></i> ${totalTime} min</span>` : ''}
       </div>
     `;
     }).join('');
   }
 
   document.getElementById('searchFab').onclick = () => {
+    const wrap = document.getElementById('searchWrap');
     const input = document.getElementById('searchInput');
-    const showing = input.style.display !== 'none';
-    input.style.display = showing ? 'none' : 'block';
+    const showing = wrap.style.display !== 'none';
+    wrap.style.display = showing ? 'none' : 'block';
     if (!showing) input.focus();
+  };
+
+  document.getElementById('clearSearchBtn').onclick = () => {
+    const input = document.getElementById('searchInput');
+    input.value = '';
+    searchQuery = '';
+    renderList();
+    input.focus();
   };
 
   document.getElementById('searchInput').oninput = (e) => {
@@ -501,6 +519,7 @@
   let currentDetailIndex = null;
 
   function showDetail(i) {
+    window.scrollTo(0, 0);
     currentDetailIndex = i;
     const r = recipes[i];
     currentServings[i] = r.servings || 4;
@@ -516,16 +535,25 @@
     const base = r.servings || 4;
     const s = currentServings[i];
     const metaPills = [];
-    if (r.prep_time_minutes) metaPills.push(`<span class="meta-pill"><i class="ti ti-clock" style="font-size:13px;color:#2B2A28;"></i> ${r.prep_time_minutes} min</span>`);
-    if (r.cook_time_minutes) metaPills.push(`<span class="meta-pill"><i class="ti ti-flame" style="font-size:13px;color:#2B2A28;"></i> ${r.cook_time_minutes} min</span>`);
-    if (r.oven_temp_celsius) metaPills.push(`<span class="meta-pill"><i class="ti ti-temperature" style="font-size:13px;color:#2B2A28;"></i> ${r.oven_temp_celsius}°</span>`);
+    if (r.prep_time_minutes) metaPills.push(`<span class="meta-pill"><i class="bi bi-clock" style="font-size:13px;color:#2B2A28;"></i> ${r.prep_time_minutes} min</span>`);
+    if (r.cook_time_minutes) metaPills.push(`<span class="meta-pill"><i class="bi bi-fire" style="font-size:13px;color:#2B2A28;"></i> ${r.cook_time_minutes} min</span>`);
+    if (r.oven_temp_celsius) metaPills.push(`<span class="meta-pill"><i class="bi bi-thermometer-half" style="font-size:13px;color:#2B2A28;"></i> ${r.oven_temp_celsius}°</span>`);
 
-    const ingredientsHtml = (r.ingredients || []).map(ing => {
+    function ingredientImageUrl(name) {
+      const keyword = encodeURIComponent(name.trim().split(' ')[0]);
+      return `https://loremflickr.com/60/60/${keyword},food`;
+    }
+
+    const sortedIngredients = [...(r.ingredients || [])].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+    const ingredientsHtml = sortedIngredients.map(ing => {
       const q = ing.quantity != null ? (ing.quantity * s / base) : null;
       const qDisplay = q != null ? (Number.isInteger(q) ? q : q.toFixed(1).replace(/[.]0$/, '')) : '';
       return `
       <div class="ing-row">
-        <span class="ing-row-name">${ing.name}${ing.note ? ' <span class="ing-row-note">(' + ing.note + ')</span>' : ''}</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <img src="${ingredientImageUrl(ing.name)}" alt="" style="width:36px;height:36px;border-radius:10px;object-fit:cover;flex-shrink:0;background:#E8E4D8;" onerror="this.style.display='none'" />
+          <span class="ing-row-name">${ing.name}${ing.note ? ' <span class="ing-row-note">(' + ing.note + ')</span>' : ''}</span>
+        </div>
         <span class="ing-row-qty">${qDisplay} ${ing.unit || ''}</span>
       </div>`;
     }).join('');
@@ -534,13 +562,15 @@
       ? '<h2>Étapes</h2><ol>' + r.steps.map(st => `<li>${st}</li>`).join('') + '</ol>'
       : '';
 
+    const recipePhoto = r.photo_url || `https://loremflickr.com/600/400/${encodeURIComponent(r.title.split(' ')[0])},food`;
+
     document.getElementById('detailContent').innerHTML = `
       <div style="height:260px;background:#E8E4D8;position:relative;">
-        ${r.photo_url ? `<img src="${r.photo_url}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />` : ''}
-        <button class="icon-btn" style="position:absolute;top:18px;left:18px;background:rgba(255,255,255,0.9);" onclick="goBackFromDetail()"><i class="ti ti-arrow-left icon"></i></button>
+        <img src="${recipePhoto}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />
+        <button class="icon-btn" style="position:absolute;top:18px;left:18px;background:rgba(255,255,255,0.9);" onclick="goBackFromDetail()"><i class="bi bi-arrow-left icon"></i></button>
         <div style="position:absolute;top:18px;right:18px;display:flex;gap:8px;">
-          <button class="icon-btn" style="background:rgba(255,255,255,0.9);" onclick="editCurrentRecipe()"><i class="ti ti-edit icon"></i></button>
-          <button class="icon-btn" style="background:rgba(255,255,255,0.9);" onclick="deleteCurrentRecipe()"><i class="ti ti-trash icon"></i></button>
+          <button class="icon-btn" style="background:rgba(255,255,255,0.9);" onclick="editCurrentRecipe()"><i class="bi bi-pencil icon"></i></button>
+          <button class="icon-btn" style="background:rgba(255,255,255,0.9);" onclick="deleteCurrentRecipe()"><i class="bi bi-trash icon"></i></button>
         </div>
       </div>
       <div style="background:#F4F2ED;border-radius:22px 22px 0 0;margin-top:-18px;position:relative;padding:20px 18px 24px;">
@@ -549,9 +579,8 @@
           ${metaPills.join('')}
         </div>
         <div class="tags" style="margin-bottom:14px;">${(r.tags || []).map(t => `<span class="tag">#${t}</span>`).join('')}</div>
-        ${r.notes ? `<div class="notice">${r.notes}</div>` : ''}
         <div class="servings-box">
-          <span style="font-size:14px;color:#6B6862;">Portions</span>
+          <span style="font-size:14px;color:#403D36;">Portions</span>
           <div style="display:flex;align-items:center;gap:14px;">
             <button onclick="changeServings(${i}, -1)">−</button>
             <span style="font-weight:600;min-width:16px;text-align:center;">${s}</span>
@@ -560,6 +589,7 @@
         </div>
         <h2>Ingrédients</h2>
         ${ingredientsHtml}
+        ${r.notes ? `<div class="notice" style="margin-top:16px;">${r.notes}</div>` : ''}
         ${stepsHtml}
       </div>
     `;
@@ -573,6 +603,7 @@
   }
 
   function goBackFromDetail() {
+    window.scrollTo(0, 0);
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('listView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
@@ -591,6 +622,7 @@
   }
 
   function showHome() {
+    window.scrollTo(0, 0);
     hideAllViews();
     document.getElementById('listView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
@@ -599,6 +631,7 @@
   }
 
   function showForm() {
+    window.scrollTo(0, 0);
     hideAllViews();
     document.getElementById('formView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
@@ -607,6 +640,7 @@
   }
 
   function showPlanning() {
+    window.scrollTo(0, 0);
     hideAllViews();
     document.getElementById('planningView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
@@ -883,20 +917,30 @@
     (data || []).forEach(row => { mealPlan[row.recipe_id] = row.count; });
   }
 
+  const MEAL_CATEGORIES = [
+    { label: 'Petit-déj', keywords: ['petit-dej', 'petit dej', 'petitdej', 'breakfast'] },
+    { label: 'Déjeuner', keywords: ['dejeuner', 'lunch'] },
+    { label: 'Dîner', keywords: ['diner', 'dinner'] },
+    { label: 'Encas', keywords: ['gouter', 'encas', 'snack', 'apero', 'aperitif'] }
+  ];
+
   function renderPlanningRecipes() {
-    // Résumé par tag
-    const tagCounts = {};
-    recipes.forEach(r => {
-      const count = mealPlan[r.id] || 0;
-      if (count > 0) {
-        (r.tags || []).forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + count; });
-      }
+    const counts = MEAL_CATEGORIES.map(cat => {
+      let total = 0;
+      recipes.forEach(r => {
+        const count = mealPlan[r.id] || 0;
+        if (count === 0) return;
+        if ((r.tags || []).some(t => cat.keywords.includes(normalize(t)))) total += count;
+      });
+      return total;
     });
-    const summaryEl = document.getElementById('planSummary');
-    const chips = Object.entries(tagCounts);
-    summaryEl.innerHTML = chips.length
-      ? chips.map(([tag, n]) => `<span class="summary-chip">${n} × #${tag}</span>`).join('')
-      : '<span style="font-size:13px;color:#999;">Aucune recette sélectionnée pour l\'instant.</span>';
+
+    document.getElementById('planSummary').innerHTML = MEAL_CATEGORIES.map((cat, idx) => `
+      <div class="meal-category-card">
+        <p class="meal-category-number">${counts[idx]}</p>
+        <p class="meal-category-label">${cat.label}</p>
+      </div>
+    `).join('');
 
     // Liste des recettes avec stepper
     const listEl = document.getElementById('planningRecipeList');
@@ -986,6 +1030,13 @@
       `;
     }).join('');
   }
+
+  document.getElementById('resetPlanningBtn').onclick = async () => {
+    if (!confirm("Réinitialiser tout le planning de la semaine ?")) return;
+    await sb.from('meal_plan').delete().neq('recipe_id', '00000000-0000-0000-0000-000000000000');
+    mealPlan = {};
+    renderPlanningRecipes();
+  };
 
   document.getElementById('subtabRecipes').onclick = () => {
     document.getElementById('subtabRecipes').classList.add('active');
