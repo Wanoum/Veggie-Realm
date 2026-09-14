@@ -316,10 +316,35 @@
 </head>
 <body>
 
-<div id="listView">
+<div id="authView" style="display:none;padding-top:60px;">
+  <h1 class="serif" style="font-size:30px;text-align:center;">Mes recettes</h1>
+  <p style="text-align:center;color:#403D36;margin-bottom:32px;">Connecte-toi pour retrouver tes recettes</p>
+
+  <div style="max-width:340px;margin:0 auto;">
+    <label class="field-label">Email</label>
+    <input id="auth_email" class="field-input" type="email" placeholder="toi@exemple.com" autocomplete="email" />
+
+    <label class="field-label">Mot de passe</label>
+    <input id="auth_password" class="field-input" type="password" placeholder="••••••••" autocomplete="current-password" />
+
+    <p id="authError" style="color:#B3261E;font-size:13px;margin-top:10px;"></p>
+
+    <button type="button" id="authSubmitBtn" class="primary-btn">Se connecter</button>
+    <button type="button" id="authToggleModeBtn" style="width:100%;background:none;border:none;padding:14px;color:#403D36;font-size:14px;">Pas encore de compte ? Inscris-toi</button>
+  </div>
+</div>
+
+<div id="sharedRecipeView" style="display:none;">
+  <div id="sharedRecipeContent"></div>
+</div>
+
+<div id="listView" style="display:none;">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
     <h1 style="margin-bottom:0;">Mes recettes</h1>
-    <button id="refreshBtn" class="icon-btn"><i class="bi bi-arrow-clockwise icon"></i></button>
+    <div style="display:flex;gap:8px;">
+      <button id="refreshBtn" class="icon-btn"><i class="bi bi-arrow-clockwise icon"></i></button>
+      <button id="logoutBtn" class="icon-btn"><i class="bi bi-box-arrow-right icon"></i></button>
+    </div>
   </div>
   <div style="position:relative;display:none;margin:10px 0;" id="searchWrap">
     <input id="searchInput" class="field-input" placeholder="Rechercher une recette..." style="padding-right:40px;" />
@@ -330,7 +355,7 @@
   <div id="cards" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;"></div>
 </div>
 
-<button id="searchFab" class="fab-search"><i class="bi bi-search icon" style="color:white;"></i></button>
+<button id="searchFab" class="fab-search" style="display:none;"><i class="bi bi-search icon" style="color:white;"></i></button>
 
 <div id="detailView" style="display:none;margin:-18px -18px 0;">
   <div id="detailContent"></div>
@@ -406,7 +431,7 @@
   <p id="formError" style="color:#B3261E;font-size:13px;"></p>
 </div>
 
-<nav id="bottomNav">
+<nav id="bottomNav" style="display:none;">
   <button id="navHome" class="nav-btn active">
     <i class="bi bi-house nav-icon"></i>
     <span>Accueil</span>
@@ -594,6 +619,7 @@
         <img src="${recipePhoto}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />
         <button class="icon-btn" style="position:absolute;top:18px;left:18px;background:rgba(255,255,255,0.9);" onclick="goBackFromDetail()"><i class="bi bi-arrow-left icon"></i></button>
         <div style="position:absolute;top:18px;right:18px;display:flex;gap:8px;">
+          <button class="icon-btn" style="background:rgba(255,255,255,0.9);" onclick="shareCurrentRecipe(${i})"><i class="bi bi-share icon"></i></button>
           <button class="icon-btn" style="background:rgba(255,255,255,0.9);" onclick="editCurrentRecipe()"><i class="bi bi-pencil icon"></i></button>
           <button class="icon-btn" style="background:rgba(255,255,255,0.9);" onclick="deleteCurrentRecipe()"><i class="bi bi-trash icon"></i></button>
         </div>
@@ -763,6 +789,32 @@
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('formView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
+  }
+
+  async function shareCurrentRecipe(i) {
+    const r = recipes[i];
+    let token = r.share_token;
+
+    if (!token) {
+      token = crypto.randomUUID();
+      const { error } = await sb.from('recipes').update({ share_token: token }).eq('id', r.id);
+      if (error) {
+        alert("Erreur lors de la création du lien : " + error.message);
+        return;
+      }
+      r.share_token = token;
+    }
+
+    const shareUrl = `${location.origin}${location.pathname}?recipe=${token}`;
+
+    if (navigator.share) {
+      navigator.share({ title: r.title, text: `Regarde cette recette : ${r.title}`, url: shareUrl }).catch(() => {});
+    } else if (navigator.clipboard) {
+      await navigator.clipboard.writeText(shareUrl);
+      alert("Lien copié dans le presse-papier !");
+    } else {
+      prompt("Copie ce lien :", shareUrl);
+    }
   }
 
   async function deleteCurrentRecipe() {
@@ -1063,6 +1115,7 @@
 
     const payload = {
       title,
+      user_id: currentUser.id,
       photo_url: document.getElementById('f_photo').value.trim() || null,
       tags,
       servings: Number(document.getElementById('f_servings').value) || 4,
@@ -1169,7 +1222,7 @@
         if (newVal === 0) {
           await sb.from('meal_plan').delete().eq('recipe_id', recipeId);
         } else {
-          await sb.from('meal_plan').upsert({ recipe_id: recipeId, count: newVal });
+          await sb.from('meal_plan').upsert({ recipe_id: recipeId, count: newVal, user_id: currentUser.id });
         }
         renderPlanningRecipes();
       };
@@ -1252,13 +1305,143 @@
     renderCoursesList();
   };
 
-  loadMealPlan();
+  // ---- Authentification ----
+  let currentUser = null;
+  let authMode = 'login'; // 'login' | 'signup'
 
+  function showAuthView() {
+    document.getElementById('authView').style.display = 'block';
+    document.getElementById('listView').style.display = 'none';
+    document.getElementById('detailView').style.display = 'none';
+    document.getElementById('formView').style.display = 'none';
+    document.getElementById('planningView').style.display = 'none';
+    document.getElementById('sharedRecipeView').style.display = 'none';
+    document.getElementById('bottomNav').style.display = 'none';
+    document.getElementById('searchFab').style.display = 'none';
+  }
+
+  function startApp() {
+    document.getElementById('authView').style.display = 'none';
+    document.getElementById('sharedRecipeView').style.display = 'none';
+    showHome();
+    loadMealPlan();
+    loadRecipes();
+  }
+
+  document.getElementById('authToggleModeBtn').onclick = () => {
+    authMode = authMode === 'login' ? 'signup' : 'login';
+    document.getElementById('authSubmitBtn').textContent = authMode === 'login' ? 'Se connecter' : "S'inscrire";
+    document.getElementById('authToggleModeBtn').textContent = authMode === 'login'
+      ? "Pas encore de compte ? Inscris-toi"
+      : "Déjà un compte ? Connecte-toi";
+    document.getElementById('authError').textContent = '';
+  };
+
+  document.getElementById('authSubmitBtn').onclick = async () => {
+    const email = document.getElementById('auth_email').value.trim();
+    const password = document.getElementById('auth_password').value;
+    const errEl = document.getElementById('authError');
+    errEl.textContent = '';
+
+    if (!email || !password) {
+      errEl.textContent = "Email et mot de passe requis.";
+      return;
+    }
+
+    document.getElementById('authSubmitBtn').disabled = true;
+
+    const { data, error } = authMode === 'login'
+      ? await sb.auth.signInWithPassword({ email, password })
+      : await sb.auth.signUp({ email, password });
+
+    document.getElementById('authSubmitBtn').disabled = false;
+
+    if (error) {
+      errEl.textContent = error.message;
+      return;
+    }
+
+    if (authMode === 'signup' && !data.session) {
+      errEl.style.color = '#3D5A34';
+      errEl.textContent = "Compte créé ! Tu peux maintenant te connecter.";
+      authMode = 'login';
+      document.getElementById('authSubmitBtn').textContent = 'Se connecter';
+      return;
+    }
+    // Si une session existe déjà (connexion ou inscription sans confirmation email), onAuthStateChange prend le relais.
+  };
+
+  document.getElementById('logoutBtn').onclick = async () => {
+    await sb.auth.signOut();
+  };
+
+  sb.auth.onAuthStateChange((event, session) => {
+    currentUser = session ? session.user : null;
+    if (currentUser) {
+      startApp();
+    } else if (!new URLSearchParams(location.search).get('recipe')) {
+      showAuthView();
+    }
+  });
+
+  // ---- Recette partagée publique (accessible sans compte) ----
+  async function loadSharedRecipe(token) {
+    const { data, error } = await sb.from('recipes').select('*').eq('share_token', token).single();
+    if (error || !data) {
+      document.getElementById('sharedRecipeContent').innerHTML = '<div class="empty" style="padding-top:60px;">Cette recette n\'est plus disponible.</div>';
+      document.getElementById('sharedRecipeView').style.display = 'block';
+      return;
+    }
+    const r = data;
+    const sortedIngredients = [...(r.ingredients || [])].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+    const ingredientsHtml = sortedIngredients.map(ing => `
+      <div class="ing-row">
+        <span class="ing-row-name">${ing.name}${ing.note ? ' <span class="ing-row-note">(' + ing.note + ')</span>' : ''}</span>
+        <span class="ing-row-qty">${ing.quantity ?? ''} ${ing.unit || ''}</span>
+      </div>`).join('');
+    const stepsHtml = (r.steps && r.steps.length > 0)
+      ? '<h2>Étapes</h2><ol>' + r.steps.map(st => `<li>${st}</li>`).join('') + '</ol>'
+      : '';
+    const recipePhoto = r.photo_url || `https://loremflickr.com/600/400/${encodeURIComponent(r.title.split(' ')[0])},food`;
+
+    document.getElementById('sharedRecipeContent').innerHTML = `
+      <div style="height:260px;background:#E8E4D8;">
+        <img src="${recipePhoto}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />
+      </div>
+      <div style="background:#F4F2ED;border-radius:22px 22px 0 0;margin-top:-18px;position:relative;padding:20px 18px 24px;">
+        <div style="background:#2B2A28;color:white;border-radius:14px;padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <span style="font-size:13px;">Recette partagée avec toi ✨</span>
+          <button type="button" onclick="location.href = location.pathname;" style="background:white;color:#2B2A28;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;white-space:nowrap;">Créer mon compte</button>
+        </div>
+        <h1 style="margin-bottom:12px;">${r.title}</h1>
+        <div class="tags" style="margin-bottom:14px;">${(r.tags || []).map(t => `<span class="tag">#${t}</span>`).join('')}</div>
+        <h2>Ingrédients</h2>
+        ${ingredientsHtml}
+        ${r.notes ? `<div class="notice" style="margin-top:16px;">${r.notes}</div>` : ''}
+        ${stepsHtml}
+      </div>
+    `;
+    document.getElementById('sharedRecipeView').style.display = 'block';
+  }
+
+  // ---- Point d'entrée ----
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
 
-  loadRecipes();
+  const sharedToken = new URLSearchParams(location.search).get('recipe');
+  if (sharedToken) {
+    loadSharedRecipe(sharedToken);
+  } else {
+    sb.auth.getSession().then(({ data: { session } }) => {
+      currentUser = session ? session.user : null;
+      if (currentUser) {
+        startApp();
+      } else {
+        showAuthView();
+      }
+    });
+  }
 </script>
 </body>
 </html>
