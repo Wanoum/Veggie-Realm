@@ -1,0 +1,77 @@
+/* ==========================================================================
+   Veggie Realm — Design tokens
+   ========================================================================== */
+
+@font-face {
+  font-family: 'Krylon';
+  src: url('Krylon.otf') format('opentype');
+  font-display: swap;
+}
+
+/* Inter (Headline, Body, Body Medium, Small, Small Medium) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* IBM Plex Mono (Display Numeric, Quantity Mono) */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ---- Primitives ---- */
+  --green-100: #dde5da;
+  --green-300: #c0c6b2;
+  --green-700: #244d3b;
+  --green-800: #293b2e;
+  --grey-400: #aaa59b;
+  --grey-600: #77766f;
+  --grey-900: #191a17;
+  --light-100: #f7f5ed;
+  --light-150: #f7f3eb;
+  --light-200: #f4f1e9;
+  --light-300: #eae4d8;
+  --light-400: #e8e3d6;
+  --light-50: #fffdf8;
+  --light-500: #ddd7cc;
+  --white: #ffffff;
+
+  /* ---- Colors ---- */
+  --border-divider: var(--light-500);
+  --border-strong: var(--green-300);
+  --interaction-primary: var(--green-700);
+  --interaction-primary-pale: var(--green-100);
+  --surface-high: var(--light-50);
+  --surface-highest: var(--white);
+  --surface-low: var(--light-200);
+  --surface-lowest: var(--light-300);
+  --text-icon-accent: var(--green-700);
+  --text-icon-accent-strong: var(--green-800);
+  --text-icon-disabled: var(--grey-400);
+  --text-icon-on-primary: var(--white);
+  --text-icon-primary: var(--grey-900);
+  --text-icon-secondary: var(--grey-600);
+
+  /* ---- Spacing (usage cohérente dans toute l'app) ---- */
+  --space-page-edge: 16px;
+  --space-section-gap: 24px;
+}
+
+/* ---- Text styles ----
+   Format : taille / line-height (% de la taille)
+   H1              : 40px, 100%   — Krylon
+   Display Numeric : 40px, 40%    — IBM Plex Mono
+   Headline        : 20px, 120%   — Inter, 600
+   Body            : 16px, 120%   — Inter, 400
+   Body Medium     : 16px, 120%   — Inter, 500
+   Quantity Mono   : 16px, 120%   — IBM Plex Mono, 400
+   Small           : 12px, 120%   — Inter, 400
+   Small Medium    : 12px, 120%   — Inter, 500
+
+   Note : la maquette indique "Body · 16/20" (20% de line-height, soit ~3px),
+   ce qui écraserait le texte. On applique 120% comme les autres styles Inter
+   pour rester lisible — à corriger si une autre valeur était voulue.
+*/
+.text-h1 { font-family: 'Krylon', Georgia, serif; font-size: 40px; line-height: 100%; font-weight: 400; }
+.text-display-numeric { font-family: 'IBM Plex Mono', monospace; font-size: 40px; line-height: 40%; font-weight: 400; }
+.text-headline { font-family: 'Inter', sans-serif; font-size: 20px; line-height: 120%; font-weight: 600; }
+.text-body { font-family: 'Inter', sans-serif; font-size: 16px; line-height: 120%; font-weight: 400; }
+.text-body-medium { font-family: 'Inter', sans-serif; font-size: 16px; line-height: 120%; font-weight: 500; }
+.text-quantity-mono { font-family: 'IBM Plex Mono', monospace; font-size: 16px; line-height: 120%; font-weight: 400; }
+.text-small { font-family: 'Inter', sans-serif; font-size: 12px; line-height: 120%; font-weight: 400; }
+.text-small-medium { font-family: 'Inter', sans-serif; font-size: 12px; line-height: 120%; font-weight: 500; }
