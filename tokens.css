@@ -70,8 +70,8 @@
 .text-h1 { font-family: 'Krylon', Georgia, serif; font-size: 40px; line-height: 100%; font-weight: 400; }
 .text-display-numeric { font-family: 'IBM Plex Mono', monospace; font-size: 40px; line-height: 40%; font-weight: 400; }
 .text-headline { font-family: 'Inter', sans-serif; font-size: 20px; line-height: 120%; font-weight: 600; }
-.text-body { font-family: 'Inter', sans-serif; font-size: 16px; line-height: 120%; font-weight: 400; }
-.text-body-medium { font-family: 'Inter', sans-serif; font-size: 16px; line-height: 120%; font-weight: 500; }
-.text-quantity-mono { font-family: 'IBM Plex Mono', monospace; font-size: 16px; line-height: 120%; font-weight: 400; }
-.text-small { font-family: 'Inter', sans-serif; font-size: 12px; line-height: 120%; font-weight: 400; }
-.text-small-medium { font-family: 'Inter', sans-serif; font-size: 12px; line-height: 120%; font-weight: 500; }
+.text-body { font-family: 'Inter', sans-serif; font-size: 18px; line-height: 120%; font-weight: 400; }
+.text-body-medium { font-family: 'Inter', sans-serif; font-size: 18px; line-height: 120%; font-weight: 500; }
+.text-quantity-mono { font-family: 'IBM Plex Mono', monospace; font-size: 18px; line-height: 120%; font-weight: 400; }
+.text-small { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 120%; font-weight: 400; }
+.text-small-medium { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 120%; font-weight: 500; }
