@@ -336,6 +336,20 @@
   <div id="detailContent"></div>
 </div>
 
+<div id="cookingModeView" style="display:none;position:fixed;inset:0;background:#2B2A28;color:white;z-index:300;flex-direction:column;">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:18px;">
+    <span id="cookingStepCounter" style="font-size:14px;color:rgba(255,255,255,0.6);"></span>
+    <button class="icon-btn" style="background:rgba(255,255,255,0.15);border:none;" onclick="closeCookingMode()"><i class="bi bi-x-lg icon" style="color:white;"></i></button>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;padding:24px 28px;overflow-y:auto;">
+    <p id="cookingStepText" class="serif" style="font-size:28px;line-height:1.5;margin:0;"></p>
+  </div>
+  <div style="display:flex;gap:10px;padding:18px;padding-bottom:max(18px, env(safe-area-inset-bottom));">
+    <button id="cookingPrevBtn" class="icon-btn" style="flex:0 0 56px;height:56px;background:rgba(255,255,255,0.15);border:none;"><i class="bi bi-chevron-left icon" style="color:white;"></i></button>
+    <button id="cookingNextBtn" class="primary-btn" style="margin-top:0;flex:1;background:white;color:#2B2A28;">Étape suivante</button>
+  </div>
+</div>
+
 <div id="formView" style="display:none;">
   <h1 id="formTitle">Nouvelle recette</h1>
 
@@ -590,6 +604,7 @@
           ${metaPills.join('')}
         </div>
         <div class="tags" style="margin-bottom:14px;">${(r.tags || []).map(t => `<span class="tag">#${t}</span>`).join('')}</div>
+        ${(r.steps && r.steps.length > 0) ? `<button type="button" class="primary-btn" style="margin-top:0;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="openCookingMode(${i})"><i class="bi bi-play-circle-fill"></i> Mode cuisine</button>` : ''}
         <div class="servings-box">
           <span style="font-size:14px;color:#403D36;">Portions</span>
           <div style="display:flex;align-items:center;gap:14px;">
@@ -621,7 +636,53 @@
     document.getElementById('searchFab').style.display = 'block';
   }
 
+  // ---- Mode cuisine plein écran ----
+  let cookingSteps = [];
+  let cookingStepIndex = 0;
+  let wakeLock = null;
+
+  async function openCookingMode(i) {
+    const r = recipes[i];
+    cookingSteps = r.steps || [];
+    if (cookingSteps.length === 0) return;
+    cookingStepIndex = 0;
+    document.getElementById('cookingModeView').style.display = 'flex';
+    renderCookingStep();
+
+    if ('wakeLock' in navigator) {
+      try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) { /* ignoré */ }
+    }
+  }
+
+  function renderCookingStep() {
+    document.getElementById('cookingStepCounter').textContent = `Étape ${cookingStepIndex + 1} / ${cookingSteps.length}`;
+    document.getElementById('cookingStepText').textContent = cookingSteps[cookingStepIndex];
+    document.getElementById('cookingPrevBtn').style.visibility = cookingStepIndex === 0 ? 'hidden' : 'visible';
+    document.getElementById('cookingNextBtn').innerHTML = (cookingStepIndex === cookingSteps.length - 1)
+      ? '<i class="bi bi-check-lg"></i> Terminé'
+      : 'Étape suivante <i class="bi bi-chevron-right"></i>';
+  }
+
+  document.getElementById('cookingPrevBtn').onclick = () => {
+    if (cookingStepIndex > 0) { cookingStepIndex--; renderCookingStep(); }
+  };
+
+  document.getElementById('cookingNextBtn').onclick = () => {
+    if (cookingStepIndex < cookingSteps.length - 1) {
+      cookingStepIndex++;
+      renderCookingStep();
+    } else {
+      closeCookingMode();
+    }
+  };
+
+  function closeCookingMode() {
+    document.getElementById('cookingModeView').style.display = 'none';
+    if (wakeLock) { wakeLock.release(); wakeLock = null; }
+  }
+
   function hideAllViews() {
+    discardAbandonedPhoto();
     document.getElementById('listView').style.display = 'none';
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('formView').style.display = 'none';
@@ -680,6 +741,8 @@
   function editCurrentRecipe() {
     const r = recipes[currentDetailIndex];
     editingId = r.id;
+    currentSessionUploadPath = null;
+    originalPhotoUrlForSession = r.photo_url || null;
     document.getElementById('formTitle').textContent = "Modifier la recette";
     document.getElementById('f_title').value = r.title || '';
     document.getElementById('f_photo').value = r.photo_url || '';
@@ -709,6 +772,10 @@
     if (error) {
       alert("Erreur lors de la suppression : " + error.message);
       return;
+    }
+    if (r.photo_url) {
+      const path = extractStoragePath(r.photo_url);
+      if (path) await sb.storage.from('recipe-photos').remove([path]);
     }
     await loadRecipes();
     showHome();
@@ -835,6 +902,16 @@
   }
 
   // ---- Upload de photo (galerie / appareil photo) ----
+  let currentSessionUploadPath = null; // photo uploadée cette session, pas encore enregistrée en base
+  let originalPhotoUrlForSession = null; // photo déjà enregistrée avant édition (null si ajout)
+
+  function discardAbandonedPhoto() {
+    if (currentSessionUploadPath) {
+      sb.storage.from('recipe-photos').remove([currentSessionUploadPath]);
+      currentSessionUploadPath = null;
+    }
+  }
+
   function updatePhotoPreview(url) {
     const wrap = document.getElementById('photoPreviewWrap');
     const img = document.getElementById('photoPreview');
@@ -894,6 +971,13 @@
       statusEl.textContent = "Erreur d'envoi : " + error.message;
       return;
     }
+
+    // Si une photo avait déjà été uploadée cette session sans être enregistrée, elle est orpheline : on la supprime.
+    if (currentSessionUploadPath) {
+      sb.storage.from('recipe-photos').remove([currentSessionUploadPath]);
+    }
+    currentSessionUploadPath = path;
+
     const { data } = sb.storage.from('recipe-photos').getPublicUrl(path);
     document.getElementById('f_photo').value = data.publicUrl;
     updatePhotoPreview(data.publicUrl);
@@ -910,11 +994,13 @@
   });
 
   document.getElementById('removePhotoBtn').onclick = async () => {
-    const currentUrl = document.getElementById('f_photo').value.trim();
-    const path = currentUrl ? extractStoragePath(currentUrl) : null;
-    if (path) {
-      await sb.storage.from('recipe-photos').remove([path]);
+    if (currentSessionUploadPath) {
+      // Photo uploadée cette session, jamais enregistrée : suppression immédiate sûre.
+      await sb.storage.from('recipe-photos').remove([currentSessionUploadPath]);
+      currentSessionUploadPath = null;
     }
+    // Si c'est la photo déjà enregistrée (originalPhotoUrlForSession), elle n'est retirée du storage
+    // qu'au moment de l'enregistrement effectif (voir saveBtn), pour ne pas casser la recette si on abandonne.
     document.getElementById('f_photo').value = '';
     document.getElementById('photoUploadStatus').textContent = '';
     updatePhotoPreview(null);
@@ -929,6 +1015,8 @@
 
   function resetForm() {
     editingId = null;
+    currentSessionUploadPath = null;
+    originalPhotoUrlForSession = null;
     document.getElementById('formTitle').textContent = "Nouvelle recette";
     document.getElementById('f_title').value = '';
     document.getElementById('f_photo').value = '';
@@ -1000,6 +1088,14 @@
       errEl.textContent = "Erreur lors de l'enregistrement : " + error.message;
       console.error(error);
       return;
+    }
+
+    // La sauvegarde a réussi : la nouvelle photo (si upload cette session) est désormais "officielle".
+    currentSessionUploadPath = null;
+    // Si l'ancienne photo (avant édition) a été remplacée ou retirée, elle est maintenant orpheline : on la supprime.
+    if (originalPhotoUrlForSession && originalPhotoUrlForSession !== payload.photo_url) {
+      const oldPath = extractStoragePath(originalPhotoUrlForSession);
+      if (oldPath) sb.storage.from('recipe-photos').remove([oldPath]);
     }
 
     resetForm();
