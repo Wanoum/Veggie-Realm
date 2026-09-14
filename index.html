@@ -290,23 +290,32 @@
   .course-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--interaction-primary); }
   .course-item.checked { color: var(--text-icon-secondary); text-decoration: line-through; }
   .course-qty { margin-left: auto; font-family: Georgia, serif; color: var(--text-icon-secondary); white-space: nowrap; }
-  .subtabs {
+  .subtabs, .tag-filters, .segmented {
     display: flex;
-    background: var(--cream-300);
-    border-radius: 12px;
-    padding: 3px;
+    gap: 4px;
     margin: 12px 0 18px;
   }
-  .subtab-btn {
+  .subtab-btn, .filter-chip {
     flex: 1;
-    padding: 8px 0;
+    height: 40px;
+    padding: 0 10px;
     border: none;
-    background: transparent;
-    border-radius: 10px;
+    background: var(--interaction-primary-pale);
+    border-radius: 8px;
     font-size: 14px;
-    color: var(--text-icon-secondary);
+    color: var(--text-icon-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
   }
-  .subtab-btn.active { background: white; color: var(--text-icon-primary); font-weight: 600; }
+  .subtab-btn.active, .filter-chip.active {
+    background: var(--interaction-primary);
+    color: var(--text-icon-on-primary);
+    border-radius: 999px;
+    font-weight: 600;
+  }
   .plan-summary {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -336,20 +345,6 @@
   .plan-stepper { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .plan-stepper button { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--cream-400); background: white; font-size: 15px; }
   .plan-stepper span { min-width: 14px; text-align: center; font-weight: 600; }
-  .tag-filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; overflow-x: auto; }
-  .filter-chip {
-    font-size: 14px;
-    padding: 11px 18px;
-    border-radius: 24px;
-    border: 1px solid var(--cream-400);
-    background: white;
-    color: var(--text-icon-primary);
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .filter-chip.active { background: var(--text-icon-primary); color: white; border-color: var(--text-icon-primary); }
   .autocomplete-box {
     position: absolute;
     background: white;
