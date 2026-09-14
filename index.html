@@ -343,8 +343,9 @@
   <input id="f_title" class="field-input" placeholder="Ex: Gâteau au yaourt" />
 
   <label class="field-label">Photo</label>
-  <div id="photoPreviewWrap" style="display:none;margin-bottom:8px;">
+  <div id="photoPreviewWrap" style="display:none;margin-bottom:8px;position:relative;">
     <img id="photoPreview" style="width:100%;height:160px;object-fit:cover;border-radius:12px;" />
+    <button type="button" id="removePhotoBtn" class="icon-btn" style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.9);"><i class="bi bi-trash icon"></i></button>
   </div>
   <div style="display:flex;gap:8px;margin-bottom:8px;">
     <button type="button" id="choosePhotoBtn" class="secondary-btn" style="margin-top:0;flex:1;"><i class="bi bi-images"></i> Galerie</button>
@@ -845,14 +846,50 @@
     }
   }
 
+  function compressImage(file, maxSize = 1280, quality = 0.8) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = (e) => { img.src = e.target.result; };
+      reader.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxSize || height > maxSize) {
+          if (width > height) { height = Math.round(height * maxSize / width); width = maxSize; }
+          else { width = Math.round(width * maxSize / height); height = maxSize; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        canvas.toBlob(blob => resolve(blob), 'image/jpeg', quality);
+      };
+      img.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function extractStoragePath(url) {
+    const marker = '/recipe-photos/';
+    const idx = url.indexOf(marker);
+    return idx === -1 ? null : url.slice(idx + marker.length);
+  }
+
   async function handlePhotoFile(file) {
     if (!file) return;
     const statusEl = document.getElementById('photoUploadStatus');
-    statusEl.textContent = "Envoi de la photo...";
-    const ext = file.name.split('.').pop() || 'jpg';
-    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    statusEl.textContent = "Compression et envoi...";
 
-    const { error } = await sb.storage.from('recipe-photos').upload(path, file);
+    let blob;
+    try {
+      blob = await compressImage(file);
+    } catch (err) {
+      statusEl.textContent = "Erreur de compression, envoi de l'original...";
+      blob = file;
+    }
+
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+    const { error } = await sb.storage.from('recipe-photos').upload(path, blob, { contentType: 'image/jpeg' });
     if (error) {
       statusEl.textContent = "Erreur d'envoi : " + error.message;
       return;
@@ -871,6 +908,19 @@
     document.getElementById('photoUploadStatus').textContent = '';
     updatePhotoPreview(e.target.value.trim());
   });
+
+  document.getElementById('removePhotoBtn').onclick = async () => {
+    const currentUrl = document.getElementById('f_photo').value.trim();
+    const path = currentUrl ? extractStoragePath(currentUrl) : null;
+    if (path) {
+      await sb.storage.from('recipe-photos').remove([path]);
+    }
+    document.getElementById('f_photo').value = '';
+    document.getElementById('photoUploadStatus').textContent = '';
+    updatePhotoPreview(null);
+    document.getElementById('photoFileInput').value = '';
+    document.getElementById('photoCameraInput').value = '';
+  };
 
   document.getElementById('addIngBtn').onclick = () => {
     ingRows.push({ qtyUnitText: '', name: '' });
