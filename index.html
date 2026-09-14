@@ -31,6 +31,19 @@
     flex-shrink: 0;
   }
   .card { cursor: pointer; }
+  .mini-card {
+    flex: 0 0 120px;
+    cursor: pointer;
+  }
+  .mini-card-photo {
+    height: 90px;
+    border-radius: 14px;
+    background: #E8E4D8;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .mini-card-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .mini-card p { font-size: 12px; font-weight: 600; margin: 0; line-height: 1.3; color: #2B2A28; }
   .card-photo {
     height: 130px;
     border-radius: 16px;
@@ -369,6 +382,12 @@
     <button id="clearSearchBtn" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;padding:6px;color:#5A574E;"><i class="bi bi-x-circle-fill"></i></button>
   </div>
   <div id="tagFilters" class="tag-filters"></div>
+
+  <div id="savedRecipesSection" style="display:none;margin-bottom:20px;">
+    <h2 style="margin:0 0 10px;font-size:15px;">Recettes partagées avec toi</h2>
+    <div id="savedRecipesStrip" style="display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;"></div>
+  </div>
+
   <p class="count" id="count">Chargement...</p>
   <div id="cards" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;"></div>
 </div>
@@ -514,7 +533,7 @@
   let currentServings = {};
 
   async function loadRecipes() {
-    const { data, error } = await sb.from('recipes').select('*').order('created_at', { ascending: false });
+    const { data, error } = await sb.from('recipes').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
     if (error) {
       document.getElementById('count').textContent = "Erreur de chargement";
       console.error(error);
@@ -522,6 +541,7 @@
     }
     recipes = data;
     renderList();
+    loadSavedRecipes();
   }
 
   let activeTagFilter = null;
@@ -750,6 +770,7 @@
     document.getElementById('formView').style.display = 'none';
     document.getElementById('planningView').style.display = 'none';
     document.getElementById('accountView').style.display = 'none';
+    document.getElementById('sharedRecipeView').style.display = 'none';
     document.getElementById('searchFab').style.display = 'none';
     document.getElementById('navHome').classList.remove('active');
     document.getElementById('navAdd').classList.remove('active');
@@ -1544,6 +1565,8 @@
   });
 
   // ---- Recette partagée publique (accessible sans compte) ----
+  let currentSharedRecipe = null;
+
   async function loadSharedRecipe(token) {
     const { data, error } = await sb.from('recipes').select('*').eq('share_token', token).single();
     if (error || !data) {
@@ -1552,6 +1575,7 @@
       return;
     }
     const r = data;
+    currentSharedRecipe = r;
     const sortedIngredients = [...(r.ingredients || [])].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
     const ingredientsHtml = sortedIngredients.map(ing => `
       <div class="ing-row">
@@ -1563,15 +1587,28 @@
       : '';
     const recipePhoto = r.photo_url || `https://loremflickr.com/600/400/${encodeURIComponent(r.title.split(' ')[0])},food`;
 
-    document.getElementById('sharedRecipeContent').innerHTML = `
-      <div style="height:260px;background:#E8E4D8;">
-        <img src="${recipePhoto}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />
-      </div>
-      <div style="background:#F4F2ED;border-radius:22px 22px 0 0;margin-top:-18px;position:relative;padding:20px 18px 24px;">
+    const isOwnRecipe = currentUser && currentUser.id === r.user_id;
+    let banner = '';
+    if (!currentUser) {
+      banner = `
         <div style="background:#2B2A28;color:white;border-radius:14px;padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <span style="font-size:13px;">Recette partagée avec toi ✨</span>
           <button type="button" onclick="location.href = location.pathname;" style="background:white;color:#2B2A28;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;white-space:nowrap;">Créer mon compte</button>
-        </div>
+        </div>`;
+    } else if (!isOwnRecipe) {
+      banner = `
+        <button type="button" class="primary-btn" style="margin-top:0;margin-bottom:18px;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="saveSharedRecipe('${r.id}')" id="saveSharedBtn">
+          <i class="bi bi-bookmark-plus"></i> Enregistrer cette recette
+        </button>`;
+    }
+
+    document.getElementById('sharedRecipeContent').innerHTML = `
+      <div style="height:260px;background:#E8E4D8;position:relative;">
+        <img src="${recipePhoto}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />
+        ${currentUser ? `<button class="icon-btn" style="position:absolute;top:18px;left:18px;background:rgba(255,255,255,0.9);" onclick="showHome()"><i class="bi bi-arrow-left icon"></i></button>` : ''}
+      </div>
+      <div style="background:#F4F2ED;border-radius:22px 22px 0 0;margin-top:-18px;position:relative;padding:20px 18px 24px;">
+        ${banner}
         <h1 style="margin-bottom:12px;">${r.title}</h1>
         <div class="tags" style="margin-bottom:14px;">${(r.tags || []).map(t => `<span class="tag">#${t}</span>`).join('')}</div>
         <h2>Ingrédients</h2>
@@ -1580,7 +1617,67 @@
         ${stepsHtml}
       </div>
     `;
+    hideAllViewsForShared();
     document.getElementById('sharedRecipeView').style.display = 'block';
+  }
+
+  function hideAllViewsForShared() {
+    document.getElementById('listView').style.display = 'none';
+    document.getElementById('detailView').style.display = 'none';
+    document.getElementById('formView').style.display = 'none';
+    document.getElementById('planningView').style.display = 'none';
+    document.getElementById('accountView').style.display = 'none';
+    document.getElementById('authView').style.display = 'none';
+    document.getElementById('bottomNav').style.display = 'none';
+    document.getElementById('searchFab').style.display = 'none';
+  }
+
+  async function saveSharedRecipe(recipeId) {
+    const btn = document.getElementById('saveSharedBtn');
+    btn.disabled = true;
+    const { error } = await sb.from('saved_recipes').insert({ user_id: currentUser.id, recipe_id: recipeId });
+    if (error) {
+      if (error.code === '23505') {
+        btn.innerHTML = '<i class="bi bi-bookmark-check-fill"></i> Déjà enregistrée';
+      } else {
+        alert("Erreur : " + error.message);
+        btn.disabled = false;
+      }
+      return;
+    }
+    btn.innerHTML = '<i class="bi bi-bookmark-check-fill"></i> Enregistrée !';
+  }
+
+  // ---- Recettes enregistrées depuis un partage ----
+  let savedRecipes = [];
+
+  async function loadSavedRecipes() {
+    const { data, error } = await sb
+      .from('saved_recipes')
+      .select('id, recipe:recipes(id, title, photo_url, share_token)')
+      .order('saved_at', { ascending: false });
+    if (error) { console.error(error); return; }
+    savedRecipes = (data || []).filter(row => row.recipe);
+    renderSavedRecipesStrip();
+  }
+
+  function renderSavedRecipesStrip() {
+    const section = document.getElementById('savedRecipesSection');
+    const strip = document.getElementById('savedRecipesStrip');
+    if (savedRecipes.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+    section.style.display = 'block';
+    strip.innerHTML = savedRecipes.map(row => {
+      const r = row.recipe;
+      const photo = r.photo_url || `https://loremflickr.com/200/150/${encodeURIComponent(r.title.split(' ')[0])},food`;
+      return `
+        <div class="mini-card" onclick="loadSharedRecipe('${r.share_token}')">
+          <div class="mini-card-photo"><img src="${photo}" alt="" onerror="this.style.display='none'" /></div>
+          <p>${r.title}</p>
+        </div>`;
+    }).join('');
   }
 
   // ---- Point d'entrée ----
