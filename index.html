@@ -442,13 +442,14 @@
   <div id="detailContent"></div>
 </div>
 
-<div id="cookingModeView" style="display:none;position:fixed;inset:0;background:var(--text-icon-primary);color:white;z-index:300;flex-direction:column;">
+<div id="cookingModeView" style="display:none;position:fixed;inset:0;background:var(--text-icon-accent-strong);color:white;z-index:300;flex-direction:column;">
   <div style="display:flex;justify-content:space-between;align-items:center;padding:18px;">
     <span id="cookingStepCounter" style="font-size:14px;color:rgba(255,255,255,0.6);"></span>
     <button class="icon-btn" style="background:rgba(255,255,255,0.15);border:none;" onclick="closeCookingMode()"><i class="bi bi-x-lg icon" style="color:white;"></i></button>
   </div>
-  <div style="flex:1;display:flex;align-items:center;padding:24px 28px;overflow-y:auto;">
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:20px;padding:24px 28px;overflow-y:auto;">
     <p id="cookingStepText" class="serif" style="font-size:28px;line-height:1.5;margin:0;"></p>
+    <div id="cookingStepIngredients" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
   </div>
   <div style="display:flex;gap:10px;padding:18px;padding-bottom:max(18px, env(safe-area-inset-bottom));">
     <button id="cookingPrevBtn" class="icon-btn" style="flex:0 0 56px;height:56px;background:rgba(255,255,255,0.15);border:none;"><i class="bi bi-chevron-left icon" style="color:white;"></i></button>
@@ -682,6 +683,8 @@
     document.getElementById('bottomNav').style.display = 'none';
     document.getElementById('searchFab').style.display = 'none';
     renderDetail(i);
+    sessionStorage.setItem('lastView', 'detail');
+    sessionStorage.setItem('lastDetailRecipeId', r.id);
   }
 
   function renderDetail(i) {
@@ -769,10 +772,12 @@
   // ---- Mode cuisine plein écran ----
   let cookingSteps = [];
   let cookingStepIndex = 0;
+  let cookingRecipe = null;
   let wakeLock = null;
 
   async function openCookingMode(i) {
     const r = recipes[i];
+    cookingRecipe = r;
     cookingSteps = r.steps || [];
     if (cookingSteps.length === 0) return;
     cookingStepIndex = 0;
@@ -785,12 +790,29 @@
   }
 
   function renderCookingStep() {
+    const stepText = cookingSteps[cookingStepIndex];
     document.getElementById('cookingStepCounter').textContent = `Étape ${cookingStepIndex + 1} / ${cookingSteps.length}`;
-    document.getElementById('cookingStepText').textContent = cookingSteps[cookingStepIndex];
+    document.getElementById('cookingStepText').textContent = stepText;
     document.getElementById('cookingPrevBtn').style.visibility = cookingStepIndex === 0 ? 'hidden' : 'visible';
     document.getElementById('cookingNextBtn').innerHTML = (cookingStepIndex === cookingSteps.length - 1)
       ? '<i class="bi bi-check-lg"></i> Terminé'
       : 'Étape suivante <i class="bi bi-chevron-right"></i>';
+
+    // Détecte les ingrédients mentionnés dans le texte de l'étape et affiche leur quantité pour la portion choisie
+    const ingredientsEl = document.getElementById('cookingStepIngredients');
+    if (cookingRecipe) {
+      const base = cookingRecipe.servings || 4;
+      const target = currentServings[currentDetailIndex] || base;
+      const normalizedStep = normalize(stepText);
+      const matches = (cookingRecipe.ingredients || []).filter(ing => normalizedStep.includes(normalize(ing.name)));
+      ingredientsEl.innerHTML = matches.map(ing => {
+        const q = ing.quantity != null ? (ing.quantity * target / base) : null;
+        const qDisplay = q != null ? (Number.isInteger(q) ? q : q.toFixed(1).replace(/[.]0$/, '')) : '';
+        return `<span class="meta-pill" style="background:rgba(255,255,255,0.18);color:white;font-size:14px;padding:8px 14px;"><i class="bi bi-stars"></i> ${qDisplay} ${ing.unit || ''} ${ing.name}</span>`;
+      }).join('');
+    } else {
+      ingredientsEl.innerHTML = '';
+    }
   }
 
   document.getElementById('cookingPrevBtn').onclick = () => {
@@ -1562,20 +1584,27 @@
     startApp();
   };
 
-  function startApp() {
+  async function startApp() {
     document.getElementById('authView').style.display = 'none';
     document.getElementById('resetPasswordView').style.display = 'none';
     document.getElementById('sharedRecipeView').style.display = 'none';
 
     const lastView = sessionStorage.getItem('lastView');
+    const lastDetailId = sessionStorage.getItem('lastDetailRecipeId');
+
     if (lastView === 'planning') showPlanning();
     else if (lastView === 'form') showForm();
     else if (lastView === 'account') showAccount();
     else showHome();
 
     loadMealPlan();
-    loadRecipes();
+    await loadRecipes();
     ensureProfile();
+
+    if (lastView === 'detail' && lastDetailId) {
+      const idx = recipes.findIndex(r => r.id === lastDetailId);
+      if (idx !== -1) showDetail(idx);
+    }
   }
 
   async function ensureProfile() {
