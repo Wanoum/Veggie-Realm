@@ -110,13 +110,12 @@
     margin: 0 auto 20px;
   }
   .cooking-step {
-    min-height: 100%;
     scroll-snap-align: center;
     display: flex;
     flex-direction: column;
     justify-content: center;
     gap: 16px;
-    padding: 40px 28px;
+    padding: 24px 28px;
     cursor: pointer;
   }
   .cooking-step p {
@@ -125,7 +124,7 @@
     transition: font-size 0.25s ease, opacity 0.25s ease;
     font-size: 22px;
     line-height: 1.4;
-    opacity: 0.35;
+    opacity: 0.3;
   }
   .cooking-step.active p {
     font-size: 34px;
@@ -813,7 +812,8 @@
   }
 
   async function addCurrentRecipeToPlanning(recipeId) {
-    const newVal = (mealPlan[recipeId] || 0) + 1;
+    const selectedServings = currentServings[currentDetailIndex] || 1;
+    const newVal = (mealPlan[recipeId] || 0) + selectedServings;
     mealPlan[recipeId] = newVal;
     await sb.from('meal_plan').upsert({ recipe_id: recipeId, count: newVal, user_id: currentUser.id });
   }
@@ -871,16 +871,17 @@
 
   function renderCookingSteps() {
     const scrollEl = document.getElementById('cookingScroll');
-    scrollEl.innerHTML = cookingSteps.map((stepText, idx) => `
-      <div class="cooking-step" data-step-idx="${idx}" onclick="scrollToCookingStep(${idx})">
-        <p>${stepText}</p>
-        <div class="cooking-step-ingredients">${ingredientChipsForStep(stepText)}</div>
-      </div>
-    `).join('');
-
-    scrollEl.querySelectorAll('.cooking-step').forEach(el => {
-      el.style.minHeight = scrollEl.clientHeight + 'px';
-    });
+    const spacerHeight = Math.round(scrollEl.clientHeight / 2);
+    scrollEl.innerHTML = `
+      <div style="height:${spacerHeight}px;"></div>
+      ${cookingSteps.map((stepText, idx) => `
+        <div class="cooking-step" data-step-idx="${idx}" onclick="scrollToCookingStep(${idx})">
+          <p>${stepText}</p>
+          <div class="cooking-step-ingredients">${ingredientChipsForStep(stepText)}</div>
+        </div>
+      `).join('')}
+      <div style="height:${spacerHeight}px;"></div>
+    `;
 
     updateActiveCookingStep();
     scrollEl.onscroll = () => {
@@ -888,7 +889,7 @@
     };
 
     // Positionne sur la première étape sans animation
-    scrollEl.querySelector('.cooking-step').scrollIntoView({ block: 'start' });
+    scrollEl.querySelector('.cooking-step').scrollIntoView({ block: 'center' });
   }
 
   function updateActiveCookingStep() {
@@ -911,7 +912,7 @@
   function scrollToCookingStep(idx) {
     const scrollEl = document.getElementById('cookingScroll');
     const target = scrollEl.querySelectorAll('.cooking-step')[idx];
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   function closeCookingMode() {
@@ -1549,10 +1550,11 @@
       const count = mealPlan[r.id] || 0;
       if (count === 0) return;
       hasAnySelection = true;
+      const base = r.servings || 4;
       (r.ingredients || []).forEach(ing => {
         const nameKey = normalize(ing.name).replace(/s$/, '');
         const unitKey = normalize(ing.unit);
-        const scaledQty = ing.quantity != null ? ing.quantity * count : null;
+        const scaledQty = ing.quantity != null ? (ing.quantity * count / base) : null;
 
         if (!aggregated[nameKey]) {
           aggregated[nameKey] = { displayName: ing.name.trim(), units: {} };
