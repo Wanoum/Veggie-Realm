@@ -109,6 +109,35 @@
     border-radius: 4px;
     margin: 0 auto 20px;
   }
+  .cooking-step {
+    min-height: 100%;
+    scroll-snap-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+    padding: 40px 28px;
+    cursor: pointer;
+  }
+  .cooking-step p {
+    font-family: 'Krylon', Georgia, serif;
+    margin: 0;
+    transition: font-size 0.25s ease, opacity 0.25s ease;
+    font-size: 22px;
+    line-height: 1.4;
+    opacity: 0.35;
+  }
+  .cooking-step.active p {
+    font-size: 34px;
+    line-height: 1.35;
+    opacity: 1;
+  }
+  .cooking-step .cooking-step-ingredients {
+    display: none;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .cooking-step.active .cooking-step-ingredients { display: flex; }
   .detail-footer {
     position: fixed;
     bottom: 0; left: 0; right: 0;
@@ -475,18 +504,14 @@
 </div>
 
 <div id="cookingModeView" style="display:none;position:fixed;inset:0;background:var(--text-icon-accent-strong);color:white;z-index:300;flex-direction:column;">
-  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;">
-    <span id="cookingStepCounter" style="font-size:14px;color:rgba(255,255,255,0.6);"></span>
-    <button class="icon-btn" style="background:rgba(255,255,255,0.15);border:none;" onclick="closeCookingMode()"><i class="bi bi-x-lg icon" style="color:white;"></i></button>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:16px;padding-top:calc(16px + env(safe-area-inset-top));">
+    <div>
+      <p id="cookingRecipeTitle" style="font-family:'Inter',sans-serif;font-size:20px;line-height:120%;font-weight:600;margin:0 0 2px;"></p>
+      <p id="cookingRecipeServings" style="font-family:'Inter',sans-serif;font-size:14px;line-height:120%;color:rgba(255,255,255,0.7);margin:0;"></p>
+    </div>
+    <button class="icon-btn" style="background:var(--surface-high);border:none;" onclick="closeCookingMode()"><i class="bi bi-x-lg icon"></i></button>
   </div>
-  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:20px;padding:24px 28px;overflow-y:auto;">
-    <p id="cookingStepText" class="serif" style="font-size:28px;line-height:1.5;margin:0;"></p>
-    <div id="cookingStepIngredients" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-  </div>
-  <div style="display:flex;gap:10px;padding:16px;padding-bottom:max(18px, env(safe-area-inset-bottom));">
-    <button id="cookingPrevBtn" class="icon-btn" style="flex:0 0 56px;height:56px;background:rgba(255,255,255,0.15);border:none;"><i class="bi bi-chevron-left icon" style="color:white;"></i></button>
-    <button id="cookingNextBtn" class="primary-btn" style="margin-top:0;flex:1;background:var(--surface-highest);color:var(--text-icon-primary);">Étape suivante</button>
-  </div>
+  <div id="cookingScroll" style="flex:1;overflow-y:auto;scroll-snap-type:y mandatory;"></div>
 </div>
 
 <div id="formView" style="display:none;">
@@ -820,52 +845,74 @@
     cookingSteps = r.steps || [];
     if (cookingSteps.length === 0) return;
     cookingStepIndex = 0;
+
+    document.getElementById('cookingRecipeTitle').textContent = r.title;
+    document.getElementById('cookingRecipeServings').textContent = `pour ${currentServings[i] || r.servings || 4} portions`;
     document.getElementById('cookingModeView').style.display = 'flex';
-    renderCookingStep();
+    renderCookingSteps();
 
     if ('wakeLock' in navigator) {
       try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) { /* ignoré */ }
     }
   }
 
-  function renderCookingStep() {
-    const stepText = cookingSteps[cookingStepIndex];
-    document.getElementById('cookingStepCounter').textContent = `Étape ${cookingStepIndex + 1} / ${cookingSteps.length}`;
-    document.getElementById('cookingStepText').textContent = stepText;
-    document.getElementById('cookingPrevBtn').style.visibility = cookingStepIndex === 0 ? 'hidden' : 'visible';
-    document.getElementById('cookingNextBtn').innerHTML = (cookingStepIndex === cookingSteps.length - 1)
-      ? '<i class="bi bi-check-lg"></i> Terminé'
-      : 'Étape suivante <i class="bi bi-chevron-right"></i>';
-
-    // Détecte les ingrédients mentionnés dans le texte de l'étape et affiche leur quantité pour la portion choisie
-    const ingredientsEl = document.getElementById('cookingStepIngredients');
-    if (cookingRecipe) {
-      const base = cookingRecipe.servings || 4;
-      const target = currentServings[currentDetailIndex] || base;
-      const normalizedStep = normalize(stepText);
-      const matches = (cookingRecipe.ingredients || []).filter(ing => normalizedStep.includes(normalize(ing.name)));
-      ingredientsEl.innerHTML = matches.map(ing => {
-        const q = ing.quantity != null ? (ing.quantity * target / base) : null;
-        const qDisplay = q != null ? (Number.isInteger(q) ? q : q.toFixed(1).replace(/[.]0$/, '')) : '';
-        return `<span class="meta-pill" style="background:rgba(255,255,255,0.18);color:white;font-size:14px;padding:8px 14px;"><i class="bi bi-stars"></i> ${qDisplay} ${ing.unit || ''} ${ing.name}</span>`;
-      }).join('');
-    } else {
-      ingredientsEl.innerHTML = '';
-    }
+  function ingredientChipsForStep(stepText) {
+    if (!cookingRecipe) return '';
+    const base = cookingRecipe.servings || 4;
+    const target = currentServings[currentDetailIndex] || base;
+    const normalizedStep = normalize(stepText);
+    const matches = (cookingRecipe.ingredients || []).filter(ing => normalizedStep.includes(normalize(ing.name)));
+    return matches.map(ing => {
+      const q = ing.quantity != null ? (ing.quantity * target / base) : null;
+      const qDisplay = q != null ? (Number.isInteger(q) ? q : q.toFixed(1).replace(/[.]0$/, '')) : '';
+      return `<span class="meta-pill" style="background:rgba(255,255,255,0.18);color:white;font-size:14px;padding:8px 14px;"><i class="bi bi-stars"></i> ${qDisplay} ${ing.unit || ''} ${ing.name}</span>`;
+    }).join('');
   }
 
-  document.getElementById('cookingPrevBtn').onclick = () => {
-    if (cookingStepIndex > 0) { cookingStepIndex--; renderCookingStep(); }
-  };
+  function renderCookingSteps() {
+    const scrollEl = document.getElementById('cookingScroll');
+    scrollEl.innerHTML = cookingSteps.map((stepText, idx) => `
+      <div class="cooking-step" data-step-idx="${idx}" onclick="scrollToCookingStep(${idx})">
+        <p>${stepText}</p>
+        <div class="cooking-step-ingredients">${ingredientChipsForStep(stepText)}</div>
+      </div>
+    `).join('');
 
-  document.getElementById('cookingNextBtn').onclick = () => {
-    if (cookingStepIndex < cookingSteps.length - 1) {
-      cookingStepIndex++;
-      renderCookingStep();
-    } else {
-      closeCookingMode();
+    scrollEl.querySelectorAll('.cooking-step').forEach(el => {
+      el.style.minHeight = scrollEl.clientHeight + 'px';
+    });
+
+    updateActiveCookingStep();
+    scrollEl.onscroll = () => {
+      window.requestAnimationFrame(updateActiveCookingStep);
+    };
+
+    // Positionne sur la première étape sans animation
+    scrollEl.querySelector('.cooking-step').scrollIntoView({ block: 'start' });
+  }
+
+  function updateActiveCookingStep() {
+    const scrollEl = document.getElementById('cookingScroll');
+    const center = scrollEl.scrollTop + scrollEl.clientHeight / 2;
+    let closestIdx = 0;
+    let closestDist = Infinity;
+    scrollEl.querySelectorAll('.cooking-step').forEach((el, idx) => {
+      const dist = Math.abs((el.offsetTop + el.offsetHeight / 2) - center);
+      if (dist < closestDist) { closestDist = dist; closestIdx = idx; }
+    });
+    if (closestIdx !== cookingStepIndex) {
+      cookingStepIndex = closestIdx;
     }
-  };
+    scrollEl.querySelectorAll('.cooking-step').forEach((el, idx) => {
+      el.classList.toggle('active', idx === closestIdx);
+    });
+  }
+
+  function scrollToCookingStep(idx) {
+    const scrollEl = document.getElementById('cookingScroll');
+    const target = scrollEl.querySelectorAll('.cooking-step')[idx];
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   function closeCookingMode() {
     document.getElementById('cookingModeView').style.display = 'none';
@@ -940,31 +987,34 @@
 
   // ---- Tirer pour rafraîchir (pull-to-refresh) ----
   (function setupPullToRefresh() {
-    const listView = document.getElementById('listView');
     const indicator = document.getElementById('pullIndicator');
     const icon = document.getElementById('pullIcon');
     const threshold = 70;
     let startY = null;
     let pulling = false;
 
-    listView.addEventListener('touchstart', (e) => {
-      if (listView.style.display === 'none') return;
-      if (window.scrollY > 0) { startY = null; return; }
+    function isOnHome() {
+      return document.getElementById('listView').style.display !== 'none';
+    }
+
+    document.addEventListener('touchstart', (e) => {
+      if (!isOnHome()) { startY = null; pulling = false; return; }
+      if ((window.scrollY || document.documentElement.scrollTop || 0) > 0) { startY = null; pulling = false; return; }
       startY = e.touches[0].clientY;
       pulling = true;
     }, { passive: true });
 
-    listView.addEventListener('touchmove', (e) => {
+    document.addEventListener('touchmove', (e) => {
       if (!pulling || startY == null) return;
       const diff = e.touches[0].clientY - startY;
-      if (diff > 0 && window.scrollY === 0) {
+      if (diff > 0 && (window.scrollY || document.documentElement.scrollTop || 0) === 0) {
         const height = Math.min(diff * 0.5, 70);
         indicator.style.height = height + 'px';
         icon.style.transform = `rotate(${height * 4}deg)`;
       }
     }, { passive: true });
 
-    listView.addEventListener('touchend', () => {
+    document.addEventListener('touchend', () => {
       if (!pulling) return;
       pulling = false;
       const currentHeight = parseInt(indicator.style.height) || 0;
@@ -977,7 +1027,7 @@
         indicator.style.height = '0';
       }
       startY = null;
-    });
+    }, { passive: true });
   })();
 
   document.addEventListener('visibilitychange', () => {
