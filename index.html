@@ -493,6 +493,10 @@
     <label class="field-label">Email</label>
     <input id="account_email" class="field-input" disabled style="opacity:0.7;" />
 
+    <label class="field-label" style="margin-top:22px;">Pseudo</label>
+    <input id="account_display_name" class="field-input" placeholder="Ton pseudo" />
+    <button type="button" id="updateNameBtn" class="secondary-btn">Enregistrer le pseudo</button>
+
     <label class="field-label" style="margin-top:22px;">Nouveau mot de passe</label>
     <input id="account_new_password" class="field-input" type="password" placeholder="Laisser vide pour ne pas changer" autocomplete="new-password" />
 
@@ -805,7 +809,7 @@
     renderPlanningRecipes();
   }
 
-  function showAccount() {
+  async function showAccount() {
     window.scrollTo(0, 0);
     hideAllViews();
     document.getElementById('accountView').style.display = 'block';
@@ -814,6 +818,9 @@
     document.getElementById('account_email').value = currentUser ? currentUser.email : '';
     document.getElementById('account_new_password').value = '';
     document.getElementById('accountError').textContent = '';
+
+    const { data: profile } = await sb.from('profiles').select('display_name').eq('id', currentUser.id).maybeSingle();
+    document.getElementById('account_display_name').value = profile ? (profile.display_name || '') : '';
   }
 
   document.getElementById('navAccount').onclick = showAccount;
@@ -1480,8 +1487,10 @@
   }
 
   async function ensureProfile() {
+    const { data: existing } = await sb.from('profiles').select('id').eq('id', currentUser.id).maybeSingle();
+    if (existing) return;
     const displayName = currentUser.email.split('@')[0];
-    await sb.from('profiles').upsert({ id: currentUser.id, email: currentUser.email, display_name: displayName });
+    await sb.from('profiles').insert({ id: currentUser.id, email: currentUser.email, display_name: displayName });
   }
 
   function setAuthMode(mode) {
@@ -1530,6 +1539,26 @@
 
   document.getElementById('logoutBtn').onclick = async () => {
     await sb.auth.signOut();
+  };
+
+  document.getElementById('updateNameBtn').onclick = async () => {
+    const name = document.getElementById('account_display_name').value.trim();
+    const errEl = document.getElementById('accountError');
+    errEl.style.color = '#B3261E';
+    errEl.textContent = '';
+
+    if (!name) {
+      errEl.textContent = "Le pseudo ne peut pas être vide.";
+      return;
+    }
+
+    const { error } = await sb.from('profiles').upsert({ id: currentUser.id, email: currentUser.email, display_name: name });
+    if (error) {
+      errEl.textContent = error.message;
+      return;
+    }
+    errEl.style.color = '#3D5A34';
+    errEl.textContent = "Pseudo enregistré ✓";
   };
 
   document.getElementById('updatePasswordBtn').onclick = async () => {
