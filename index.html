@@ -26,8 +26,8 @@
   .icon-btn {
     width: 38px; height: 38px;
     border-radius: 12px;
-    background: white;
-    border: 1px solid var(--cream-400);
+    background: var(--surface-highest);
+    border: 1px solid var(--border-divider);
     display: flex; align-items: center; justify-content: center;
     font-size: 16px;
     flex-shrink: 0;
@@ -77,8 +77,8 @@
     border-radius: 20px;
   }
   #backBtn {
-    background: white;
-    border: 1px solid var(--cream-400);
+    background: var(--surface-highest);
+    border: 1px solid var(--border-divider);
     border-radius: 12px;
     padding: 8px 14px;
     font-size: 14px;
@@ -89,7 +89,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: var(--cream-300);
+    background: var(--border-divider);
     border-radius: 14px;
     padding: 12px 16px;
     margin: 16px 0;
@@ -97,8 +97,8 @@
   .servings-box button {
     width: 30px; height: 30px;
     border-radius: 50%;
-    border: 1px solid #DAD5C8;
-    background: white;
+    border: 1px solid var(--border-strong);
+    background: var(--surface-highest);
     font-size: 16px;
   }
   .ing-row {
@@ -109,7 +109,7 @@
     border-bottom: 1px solid #EAE7DE;
   }
   .ing-row-name { font-family: Georgia, serif; font-size: 15px; color: var(--text-icon-primary); margin: 0; }
-  .ing-row-note { color: #6B6862; font-size: 13px; }
+  .ing-row-note { color: var(--text-icon-secondary); font-size: 13px; }
   .ing-row-qty { font-family: 'IBM Plex Mono', monospace; font-size: 16px; line-height: 120%; color: var(--text-icon-secondary); white-space: nowrap; margin-left: 12px; }
   ol { padding-left: 20px; }
   ol li { margin-bottom: 10px; line-height: 1.6; font-size: 14.5px; }
@@ -127,27 +127,35 @@
     left: 0;
     right: 0;
     display: flex;
-    background: white;
-    border-top: 1px solid var(--cream-300);
-    padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+    align-items: center;
+    height: 72px;
+    background: var(--surface-high);
+    border-top: 1px solid var(--border-divider);
+    padding: 0 0 env(safe-area-inset-bottom);
     z-index: 100;
   }
   .nav-btn {
     flex: 1;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 2px;
     background: none;
     border: none;
-    padding: 4px 0;
-    font-size: 12px;
-    color: var(--text-icon-secondary);
+    font-family: 'Inter', sans-serif;
   }
-  .nav-btn { color: var(--text-icon-primary); opacity: 0.4; }
-  .nav-btn.active { opacity: 1; font-weight: 600; }
+  .nav-icon-wrap {
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .nav-btn.active .nav-icon-wrap { background: var(--interaction-primary-pale); }
+  .nav-icon { font-size: 24px; line-height: 1; color: var(--text-icon-secondary); }
+  .nav-btn.active .nav-icon { color: var(--text-icon-accent); }
+  .nav-label { font-size: 12px; line-height: 120%; font-weight: 400; color: var(--text-icon-secondary); }
+  .nav-btn.active .nav-label { font-weight: 500; color: var(--text-icon-accent); }
   .icon { font-size: 20px; line-height: 1; color: var(--text-icon-primary); }
-  .nav-icon { font-size: 20px; line-height: 1; }
   .fab-search {
     position: fixed;
     bottom: calc(72px + env(safe-area-inset-bottom));
@@ -169,32 +177,42 @@
   .field-input {
     width: 100%;
     padding: 11px 13px;
-    border: 1px solid var(--cream-400);
+    border: 1px solid var(--border-divider);
     border-radius: 12px;
-    font-size: 15px;
-    background: white;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 120%;
+    background: var(--surface-highest);
     color: var(--text-icon-primary);
   }
   .secondary-btn {
     width: 100%;
     padding: 10px;
     margin-top: 8px;
-    border: 1.5px dashed #DAD5C8;
+    border: 1.5px dashed var(--border-strong);
     border-radius: 12px;
     background: transparent;
-    color: #6B6862;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-icon-secondary);
     font-size: 14px;
   }
   .primary-btn {
     width: 100%;
-    padding: 14px;
-    margin-top: 24px;
+    height: 48px;
+    padding: 0 14px;
+    margin-top: var(--space-section-gap);
     border: none;
     border-radius: 14px;
-    background: var(--text-icon-primary);
-    color: white;
-    font-size: 15px;
-    font-weight: 600;
+    background: var(--interaction-primary);
+    color: var(--text-icon-on-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 120%;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
   }
   .row-item {
     display: flex;
@@ -204,10 +222,10 @@
   }
   .row-item input, .row-item select {
     padding: 10px 12px;
-    border: 1px solid var(--cream-400);
+    border: 1px solid var(--border-divider);
     border-radius: 12px;
     font-size: 15px;
-    background: white;
+    background: var(--surface-highest);
   }
   .row-item input { flex: 2; min-width: 0; }
   .row-item .qty-input { flex: 1; }
@@ -222,29 +240,29 @@
   .step-item textarea {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid var(--cream-400);
+    border: 1px solid var(--border-divider);
     border-radius: 12px;
     font-size: 14px;
     resize: vertical;
     min-height: 44px;
   }
   .day-row {
-    background: white;
-    border: 1px solid var(--cream-400);
+    background: var(--surface-highest);
+    border: 1px solid var(--border-divider);
     border-radius: 14px;
     padding: 12px 14px;
     margin-bottom: 10px;
   }
   .day-row .day-name { font-size: 13px; color: var(--text-icon-secondary); margin-bottom: 6px; text-transform: capitalize; }
-  .day-row select { width: 100%; padding: 9px 10px; border: 1px solid var(--cream-400); border-radius: 10px; font-size: 14px; background: white; margin-bottom: 6px; }
+  .day-row select { width: 100%; padding: 9px 10px; border: 1px solid var(--border-divider); border-radius: 10px; font-size: 14px; background: var(--surface-highest); margin-bottom: 6px; }
   .day-row .servings-mini { display: flex; align-items: center; gap: 10px; }
-  .day-row .servings-mini button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--cream-400); background: white; font-size: 14px; }
+  .day-row .servings-mini button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border-divider); background: var(--surface-highest); font-size: 14px; }
   .course-item {
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 11px 0;
-    border-top: 1px solid var(--cream-300);
+    border-top: 1px solid var(--border-divider);
     font-size: 14px;
   }
   .course-item:first-child { border-top: none; }
@@ -297,8 +315,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: white;
-    border: 1px solid var(--cream-400);
+    background: var(--surface-highest);
+    border: 1px solid var(--border-divider);
     border-radius: 14px;
     padding: 12px 14px;
     margin-bottom: 8px;
@@ -306,12 +324,12 @@
   .plan-recipe-row .plan-recipe-name { font-size: 14px; font-weight: 500; }
   .plan-recipe-row .plan-recipe-tags { font-size: 12px; color: var(--text-icon-secondary); margin-top: 2px; }
   .plan-stepper { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-  .plan-stepper button { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--cream-400); background: white; font-size: 15px; }
+  .plan-stepper button { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border-divider); background: var(--surface-highest); font-size: 15px; }
   .plan-stepper span { min-width: 14px; text-align: center; font-weight: 600; }
   .autocomplete-box {
     position: absolute;
-    background: white;
-    border: 1px solid var(--cream-400);
+    background: var(--surface-highest);
+    border: 1px solid var(--border-divider);
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     z-index: 200;
@@ -374,7 +392,7 @@
 </div>
 
 <div id="listView" style="display:none;">
-  <h1 style="margin-bottom:0;">Veggie Realm</h1>
+  <h1>Veggie Realm</h1>
   <div style="position:relative;display:none;margin:10px 0;" id="searchWrap">
     <input id="searchInput" class="field-input" placeholder="Rechercher une recette..." style="padding-right:40px;" />
     <button id="clearSearchBtn" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;padding:6px;color:var(--text-icon-secondary);"><i class="bi bi-x-circle-fill"></i></button>
@@ -407,7 +425,7 @@
   </div>
   <div style="display:flex;gap:10px;padding:16px;padding-bottom:max(18px, env(safe-area-inset-bottom));">
     <button id="cookingPrevBtn" class="icon-btn" style="flex:0 0 56px;height:56px;background:rgba(255,255,255,0.15);border:none;"><i class="bi bi-chevron-left icon" style="color:white;"></i></button>
-    <button id="cookingNextBtn" class="primary-btn" style="margin-top:0;flex:1;background:white;color:var(--text-icon-primary);">Étape suivante</button>
+    <button id="cookingNextBtn" class="primary-btn" style="margin-top:0;flex:1;background:var(--surface-highest);color:var(--text-icon-primary);">Étape suivante</button>
   </div>
 </div>
 
@@ -469,20 +487,20 @@
 
 <nav id="bottomNav" style="display:none;">
   <button id="navHome" class="nav-btn active">
-    <i class="bi bi-house nav-icon"></i>
-    <span>Accueil</span>
+    <span class="nav-icon-wrap"><i class="bi bi-book nav-icon"></i></span>
+    <span class="nav-label">Recettes</span>
   </button>
   <button id="navPlanning" class="nav-btn">
-    <i class="bi bi-calendar3 nav-icon"></i>
-    <span>Planning</span>
+    <span class="nav-icon-wrap"><i class="bi bi-calendar3 nav-icon"></i></span>
+    <span class="nav-label">Planning</span>
   </button>
   <button id="navAdd" class="nav-btn">
-    <i class="bi bi-plus-lg nav-icon"></i>
-    <span>Ajouter</span>
+    <span class="nav-icon-wrap"><i class="bi bi-plus-square nav-icon"></i></span>
+    <span class="nav-label">Ajouter</span>
   </button>
   <button id="navAccount" class="nav-btn">
-    <i class="bi bi-person-circle nav-icon"></i>
-    <span>Compte</span>
+    <span class="nav-icon-wrap"><i class="bi bi-sliders nav-icon"></i></span>
+    <span class="nav-label">Compte</span>
   </button>
 </nav>
 
@@ -508,7 +526,7 @@
 
 <div id="planningView" style="display:none;">
   <div style="display:flex;align-items:center;justify-content:space-between;">
-    <h1 style="margin-bottom:0;">Planning</h1>
+    <h1>Planning</h1>
     <button id="resetPlanningBtn" class="icon-btn"><i class="bi bi-arrow-counterclockwise icon"></i></button>
   </div>
   <div class="subtabs">
@@ -553,7 +571,7 @@
   function renderTagFilters() {
     const container = document.getElementById('tagFilters');
     container.innerHTML = MEAL_TYPES.map(t => `
-      <button type="button" class="filter-chip ${activeTagFilter === t ? 'active' : ''}" data-tag="${t}">${t}</button>
+      <button type="button" class="filter-chip ${activeTagFilter === t ? 'active' : ''}" data-tag="${t}"><i class="bi ${MEAL_TYPE_ICONS[t]}" style="font-size:16px;margin-right:6px;"></i>${t}</button>
     `).join('');
     container.querySelectorAll('.filter-chip').forEach(chip => {
       chip.onclick = () => {
@@ -578,7 +596,7 @@
   function renderList() {
     renderTagFilters();
     const filteredIndices = getFilteredIndices();
-    document.getElementById('count').textContent = filteredIndices.length + " recette" + (filteredIndices.length > 1 ? "s" : "");
+    document.getElementById('count').textContent = '';
     const cardsEl = document.getElementById('cards');
     if (recipes.length === 0) {
       cardsEl.innerHTML = '<div class="empty">Aucune recette pour l\'instant.</div>';
@@ -686,7 +704,7 @@
         </div>
       </div>
       <div style="background:var(--surface-high);border-radius:22px 22px 0 0;margin-top:-18px;position:relative;padding:24px 16px;">
-        <h1 style="margin-bottom:12px;">${r.title}</h1>
+        <h1>${r.title}</h1>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
           ${metaPills.join('')}
         </div>
@@ -1714,7 +1732,7 @@
       banner = `
         <div style="background:var(--text-icon-primary);color:white;border-radius:14px;padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <span style="font-size:13px;">Recette partagée${authorName ? ' par ' + authorName : ' avec toi'} ✨</span>
-          <button type="button" onclick="location.href = location.pathname;" style="background:white;color:var(--text-icon-primary);border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;white-space:nowrap;">Créer mon compte</button>
+          <button type="button" onclick="location.href = location.pathname;" style="background:var(--surface-highest);color:var(--text-icon-primary);border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;white-space:nowrap;">Créer mon compte</button>
         </div>`;
     } else if (!isOwnRecipe) {
       const { data: existing } = await sb.from('saved_recipes').select('id').eq('user_id', currentUser.id).eq('recipe_id', r.id).maybeSingle();
@@ -1733,7 +1751,7 @@
       </div>
       <div style="background:var(--surface-high);border-radius:22px 22px 0 0;margin-top:-18px;position:relative;padding:24px 16px;">
         ${banner}
-        <h1 style="margin-bottom:12px;">${r.title}</h1>
+        <h1>${r.title}</h1>
         <div class="tags" style="margin-bottom:14px;">${(r.tags || []).map(t => `<span class="tag">#${t}</span>`).join('')}</div>
         <h2>Ingrédients</h2>
         ${ingredientsHtml}
