@@ -342,8 +342,18 @@
   <label class="field-label">Titre</label>
   <input id="f_title" class="field-input" placeholder="Ex: Gâteau au yaourt" />
 
-  <label class="field-label">Photo (lien URL, optionnel)</label>
-  <input id="f_photo" class="field-input" placeholder="https://..." />
+  <label class="field-label">Photo</label>
+  <div id="photoPreviewWrap" style="display:none;margin-bottom:8px;">
+    <img id="photoPreview" style="width:100%;height:160px;object-fit:cover;border-radius:12px;" />
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:8px;">
+    <button type="button" id="choosePhotoBtn" class="secondary-btn" style="margin-top:0;flex:1;"><i class="bi bi-images"></i> Galerie</button>
+    <button type="button" id="takePhotoBtn" class="secondary-btn" style="margin-top:0;flex:1;"><i class="bi bi-camera"></i> Appareil photo</button>
+  </div>
+  <input type="file" id="photoFileInput" accept="image/*" style="display:none;" />
+  <input type="file" id="photoCameraInput" accept="image/*" capture="environment" style="display:none;" />
+  <input id="f_photo" class="field-input" placeholder="ou colle un lien URL..." style="margin-bottom:4px;" />
+  <p id="photoUploadStatus" style="font-size:12px;color:#5A574E;margin:0;"></p>
 
   <label class="field-label">Tags (séparés par une virgule)</label>
   <input id="f_tags" class="field-input" placeholder="Ex: dessert, goûter" />
@@ -672,6 +682,7 @@
     document.getElementById('formTitle').textContent = "Modifier la recette";
     document.getElementById('f_title').value = r.title || '';
     document.getElementById('f_photo').value = r.photo_url || '';
+    updatePhotoPreview(r.photo_url);
     document.getElementById('f_tags').value = (r.tags || []).join(', ');
     document.getElementById('f_servings').value = r.servings || 4;
     document.getElementById('f_prep').value = r.prep_time_minutes || '';
@@ -822,6 +833,45 @@
     });
   }
 
+  // ---- Upload de photo (galerie / appareil photo) ----
+  function updatePhotoPreview(url) {
+    const wrap = document.getElementById('photoPreviewWrap');
+    const img = document.getElementById('photoPreview');
+    if (url) {
+      img.src = url;
+      wrap.style.display = 'block';
+    } else {
+      wrap.style.display = 'none';
+    }
+  }
+
+  async function handlePhotoFile(file) {
+    if (!file) return;
+    const statusEl = document.getElementById('photoUploadStatus');
+    statusEl.textContent = "Envoi de la photo...";
+    const ext = file.name.split('.').pop() || 'jpg';
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const { error } = await sb.storage.from('recipe-photos').upload(path, file);
+    if (error) {
+      statusEl.textContent = "Erreur d'envoi : " + error.message;
+      return;
+    }
+    const { data } = sb.storage.from('recipe-photos').getPublicUrl(path);
+    document.getElementById('f_photo').value = data.publicUrl;
+    updatePhotoPreview(data.publicUrl);
+    statusEl.textContent = "Photo ajoutée ✓";
+  }
+
+  document.getElementById('choosePhotoBtn').onclick = () => document.getElementById('photoFileInput').click();
+  document.getElementById('takePhotoBtn').onclick = () => document.getElementById('photoCameraInput').click();
+  document.getElementById('photoFileInput').onchange = (e) => handlePhotoFile(e.target.files[0]);
+  document.getElementById('photoCameraInput').onchange = (e) => handlePhotoFile(e.target.files[0]);
+  document.getElementById('f_photo').addEventListener('input', (e) => {
+    document.getElementById('photoUploadStatus').textContent = '';
+    updatePhotoPreview(e.target.value.trim());
+  });
+
   document.getElementById('addIngBtn').onclick = () => {
     ingRows.push({ qtyUnitText: '', name: '' });
     renderIngRows();
@@ -832,6 +882,8 @@
     document.getElementById('formTitle').textContent = "Nouvelle recette";
     document.getElementById('f_title').value = '';
     document.getElementById('f_photo').value = '';
+    updatePhotoPreview(null);
+    document.getElementById('photoUploadStatus').textContent = '';
     document.getElementById('f_tags').value = '';
     document.getElementById('f_servings').value = 4;
     document.getElementById('f_prep').value = '';
