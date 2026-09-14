@@ -25,7 +25,7 @@
   .count { font-size: 13px; color: var(--text-icon-secondary); margin-bottom: 14px; }
   .icon-btn {
     width: 38px; height: 38px;
-    border-radius: 12px;
+    border-radius: 999px;
     background: var(--surface-highest);
     border: 1px solid var(--border-divider);
     display: flex; align-items: center; justify-content: center;
@@ -47,7 +47,7 @@
   .mini-card-photo img { width: 100%; height: 100%; object-fit: cover; }
   .mini-card p { font-size: 12px; font-weight: 600; margin: 0; line-height: 1.3; color: var(--text-icon-primary); }
   .card-photo {
-    aspect-ratio: 9 / 16;
+    aspect-ratio: 3 / 4;
     border-radius: 16px;
     background: var(--surface-low);
     margin-bottom: 8px;
@@ -114,15 +114,12 @@
     gap: 10px;
     padding: 16px;
     padding-bottom: calc(16px + env(safe-area-inset-bottom));
-    background: var(--surface-high);
+    background: rgba(255, 253, 248, 0.94);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     border-top: 1px solid var(--border-divider);
     z-index: 50;
   }
-  .detail-footer-secondary {
-    background: var(--interaction-primary-pale);
-    flex-shrink: 0;
-  }
-  .detail-footer-secondary .icon { color: var(--text-icon-accent); }
   .servings-stepper { display: flex; gap: 2px; }
   .servings-stepper button {
     width: 40px; height: 40px;
@@ -132,8 +129,8 @@
     font-size: 18px;
     display: flex; align-items: center; justify-content: center;
   }
-  .servings-minus { border-radius: 16px 2px 2px 16px; }
-  .servings-plus { border-radius: 2px 16px 16px 2px; }
+  .servings-minus { border-radius: 32px 2px 2px 32px; }
+  .servings-plus { border-radius: 2px 32px 32px 2px; }
   .servings-value {
     min-width: 40px; height: 40px;
     border-radius: 2px;
@@ -174,10 +171,12 @@
     right: 0;
     display: flex;
     align-items: center;
-    min-height: 72px;
-    background: var(--surface-high);
+    min-height: 64px;
+    background: rgba(255, 253, 248, 0.94);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     border-top: 1px solid var(--border-divider);
-    padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
     z-index: 100;
   }
   .nav-btn {
@@ -204,7 +203,7 @@
   .icon { font-size: 20px; line-height: 1; color: var(--text-icon-primary); }
   .fab-search {
     position: fixed;
-    bottom: calc(72px + env(safe-area-inset-bottom));
+    bottom: calc(64px + env(safe-area-inset-bottom));
     right: 22px;
     width: 50px; height: 50px;
     border-radius: 50%;
@@ -233,22 +232,29 @@
   }
   .secondary-btn {
     width: 100%;
-    padding: 10px;
+    height: 56px;
+    padding: 0 14px;
     margin-top: 8px;
-    border: 1.5px dashed var(--border-strong);
-    border-radius: 12px;
-    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px 16px 8px 16px;
+    background: var(--interaction-primary-pale);
     font-family: 'Inter', sans-serif;
-    color: var(--text-icon-secondary);
-    font-size: 14px;
+    color: var(--text-icon-accent);
+    font-size: 18px;
+    line-height: 120%;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
   }
   .primary-btn {
     width: 100%;
-    height: 48px;
+    height: 56px;
     padding: 0 14px;
     margin-top: var(--space-section-gap);
     border: none;
-    border-radius: 14px;
+    border-radius: 16px 8px 16px 8px;
     background: var(--interaction-primary);
     color: var(--text-icon-on-primary);
     font-family: 'Inter', sans-serif;
@@ -260,6 +266,7 @@
     justify-content: center;
     gap: 8px;
   }
+  .btn-square { width: 56px; flex: 0 0 56px; padding: 0; }
   .row-item {
     display: flex;
     gap: 8px;
@@ -484,7 +491,7 @@
   <label class="field-label">Photo</label>
   <div id="photoPreviewWrap" style="display:none;margin-bottom:8px;position:relative;">
     <img id="photoPreview" style="width:100%;height:160px;object-fit:cover;border-radius:12px;" />
-    <button type="button" id="removePhotoBtn" class="icon-btn" style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.9);"><i class="bi bi-trash icon"></i></button>
+    <button type="button" id="removePhotoBtn" class="icon-btn" style="position:absolute;top:8px;right:8px;"><i class="bi bi-trash icon"></i></button>
   </div>
   <div style="display:flex;gap:8px;margin-bottom:8px;">
     <button type="button" id="choosePhotoBtn" class="secondary-btn" style="margin-top:0;flex:1;"><i class="bi bi-images"></i> Galerie</button>
@@ -735,11 +742,11 @@
     document.getElementById('detailContent').innerHTML = `
       <div class="detail-photo">
         <img src="${recipePhoto}" alt="" onerror="this.style.display='none'" />
-        <button class="icon-btn" style="position:absolute;top:18px;left:18px;background:rgba(255,255,255,0.9);" onclick="goBackFromDetail()"><i class="bi bi-arrow-left icon"></i></button>
+        <button class="icon-btn" style="position:absolute;top:18px;left:18px;" onclick="goBackFromDetail()"><i class="bi bi-arrow-left icon"></i></button>
         <div style="position:absolute;top:18px;right:18px;display:flex;gap:8px;">
-          <button class="icon-btn" style="background:rgba(255,255,255,0.9);" onclick="shareCurrentRecipe(${i})"><i class="bi bi-share icon"></i></button>
-          <button class="icon-btn" style="background:rgba(255,255,255,0.9);" onclick="editCurrentRecipe()"><i class="bi bi-pencil icon"></i></button>
-          <button class="icon-btn" style="background:rgba(255,255,255,0.9);" onclick="deleteCurrentRecipe()"><i class="bi bi-trash icon"></i></button>
+          <button class="icon-btn" style="" onclick="shareCurrentRecipe(${i})"><i class="bi bi-share icon"></i></button>
+          <button class="icon-btn" style="" onclick="editCurrentRecipe()"><i class="bi bi-pencil icon"></i></button>
+          <button class="icon-btn" style="" onclick="deleteCurrentRecipe()"><i class="bi bi-trash icon"></i></button>
         </div>
       </div>
       <div class="detail-sheet">
@@ -767,7 +774,7 @@
       </div>
 
       <div class="detail-footer">
-        <button type="button" class="icon-btn detail-footer-secondary" onclick="addCurrentRecipeToPlanning('${r.id}')"><i class="bi bi-calendar-plus icon"></i></button>
+        <button type="button" class="secondary-btn btn-square" style="margin-top:0;" onclick="addCurrentRecipeToPlanning('${r.id}')"><i class="bi bi-calendar-plus" style="font-size:20px;"></i></button>
         ${hasSteps ? `<button type="button" class="primary-btn" style="margin-top:0;" onclick="openCookingMode(${i})">Cook mode</button>` : ''}
       </div>
     `;
@@ -1806,7 +1813,7 @@
     document.getElementById('sharedRecipeContent').innerHTML = `
       <div style="height:260px;background:var(--surface-low);position:relative;">
         <img src="${recipePhoto}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />
-        ${currentUser ? `<button class="icon-btn" style="position:absolute;top:18px;left:18px;background:rgba(255,255,255,0.9);" onclick="showHome()"><i class="bi bi-arrow-left icon"></i></button>` : ''}
+        ${currentUser ? `<button class="icon-btn" style="position:absolute;top:18px;left:18px;" onclick="showHome()"><i class="bi bi-arrow-left icon"></i></button>` : ''}
       </div>
       <div style="background:var(--surface-high);border-radius:22px 22px 0 0;margin-top:-18px;position:relative;padding:24px 16px;">
         ${banner}
