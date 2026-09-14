@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<title>Mes recettes</title>
+<title>Veggie Realm</title>
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#F4F2ED" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
@@ -317,10 +317,15 @@
 <body>
 
 <div id="authView" style="display:none;padding-top:60px;">
-  <h1 class="serif" style="font-size:30px;text-align:center;">Mes recettes</h1>
-  <p style="text-align:center;color:#403D36;margin-bottom:32px;">Connecte-toi pour retrouver tes recettes</p>
+  <h1 class="serif" style="font-size:30px;text-align:center;">Veggie Realm</h1>
+  <p style="text-align:center;color:#403D36;margin-bottom:24px;">Connecte-toi pour retrouver tes recettes</p>
 
   <div style="max-width:340px;margin:0 auto;">
+    <div class="subtabs">
+      <button type="button" id="authTabLogin" class="subtab-btn active">Connexion</button>
+      <button type="button" id="authTabSignup" class="subtab-btn">Inscription</button>
+    </div>
+
     <label class="field-label">Email</label>
     <input id="auth_email" class="field-input" type="email" placeholder="toi@exemple.com" autocomplete="email" />
 
@@ -330,7 +335,6 @@
     <p id="authError" style="color:#B3261E;font-size:13px;margin-top:10px;"></p>
 
     <button type="button" id="authSubmitBtn" class="primary-btn">Se connecter</button>
-    <button type="button" id="authToggleModeBtn" style="width:100%;background:none;border:none;padding:14px;color:#403D36;font-size:14px;">Pas encore de compte ? Inscris-toi</button>
   </div>
 </div>
 
@@ -340,10 +344,9 @@
 
 <div id="listView" style="display:none;">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
-    <h1 style="margin-bottom:0;">Mes recettes</h1>
+    <h1 style="margin-bottom:0;">Veggie Realm</h1>
     <div style="display:flex;gap:8px;">
       <button id="refreshBtn" class="icon-btn"><i class="bi bi-arrow-clockwise icon"></i></button>
-      <button id="logoutBtn" class="icon-btn"><i class="bi bi-box-arrow-right icon"></i></button>
     </div>
   </div>
   <div style="position:relative;display:none;margin:10px 0;" id="searchWrap">
@@ -444,7 +447,27 @@
     <i class="bi bi-plus-lg nav-icon"></i>
     <span>Ajouter</span>
   </button>
+  <button id="navAccount" class="nav-btn">
+    <i class="bi bi-person-circle nav-icon"></i>
+    <span>Compte</span>
+  </button>
 </nav>
+
+<div id="accountView" style="display:none;">
+  <h1>Compte</h1>
+  <div style="max-width:340px;">
+    <label class="field-label">Email</label>
+    <input id="account_email" class="field-input" disabled style="opacity:0.7;" />
+
+    <label class="field-label" style="margin-top:22px;">Nouveau mot de passe</label>
+    <input id="account_new_password" class="field-input" type="password" placeholder="Laisser vide pour ne pas changer" autocomplete="new-password" />
+
+    <p id="accountError" style="color:#B3261E;font-size:13px;margin-top:10px;"></p>
+
+    <button type="button" id="updatePasswordBtn" class="secondary-btn">Mettre à jour le mot de passe</button>
+    <button type="button" id="logoutBtn" class="primary-btn" style="background:#B3261E;">Se déconnecter</button>
+  </div>
+</div>
 
 <div id="planningView" style="display:none;">
   <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -713,10 +736,12 @@
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('formView').style.display = 'none';
     document.getElementById('planningView').style.display = 'none';
+    document.getElementById('accountView').style.display = 'none';
     document.getElementById('searchFab').style.display = 'none';
     document.getElementById('navHome').classList.remove('active');
     document.getElementById('navAdd').classList.remove('active');
     document.getElementById('navPlanning').classList.remove('active');
+    document.getElementById('navAccount').classList.remove('active');
   }
 
   function showHome() {
@@ -745,6 +770,19 @@
     document.getElementById('navPlanning').classList.add('active');
     renderPlanningRecipes();
   }
+
+  function showAccount() {
+    window.scrollTo(0, 0);
+    hideAllViews();
+    document.getElementById('accountView').style.display = 'block';
+    document.getElementById('bottomNav').style.display = 'flex';
+    document.getElementById('navAccount').classList.add('active');
+    document.getElementById('account_email').value = currentUser ? currentUser.email : '';
+    document.getElementById('account_new_password').value = '';
+    document.getElementById('accountError').textContent = '';
+  }
+
+  document.getElementById('navAccount').onclick = showAccount;
 
   document.getElementById('navHome').onclick = showHome;
   document.getElementById('navAdd').onclick = showForm;
@@ -1328,14 +1366,16 @@
     loadRecipes();
   }
 
-  document.getElementById('authToggleModeBtn').onclick = () => {
-    authMode = authMode === 'login' ? 'signup' : 'login';
-    document.getElementById('authSubmitBtn').textContent = authMode === 'login' ? 'Se connecter' : "S'inscrire";
-    document.getElementById('authToggleModeBtn').textContent = authMode === 'login'
-      ? "Pas encore de compte ? Inscris-toi"
-      : "Déjà un compte ? Connecte-toi";
+  function setAuthMode(mode) {
+    authMode = mode;
+    document.getElementById('authTabLogin').classList.toggle('active', mode === 'login');
+    document.getElementById('authTabSignup').classList.toggle('active', mode === 'signup');
+    document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Se connecter' : "S'inscrire";
     document.getElementById('authError').textContent = '';
-  };
+  }
+
+  document.getElementById('authTabLogin').onclick = () => setAuthMode('login');
+  document.getElementById('authTabSignup').onclick = () => setAuthMode('signup');
 
   document.getElementById('authSubmitBtn').onclick = async () => {
     const email = document.getElementById('auth_email').value.trim();
@@ -1362,10 +1402,9 @@
     }
 
     if (authMode === 'signup' && !data.session) {
+      setAuthMode('login');
       errEl.style.color = '#3D5A34';
       errEl.textContent = "Compte créé ! Tu peux maintenant te connecter.";
-      authMode = 'login';
-      document.getElementById('authSubmitBtn').textContent = 'Se connecter';
       return;
     }
     // Si une session existe déjà (connexion ou inscription sans confirmation email), onAuthStateChange prend le relais.
@@ -1373,6 +1412,31 @@
 
   document.getElementById('logoutBtn').onclick = async () => {
     await sb.auth.signOut();
+  };
+
+  document.getElementById('updatePasswordBtn').onclick = async () => {
+    const newPassword = document.getElementById('account_new_password').value;
+    const errEl = document.getElementById('accountError');
+    errEl.style.color = '#B3261E';
+    errEl.textContent = '';
+
+    if (!newPassword) {
+      errEl.textContent = "Entre un nouveau mot de passe.";
+      return;
+    }
+    if (newPassword.length < 6) {
+      errEl.textContent = "Le mot de passe doit faire au moins 6 caractères.";
+      return;
+    }
+
+    const { error } = await sb.auth.updateUser({ password: newPassword });
+    if (error) {
+      errEl.textContent = error.message;
+      return;
+    }
+    errEl.style.color = '#3D5A34';
+    errEl.textContent = "Mot de passe mis à jour ✓";
+    document.getElementById('account_new_password').value = '';
   };
 
   sb.auth.onAuthStateChange((event, session) => {
