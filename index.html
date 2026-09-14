@@ -398,8 +398,8 @@
   <input id="f_photo" class="field-input" placeholder="ou colle un lien URL..." style="margin-bottom:4px;" />
   <p id="photoUploadStatus" style="font-size:12px;color:#5A574E;margin:0;"></p>
 
-  <label class="field-label">Tags (séparés par une virgule)</label>
-  <input id="f_tags" class="field-input" placeholder="Ex: dessert, goûter" />
+  <label class="field-label">Type de repas</label>
+  <div id="f_mealTypes" class="tag-filters" style="margin-bottom:4px;"></div>
 
   <label class="field-label">Portions de référence</label>
   <input id="f_servings" class="field-input" type="number" value="4" />
@@ -513,13 +513,11 @@
   let searchQuery = '';
 
   function renderTagFilters() {
-    const allTags = [...new Set(recipes.flatMap(r => r.tags || []))].sort();
     const container = document.getElementById('tagFilters');
-    if (allTags.length === 0) { container.innerHTML = ''; return; }
-    container.innerHTML = allTags.map(t => `
+    container.innerHTML = MEAL_TYPES.map(t => `
       <button type="button" class="filter-chip ${activeTagFilter === t ? 'active' : ''}" data-tag="${t}"><i class="bi bi-tag"></i> ${t}</button>
     `).join('');
-    document.querySelectorAll('.filter-chip').forEach(chip => {
+    container.querySelectorAll('.filter-chip').forEach(chip => {
       chip.onclick = () => {
         const tag = chip.dataset.tag;
         activeTagFilter = (activeTagFilter === tag) ? null : tag;
@@ -799,6 +797,26 @@
   });
 
   // ---- Gestion du formulaire d'ajout / édition ----
+  const MEAL_TYPES = ['Petit-déj', 'Déjeuner', 'Dîner', 'Encas'];
+  let selectedMealTypes = [];
+
+  function renderMealTypeToggles() {
+    document.getElementById('f_mealTypes').innerHTML = MEAL_TYPES.map(t => `
+      <button type="button" class="filter-chip ${selectedMealTypes.includes(t) ? 'active' : ''}" data-meal-type="${t}"><i class="bi bi-check-circle${selectedMealTypes.includes(t) ? '-fill' : ''}"></i> ${t}</button>
+    `).join('');
+    document.querySelectorAll('[data-meal-type]').forEach(btn => {
+      btn.onclick = () => {
+        const t = btn.dataset.mealType;
+        if (selectedMealTypes.includes(t)) {
+          selectedMealTypes = selectedMealTypes.filter(x => x !== t);
+        } else {
+          selectedMealTypes.push(t);
+        }
+        renderMealTypeToggles();
+      };
+    });
+  }
+
   let ingRows = [];
   let editingId = null;
 
@@ -811,7 +829,8 @@
     document.getElementById('f_title').value = r.title || '';
     document.getElementById('f_photo').value = r.photo_url || '';
     updatePhotoPreview(r.photo_url);
-    document.getElementById('f_tags').value = (r.tags || []).join(', ');
+    selectedMealTypes = [...(r.tags || [])].filter(t => MEAL_TYPES.includes(t));
+    renderMealTypeToggles();
     document.getElementById('f_servings').value = r.servings || 4;
     document.getElementById('f_prep').value = r.prep_time_minutes || '';
     document.getElementById('f_cook').value = r.cook_time_minutes || '';
@@ -1112,7 +1131,8 @@
     document.getElementById('f_photo').value = '';
     updatePhotoPreview(null);
     document.getElementById('photoUploadStatus').textContent = '';
-    document.getElementById('f_tags').value = '';
+    selectedMealTypes = [];
+    renderMealTypeToggles();
     document.getElementById('f_servings').value = 4;
     document.getElementById('f_prep').value = '';
     document.getElementById('f_cook').value = '';
@@ -1134,8 +1154,7 @@
       return;
     }
 
-    const tags = document.getElementById('f_tags').value
-      .split(',').map(t => t.trim()).filter(Boolean);
+    const tags = [...selectedMealTypes];
 
     const ingredients = ingRows
       .filter(ing => ing.name && ing.name.trim())
@@ -1206,28 +1225,21 @@
     (data || []).forEach(row => { mealPlan[row.recipe_id] = row.count; });
   }
 
-  const MEAL_CATEGORIES = [
-    { label: 'Petit-déj', keywords: ['petit-dej', 'petit dej', 'petitdej', 'breakfast'] },
-    { label: 'Déjeuner', keywords: ['dejeuner', 'lunch'] },
-    { label: 'Dîner', keywords: ['diner', 'dinner'] },
-    { label: 'Encas', keywords: ['gouter', 'encas', 'snack', 'apero', 'aperitif'] }
-  ];
-
   function renderPlanningRecipes() {
-    const counts = MEAL_CATEGORIES.map(cat => {
+    const counts = MEAL_TYPES.map(type => {
       let total = 0;
       recipes.forEach(r => {
         const count = mealPlan[r.id] || 0;
         if (count === 0) return;
-        if ((r.tags || []).some(t => cat.keywords.includes(normalize(t)))) total += count;
+        if ((r.tags || []).includes(type)) total += count;
       });
       return total;
     });
 
-    document.getElementById('planSummary').innerHTML = MEAL_CATEGORIES.map((cat, idx) => `
+    document.getElementById('planSummary').innerHTML = MEAL_TYPES.map((type, idx) => `
       <div class="meal-category-card">
         <p class="meal-category-number">${counts[idx]}</p>
-        <p class="meal-category-label">${cat.label}</p>
+        <p class="meal-category-label">${type}</p>
       </div>
     `).join('');
 
