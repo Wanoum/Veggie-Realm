@@ -335,6 +335,21 @@
     <p id="authError" style="color:#B3261E;font-size:13px;margin-top:10px;"></p>
 
     <button type="button" id="authSubmitBtn" class="primary-btn">Se connecter</button>
+    <button type="button" id="forgotPasswordBtn" style="width:100%;background:none;border:none;padding:14px;color:#403D36;font-size:14px;">Mot de passe oublié ?</button>
+  </div>
+</div>
+
+<div id="resetPasswordView" style="display:none;padding-top:60px;">
+  <h1 class="serif" style="font-size:26px;text-align:center;">Nouveau mot de passe</h1>
+  <p style="text-align:center;color:#403D36;margin-bottom:24px;">Choisis un nouveau mot de passe pour ton compte</p>
+
+  <div style="max-width:340px;margin:0 auto;">
+    <label class="field-label">Nouveau mot de passe</label>
+    <input id="reset_password" class="field-input" type="password" placeholder="••••••••" autocomplete="new-password" />
+
+    <p id="resetError" style="color:#B3261E;font-size:13px;margin-top:10px;"></p>
+
+    <button type="button" id="resetSubmitBtn" class="primary-btn">Enregistrer le mot de passe</button>
   </div>
 </div>
 
@@ -515,7 +530,7 @@
   function renderTagFilters() {
     const container = document.getElementById('tagFilters');
     container.innerHTML = MEAL_TYPES.map(t => `
-      <button type="button" class="filter-chip ${activeTagFilter === t ? 'active' : ''}" data-tag="${t}"><i class="bi bi-tag"></i> ${t}</button>
+      <button type="button" class="filter-chip ${activeTagFilter === t ? 'active' : ''}" data-tag="${t}"><i class="bi ${MEAL_TYPE_ICONS[t]}"></i> ${t}</button>
     `).join('');
     container.querySelectorAll('.filter-chip').forEach(chip => {
       chip.onclick = () => {
@@ -798,11 +813,17 @@
 
   // ---- Gestion du formulaire d'ajout / édition ----
   const MEAL_TYPES = ['Petit-déj', 'Déjeuner', 'Dîner', 'Encas'];
+  const MEAL_TYPE_ICONS = {
+    'Petit-déj': 'bi-sunrise',
+    'Déjeuner': 'bi-brightness-high',
+    'Dîner': 'bi-moon-stars',
+    'Encas': 'bi-cup-straw'
+  };
   let selectedMealTypes = [];
 
   function renderMealTypeToggles() {
     document.getElementById('f_mealTypes').innerHTML = MEAL_TYPES.map(t => `
-      <button type="button" class="filter-chip ${selectedMealTypes.includes(t) ? 'active' : ''}" data-meal-type="${t}"><i class="bi bi-check-circle${selectedMealTypes.includes(t) ? '-fill' : ''}"></i> ${t}</button>
+      <button type="button" class="filter-chip ${selectedMealTypes.includes(t) ? 'active' : ''}" data-meal-type="${t}"><i class="bi ${MEAL_TYPE_ICONS[t]}"></i> ${t}</button>
     `).join('');
     document.querySelectorAll('[data-meal-type]').forEach(btn => {
       btn.onclick = () => {
@@ -1047,7 +1068,7 @@
         const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        canvas.getContext('2d', { colorSpace: 'srgb' }).drawImage(img, 0, 0, width, height);
         canvas.toBlob(blob => resolve(blob), 'image/jpeg', quality);
       };
       img.onerror = reject;
@@ -1238,6 +1259,7 @@
 
     document.getElementById('planSummary').innerHTML = MEAL_TYPES.map((type, idx) => `
       <div class="meal-category-card">
+        <i class="bi ${MEAL_TYPE_ICONS[type]}" style="font-size:18px;color:#4A5A38;"></i>
         <p class="meal-category-number">${counts[idx]}</p>
         <p class="meal-category-label">${type}</p>
       </div>
@@ -1361,6 +1383,7 @@
 
   function showAuthView() {
     document.getElementById('authView').style.display = 'block';
+    document.getElementById('resetPasswordView').style.display = 'none';
     document.getElementById('listView').style.display = 'none';
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('formView').style.display = 'none';
@@ -1370,8 +1393,64 @@
     document.getElementById('searchFab').style.display = 'none';
   }
 
+  function showResetPasswordView() {
+    document.getElementById('authView').style.display = 'none';
+    document.getElementById('listView').style.display = 'none';
+    document.getElementById('detailView').style.display = 'none';
+    document.getElementById('formView').style.display = 'none';
+    document.getElementById('planningView').style.display = 'none';
+    document.getElementById('sharedRecipeView').style.display = 'none';
+    document.getElementById('bottomNav').style.display = 'none';
+    document.getElementById('searchFab').style.display = 'none';
+    document.getElementById('resetPasswordView').style.display = 'block';
+  }
+
+  document.getElementById('forgotPasswordBtn').onclick = async () => {
+    const email = document.getElementById('auth_email').value.trim();
+    const errEl = document.getElementById('authError');
+    errEl.style.color = '#B3261E';
+    errEl.textContent = '';
+
+    if (!email) {
+      errEl.textContent = "Entre ton email ci-dessus, puis reclique sur ce lien.";
+      return;
+    }
+
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: location.origin + location.pathname
+    });
+
+    if (error) {
+      errEl.textContent = error.message;
+      return;
+    }
+    errEl.style.color = '#3D5A34';
+    errEl.textContent = "Email envoyé ! Vérifie ta boîte de réception (et les spams).";
+  };
+
+  document.getElementById('resetSubmitBtn').onclick = async () => {
+    const newPassword = document.getElementById('reset_password').value;
+    const errEl = document.getElementById('resetError');
+    errEl.style.color = '#B3261E';
+    errEl.textContent = '';
+
+    if (!newPassword || newPassword.length < 6) {
+      errEl.textContent = "Le mot de passe doit faire au moins 6 caractères.";
+      return;
+    }
+
+    const { error } = await sb.auth.updateUser({ password: newPassword });
+    if (error) {
+      errEl.textContent = error.message;
+      return;
+    }
+    // Une fois le mot de passe changé, on entre normalement dans l'app.
+    startApp();
+  };
+
   function startApp() {
     document.getElementById('authView').style.display = 'none';
+    document.getElementById('resetPasswordView').style.display = 'none';
     document.getElementById('sharedRecipeView').style.display = 'none';
     showHome();
     loadMealPlan();
@@ -1453,6 +1532,10 @@
 
   sb.auth.onAuthStateChange((event, session) => {
     currentUser = session ? session.user : null;
+    if (event === 'PASSWORD_RECOVERY') {
+      showResetPasswordView();
+      return;
+    }
     if (currentUser) {
       startApp();
     } else if (!new URLSearchParams(location.search).get('recipe')) {
