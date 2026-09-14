@@ -86,7 +86,7 @@
   .mini-card-photo img { width: 100%; height: 100%; object-fit: cover; }
   .mini-card p { font-size: 12px; font-weight: 600; margin: 0; line-height: 1.3; color: var(--text-icon-primary); }
   .card-photo {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 16 / 9;
     border-radius: 16px;
     background: var(--surface-low);
     margin-bottom: 8px;
@@ -318,13 +318,13 @@
   }
   .filter-chip-lg {
     flex-direction: column;
-    height: 76px;
+    height: 68px;
     gap: 4px;
     font-size: 12px;
     border-radius: 16px;
   }
-  .filter-chip-lg i { font-size: 32px; }
-  .filter-chip-lg.active { border-radius: 24px; }
+  .filter-chip-lg i { font-size: 24px; }
+  .filter-chip-lg.active { border-radius: 999px; }
   .plan-summary {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -420,12 +420,7 @@
 </div>
 
 <div id="listView" style="display:none;">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
-    <h1 style="margin-bottom:0;">Veggie Realm</h1>
-    <div style="display:flex;gap:8px;">
-      <button id="refreshBtn" class="icon-btn"><i class="bi bi-arrow-clockwise icon"></i></button>
-    </div>
-  </div>
+  <h1 style="margin-bottom:0;">Veggie Realm</h1>
   <div style="position:relative;display:none;margin:10px 0;" id="searchWrap">
     <input id="searchInput" class="field-input" placeholder="Rechercher une recette..." style="padding-right:40px;" />
     <button id="clearSearchBtn" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;padding:6px;color:var(--text-icon-secondary);"><i class="bi bi-x-circle-fill"></i></button>
@@ -838,6 +833,7 @@
     document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('searchFab').style.display = 'block';
     document.getElementById('navHome').classList.add('active');
+    sessionStorage.setItem('lastView', 'home');
   }
 
   function showForm() {
@@ -847,6 +843,7 @@
     document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('navAdd').classList.add('active');
     resetForm();
+    sessionStorage.setItem('lastView', 'form');
   }
 
   function showPlanning() {
@@ -856,6 +853,7 @@
     document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('navPlanning').classList.add('active');
     renderPlanningRecipes();
+    sessionStorage.setItem('lastView', 'planning');
   }
 
   async function showAccount() {
@@ -867,6 +865,7 @@
     document.getElementById('account_email').value = currentUser ? currentUser.email : '';
     document.getElementById('account_new_password').value = '';
     document.getElementById('accountError').textContent = '';
+    sessionStorage.setItem('lastView', 'account');
 
     const { data: profile } = await sb.from('profiles').select('display_name').eq('id', currentUser.id).maybeSingle();
     document.getElementById('account_display_name').value = profile ? (profile.display_name || '') : '';
@@ -877,10 +876,6 @@
   document.getElementById('navHome').onclick = showHome;
   document.getElementById('navAdd').onclick = showForm;
   document.getElementById('navPlanning').onclick = showPlanning;
-
-  document.getElementById('refreshBtn').onclick = () => {
-    location.href = location.pathname + '?t=' + Date.now();
-  };
 
   // ---- Tirer pour rafraîchir (pull-to-refresh) ----
   (function setupPullToRefresh() {
@@ -1571,7 +1566,13 @@
     document.getElementById('authView').style.display = 'none';
     document.getElementById('resetPasswordView').style.display = 'none';
     document.getElementById('sharedRecipeView').style.display = 'none';
-    showHome();
+
+    const lastView = sessionStorage.getItem('lastView');
+    if (lastView === 'planning') showPlanning();
+    else if (lastView === 'form') showForm();
+    else if (lastView === 'account') showAccount();
+    else showHome();
+
     loadMealPlan();
     loadRecipes();
     ensureProfile();
