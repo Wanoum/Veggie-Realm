@@ -1476,6 +1476,12 @@
     showHome();
     loadMealPlan();
     loadRecipes();
+    ensureProfile();
+  }
+
+  async function ensureProfile() {
+    const displayName = currentUser.email.split('@')[0];
+    await sb.from('profiles').upsert({ id: currentUser.id, email: currentUser.email, display_name: displayName });
   }
 
   function setAuthMode(mode) {
@@ -1576,6 +1582,13 @@
     }
     const r = data;
     currentSharedRecipe = r;
+
+    let authorName = null;
+    if (r.user_id) {
+      const { data: authorProfile } = await sb.from('profiles').select('display_name, email').eq('id', r.user_id).maybeSingle();
+      if (authorProfile) authorName = authorProfile.display_name || authorProfile.email;
+    }
+
     const sortedIngredients = [...(r.ingredients || [])].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
     const ingredientsHtml = sortedIngredients.map(ing => `
       <div class="ing-row">
@@ -1589,16 +1602,21 @@
 
     const isOwnRecipe = currentUser && currentUser.id === r.user_id;
     let banner = '';
+    let isSaved = false;
+
     if (!currentUser) {
       banner = `
         <div style="background:#2B2A28;color:white;border-radius:14px;padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-          <span style="font-size:13px;">Recette partagée avec toi ✨</span>
+          <span style="font-size:13px;">Recette partagée${authorName ? ' par ' + authorName : ' avec toi'} ✨</span>
           <button type="button" onclick="location.href = location.pathname;" style="background:white;color:#2B2A28;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;white-space:nowrap;">Créer mon compte</button>
         </div>`;
     } else if (!isOwnRecipe) {
+      const { data: existing } = await sb.from('saved_recipes').select('id').eq('user_id', currentUser.id).eq('recipe_id', r.id).maybeSingle();
+      isSaved = !!existing;
       banner = `
-        <button type="button" class="primary-btn" style="margin-top:0;margin-bottom:18px;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="saveSharedRecipe('${r.id}')" id="saveSharedBtn">
-          <i class="bi bi-bookmark-plus"></i> Enregistrer cette recette
+        ${authorName ? `<p style="font-size:13px;color:#403D36;margin:0 0 12px;"><i class="bi bi-person-circle"></i> Partagée par ${authorName}</p>` : ''}
+        <button type="button" class="primary-btn" style="margin-top:0;margin-bottom:18px;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="toggleSavedRecipe('${r.id}')" id="saveSharedBtn" data-saved="${isSaved}">
+          <i class="bi ${isSaved ? 'bi-bookmark-fill' : 'bi-bookmark'}" id="saveSharedIcon"></i> Enregistrer cette recette
         </button>`;
     }
 
@@ -1632,20 +1650,26 @@
     document.getElementById('searchFab').style.display = 'none';
   }
 
-  async function saveSharedRecipe(recipeId) {
+  async function toggleSavedRecipe(recipeId) {
     const btn = document.getElementById('saveSharedBtn');
+    const icon = document.getElementById('saveSharedIcon');
+    const currentlySaved = btn.dataset.saved === 'true';
     btn.disabled = true;
-    const { error } = await sb.from('saved_recipes').insert({ user_id: currentUser.id, recipe_id: recipeId });
-    if (error) {
-      if (error.code === '23505') {
-        btn.innerHTML = '<i class="bi bi-bookmark-check-fill"></i> Déjà enregistrée';
-      } else {
-        alert("Erreur : " + error.message);
-        btn.disabled = false;
-      }
-      return;
+
+    if (currentlySaved) {
+      const { error } = await sb.from('saved_recipes').delete().eq('user_id', currentUser.id).eq('recipe_id', recipeId);
+      if (error) { alert("Erreur : " + error.message); btn.disabled = false; return; }
+      btn.dataset.saved = 'false';
+      icon.className = 'bi bi-bookmark';
+    } else {
+      const { error } = await sb.from('saved_recipes').insert({ user_id: currentUser.id, recipe_id: recipeId });
+      if (error) { alert("Erreur : " + error.message); btn.disabled = false; return; }
+      btn.dataset.saved = 'true';
+      icon.className = 'bi bi-bookmark-fill';
     }
-    btn.innerHTML = '<i class="bi bi-bookmark-check-fill"></i> Enregistrée !';
+
+    btn.disabled = false;
+    loadSavedRecipes();
   }
 
   // ---- Recettes enregistrées depuis un partage ----
