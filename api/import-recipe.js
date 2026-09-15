@@ -41,6 +41,43 @@ function findRecipeInJsonLd(data) {
   return null;
 }
 
+// Fallback : certains sites utilisent le Microdata (attributs itemprop) plutôt que le JSON-LD.
+function findRecipeInMicrodata(html) {
+  const scopeMatch = html.match(/itemscope[^>]*itemtype=["'][^"']*schema\.org\/Recipe["'][\s\S]*?(?=<\/body>)/i);
+  if (!scopeMatch) return null;
+  const block = scopeMatch[0];
+
+  function grabAll(prop) {
+    const re = new RegExp(`itemprop=["']${prop}["'][^>]*content=["']([^"']*)["']`, 'gi');
+    const results = [];
+    let m;
+    while ((m = re.exec(block))) results.push(m[1]);
+    if (results.length === 0) {
+      const re2 = new RegExp(`itemprop=["']${prop}["'][^>]*>([^<]*)<`, 'gi');
+      while ((m = re2.exec(block))) results.push(m[1].trim());
+    }
+    return results;
+  }
+
+  const name = grabAll('name')[0] || '';
+  const image = grabAll('image')[0] || null;
+  const recipeIngredient = grabAll('recipeIngredient');
+  const recipeInstructions = grabAll('recipeInstructions');
+  const recipeYield = grabAll('recipeYield')[0] || null;
+  const cookTime = grabAll('cookTime')[0] || null;
+
+  if (!name && recipeIngredient.length === 0) return null;
+
+  return {
+    name,
+    image,
+    recipeIngredient,
+    recipeInstructions,
+    recipeYield,
+    cookTime
+  };
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
@@ -58,7 +95,11 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(targetUrl.toString(), {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; VeggieRealmImporter/1.0)' }
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8'
+      }
     });
     if (!response.ok) {
       return res.status(502).json({ error: `Le site a répondu avec une erreur (${response.status}).` });
@@ -76,6 +117,10 @@ export default async function handler(req, res) {
       } catch {
         // JSON invalide sur ce bloc, on continue avec les suivants
       }
+    }
+
+    if (!recipe) {
+      recipe = findRecipeInMicrodata(html);
     }
 
     if (!recipe) {
