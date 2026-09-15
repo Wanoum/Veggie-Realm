@@ -13,12 +13,15 @@
 <style>
   * { box-sizing: border-box; touch-action: manipulation; }
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  html { height: 100%; }
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-size: 18px;
     background: var(--surface-low);
     color: var(--text-icon-primary);
     margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
     padding: calc(var(--space-page-edge) + env(safe-area-inset-top)) var(--space-page-edge) 100px;
   }
   .serif { font-family: 'Krylon', Georgia, serif; }
@@ -104,11 +107,11 @@
   .detail-photo img { width: 100%; height: 100%; object-fit: cover; }
   .detail-sheet {
     position: relative;
-    margin-top: 360px;
+    margin-top: 340px;
     background: var(--surface-high);
-    border-radius: 22px 22px 0 0;
+    border-radius: 28px 28px 0 0;
     padding: 12px 16px 24px;
-    min-height: calc(100vh - 360px);
+    min-height: calc(100vh - 340px);
   }
   .detail-sheet-handle {
     width: 36px; height: 4px;
