@@ -519,6 +519,7 @@
 </div>
 
 <div id="formView" style="display:none;">
+  <button id="wizardTopBackBtn" class="icon-btn" style="display:none;margin-bottom:12px;" onclick="wizardGoBack()"><i class="bi bi-arrow-left icon"></i></button>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
     <h1 id="formTitle" style="margin-bottom:0;">Nouvelle recette</h1>
     <span id="wizardStepLabel" class="text-small" style="color:var(--text-icon-secondary);"></span>
@@ -595,7 +596,6 @@
   <p id="formError" style="color:#B3261E;font-size:13px;"></p>
 
   <div style="display:flex;gap:10px;margin-top:var(--space-section-gap);">
-    <button type="button" id="wizardBackBtn" class="secondary-btn" style="margin-top:0;display:none;flex:0 0 auto;width:auto;padding:0 20px;">Précédent</button>
     <button type="button" id="wizardNextBtn" class="primary-btn" style="margin-top:0;flex:1;">Suivant</button>
   </div>
 </div>
@@ -832,6 +832,7 @@
         ${ingredientsHtml}
         ${r.notes ? `<div class="notice">${r.notes}</div>` : ''}
         ${stepsHtml}
+        ${r.source_url ? `<p style="margin-top:var(--space-section-gap);"><a href="${r.source_url}" target="_blank" rel="noopener" style="color:var(--text-icon-accent);font-size:14px;">Source : ${new URL(r.source_url).hostname.replace('www.', '')}</a></p>` : ''}
         <div style="height:90px;"></div>
       </div>
 
@@ -1000,6 +1001,7 @@
 
   // ---- Navigation du parcours d'ajout en 4 étapes ----
   let wizardStep = 1;
+  let importedSourceUrl = null;
   const wizardStepLabels = ['', 'Source', 'Infos', 'Ingrédients', 'Étapes'];
 
   function goToWizardStep(step) {
@@ -1008,10 +1010,18 @@
     for (let s = 1; s <= 4; s++) {
       document.getElementById('wizardStep' + s).style.display = (s === step) ? 'block' : 'none';
     }
-    document.getElementById('wizardStepLabel').textContent = editingId ? '' : `Étape ${step} / 4 · ${wizardStepLabels[step]}`;
-    document.getElementById('wizardBackBtn').style.display = (step > 1) ? 'block' : 'none';
+    document.getElementById('wizardStepLabel').textContent = (editingId || step === 1)
+      ? ''
+      : `Étape ${step - 1} / 3 · ${wizardStepLabels[step]}`;
+    document.getElementById('wizardTopBackBtn').style.display = (step > 1) ? 'flex' : 'none';
+    document.getElementById('bottomNav').style.display = (step === 1) ? 'flex' : 'none';
+    document.getElementById('searchFab').style.display = 'none';
     document.getElementById('wizardNextBtn').textContent = (step === 4) ? 'Enregistrer la recette' : 'Suivant';
     document.getElementById('formError').textContent = '';
+  }
+
+  function wizardGoBack() {
+    if (wizardStep > 1) goToWizardStep(wizardStep - 1);
   }
 
   function chooseNewRecipe() {
@@ -1051,6 +1061,7 @@
       }
 
       // Préremplit les champs avec les données importées
+      importedSourceUrl = data.source_url || url;
       document.getElementById('f_title').value = data.title || '';
       document.getElementById('f_photo').value = data.photo_url || '';
       updatePhotoPreview(data.photo_url || null);
@@ -1086,10 +1097,6 @@
     } else {
       saveRecipe();
     }
-  };
-
-  document.getElementById('wizardBackBtn').onclick = () => {
-    if (wizardStep > 1) goToWizardStep(wizardStep - 1);
   };
 
   function showPlanning() {
@@ -1214,6 +1221,7 @@
     editingId = r.id;
     currentSessionUploadPath = null;
     originalPhotoUrlForSession = r.photo_url || null;
+    importedSourceUrl = r.source_url || null;
     document.getElementById('formTitle').textContent = "Modifier la recette";
     document.getElementById('f_title').value = r.title || '';
     document.getElementById('f_photo').value = r.photo_url || '';
@@ -1515,6 +1523,7 @@
     editingId = null;
     currentSessionUploadPath = null;
     originalPhotoUrlForSession = null;
+    importedSourceUrl = null;
     document.getElementById('import_url').value = '';
     document.getElementById('importPanel').style.display = 'none';
     document.getElementById('importStatus').textContent = '';
@@ -1571,6 +1580,7 @@
       cook_time_minutes: document.getElementById('f_cook').value ? Number(document.getElementById('f_cook').value) : null,
       oven_temp_celsius: document.getElementById('f_oven').value ? Number(document.getElementById('f_oven').value) : null,
       notes: document.getElementById('f_notes').value.trim() || null,
+      source_url: importedSourceUrl,
       ingredients,
       steps
     };
@@ -2029,6 +2039,7 @@
         ${ingredientsHtml}
         ${r.notes ? `<div class="notice" style="margin-top:16px;">${r.notes}</div>` : ''}
         ${stepsHtml}
+        ${r.source_url ? `<p style="margin-top:var(--space-section-gap);"><a href="${r.source_url}" target="_blank" rel="noopener" style="color:var(--text-icon-accent);font-size:14px;">Source : ${new URL(r.source_url).hostname.replace('www.', '')}</a></p>` : ''}
       </div>
     `;
     hideAllViewsForShared();
