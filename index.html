@@ -116,8 +116,14 @@
     border-radius: 4px;
     margin: 0 auto 20px;
   }
+  .cooking-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .cooking-scroll::-webkit-scrollbar { display: none; }
   .cooking-step {
     scroll-snap-align: center;
+    scroll-snap-stop: always;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -128,14 +134,12 @@
   .cooking-step p {
     font-family: 'Krylon', Georgia, serif;
     margin: 0;
-    transition: font-size 0.25s ease, opacity 0.25s ease;
-    font-size: 22px;
+    transition: opacity 0.3s ease;
+    font-size: 30px;
     line-height: 1.4;
     opacity: 0.3;
   }
   .cooking-step.active p {
-    font-size: 34px;
-    line-height: 1.35;
     opacity: 1;
   }
   .cooking-step .cooking-step-ingredients {
@@ -515,7 +519,7 @@
     </div>
     <button class="icon-btn" style="background:var(--surface-high);border:none;" onclick="closeCookingMode()"><i class="bi bi-x-lg icon"></i></button>
   </div>
-  <div id="cookingScroll" style="flex:1;overflow-y:auto;scroll-snap-type:y mandatory;"></div>
+  <div id="cookingScroll" class="cooking-scroll" style="flex:1;overflow-y:auto;scroll-snap-type:y mandatory;"></div>
 </div>
 
 <div id="formView" style="display:none;">
@@ -765,6 +769,7 @@
     const r = recipes[i];
     currentServings[i] = r.servings || 4;
     document.getElementById('listView').style.display = 'none';
+    document.getElementById('formView').style.display = 'none';
     document.getElementById('detailView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'none';
     document.getElementById('searchFab').style.display = 'none';
