@@ -219,7 +219,7 @@
     min-height: 56px;
     background: var(--surface-high);
     border-top: 1px solid var(--border-divider);
-    padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+    padding: 6px 16px calc(6px + env(safe-area-inset-bottom));
     z-index: 100;
   }
   .nav-btn {
@@ -246,7 +246,7 @@
   .icon { font-size: 20px; line-height: 1; color: var(--text-icon-primary); }
   .fab-search {
     position: fixed;
-    bottom: calc(56px + env(safe-area-inset-bottom));
+    bottom: calc(70px + env(safe-area-inset-bottom));
     right: 22px;
     width: 50px; height: 50px;
     border-radius: 50%;
@@ -539,7 +539,6 @@
 
   <!-- Étape 1 : source -->
   <div id="wizardStep1" class="wizard-step">
-    <p class="text-body" style="margin:0 0 16px;">Comment veux-tu ajouter cette recette ?</p>
     <button type="button" class="secondary-btn" style="margin-bottom:10px;" onclick="chooseNewRecipe()"><i class="bi bi-pencil"></i> Créer une nouvelle recette</button>
     <button type="button" class="secondary-btn" onclick="toggleImportPanel()"><i class="bi bi-link-45deg"></i> Importer depuis un site web</button>
 
@@ -614,7 +613,7 @@
 
 <nav id="bottomNav" style="display:none;">
   <button id="navHome" class="nav-btn active">
-    <span class="nav-icon-wrap"><i class="bi bi-book-fill nav-icon" data-outline="bi-book" data-filled="bi-book-fill"></i></span>
+    <span class="nav-icon-wrap"><i class="bi bi-book nav-icon" data-outline="bi-book" data-filled="bi-book-fill"></i></span>
     <span class="nav-label">Recettes</span>
   </button>
   <button id="navPlanning" class="nav-btn">
@@ -877,6 +876,7 @@
     document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('searchFab').style.display = 'block';
     document.body.style.background = '';
+    sessionStorage.setItem('lastView', 'home');
   }
 
   // ---- Mode cuisine plein écran ----
@@ -968,8 +968,7 @@
 
   function updateNavIcons() {
     document.querySelectorAll('.nav-btn .nav-icon').forEach(icon => {
-      const isActive = icon.closest('.nav-btn').classList.contains('active');
-      icon.className = `bi ${isActive ? icon.dataset.filled : icon.dataset.outline} nav-icon`;
+      icon.className = `bi ${icon.dataset.outline} nav-icon`;
     });
   }
 
@@ -983,6 +982,9 @@
     document.getElementById('accountView').style.display = 'none';
     document.getElementById('sharedRecipeView').style.display = 'none';
     document.getElementById('searchFab').style.display = 'none';
+    document.getElementById('searchWrap').style.display = 'none';
+    document.getElementById('searchInput').value = '';
+    searchQuery = '';
     document.getElementById('navHome').classList.remove('active');
     document.getElementById('navAdd').classList.remove('active');
     document.getElementById('navPlanning').classList.remove('active');
@@ -1153,12 +1155,13 @@
     let startY = null;
     let pulling = false;
 
-    function isOnHome() {
-      return document.getElementById('listView').style.display !== 'none';
+    function isRefreshAllowed() {
+      return document.getElementById('cookingModeView').style.display === 'none'
+          && document.getElementById('authView').style.display === 'none';
     }
 
     document.addEventListener('touchstart', (e) => {
-      if (!isOnHome()) { startY = null; pulling = false; return; }
+      if (!isRefreshAllowed()) { startY = null; pulling = false; return; }
       if ((window.scrollY || document.documentElement.scrollTop || 0) > 0) { startY = null; pulling = false; return; }
       startY = e.touches[0].clientY;
       pulling = true;
@@ -1183,6 +1186,13 @@
         icon.className = 'bi bi-arrow-repeat';
         icon.style.animation = 'spin 0.6s linear infinite';
         await Promise.all([loadRecipes(), loadMealPlan()]);
+        if (document.getElementById('planningView').style.display !== 'none') {
+          if (document.getElementById('planningCoursesPanel').style.display !== 'none') {
+            renderCoursesList();
+          } else {
+            renderPlanningRecipes();
+          }
+        }
         icon.style.animation = '';
         icon.className = 'bi bi-arrow-clockwise';
         indicator.style.height = '0';
@@ -1689,8 +1699,8 @@
 
     document.querySelectorAll('[data-plan-recipe]').forEach(btn => {
       btn.onclick = async (e) => {
-        const recipeId = e.target.dataset.planRecipe;
-        const delta = Number(e.target.dataset.delta);
+        const recipeId = e.currentTarget.dataset.planRecipe;
+        const delta = Number(e.currentTarget.dataset.delta);
         const newVal = Math.max(0, (mealPlan[recipeId] || 0) + delta);
         mealPlan[recipeId] = newVal;
 
