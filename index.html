@@ -148,12 +148,13 @@
     position: fixed;
     bottom: 0; left: 0; right: 0;
     display: flex;
+    align-items: flex-end;
     gap: 10px;
-    padding: 16px;
-    padding-bottom: calc(16px + env(safe-area-inset-bottom));
-    background: rgba(255, 253, 248, 0.75);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    padding: 40px 16px calc(16px + env(safe-area-inset-bottom));
+    background: linear-gradient(to bottom,
+      rgba(255, 253, 248, 0) 0px,
+      rgba(255, 253, 248, 0.8) 40px,
+      rgba(255, 253, 248, 0.8) 100%);
     z-index: 50;
   }
   .servings-stepper { display: flex; gap: 2px; }
@@ -208,9 +209,7 @@
     display: flex;
     align-items: center;
     min-height: 56px;
-    background: rgba(255, 253, 248, 0.94);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: var(--surface-high);
     border-top: 1px solid var(--border-divider);
     padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
     z-index: 100;
