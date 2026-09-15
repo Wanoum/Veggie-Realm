@@ -132,14 +132,18 @@
     cursor: pointer;
   }
   .cooking-step p {
-    font-family: 'Krylon', Georgia, serif;
+    font-family: 'Inter', sans-serif;
     margin: 0;
-    transition: opacity 0.3s ease;
-    font-size: 30px;
-    line-height: 1.4;
+    transition: opacity 0.3s ease, font-size 0.3s ease;
+    font-size: 18px;
+    line-height: 120%;
+    font-weight: 400;
     opacity: 0.3;
   }
   .cooking-step.active p {
+    font-family: 'Krylon', Georgia, serif;
+    font-size: 30px;
+    line-height: 1.4;
     opacity: 1;
   }
   .cooking-step .cooking-step-ingredients {
