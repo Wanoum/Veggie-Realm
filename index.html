@@ -519,55 +519,85 @@
 </div>
 
 <div id="formView" style="display:none;">
-  <h1 id="formTitle">Nouvelle recette</h1>
-
-  <label class="field-label">Titre</label>
-  <input id="f_title" class="field-input" placeholder="Ex: Gâteau au yaourt" />
-
-  <label class="field-label">Photo</label>
-  <div id="photoPreviewWrap" style="display:none;margin-bottom:8px;position:relative;">
-    <img id="photoPreview" style="width:100%;height:160px;object-fit:cover;border-radius:12px;" />
-    <button type="button" id="removePhotoBtn" class="icon-btn" style="position:absolute;top:8px;right:8px;"><i class="bi bi-trash icon"></i></button>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+    <h1 id="formTitle" style="margin-bottom:0;">Nouvelle recette</h1>
+    <span id="wizardStepLabel" class="text-small" style="color:var(--text-icon-secondary);"></span>
   </div>
-  <div style="display:flex;gap:8px;margin-bottom:8px;">
-    <button type="button" id="choosePhotoBtn" class="secondary-btn" style="margin-top:0;flex:1;"><i class="bi bi-images"></i> Galerie</button>
-    <button type="button" id="takePhotoBtn" class="secondary-btn" style="margin-top:0;flex:1;"><i class="bi bi-camera"></i> Appareil photo</button>
-  </div>
-  <input type="file" id="photoFileInput" accept="image/*" style="display:none;" />
-  <input type="file" id="photoCameraInput" accept="image/*" capture="environment" style="display:none;" />
-  <input id="f_photo" class="field-input" placeholder="ou colle un lien URL..." style="margin-bottom:4px;" />
-  <p id="photoUploadStatus" style="font-size:12px;color:var(--text-icon-secondary);margin:0;"></p>
 
-  <label class="field-label">Type de repas</label>
-  <div id="f_mealTypes" class="tag-filters" style="margin-bottom:4px;"></div>
+  <!-- Étape 1 : source -->
+  <div id="wizardStep1" class="wizard-step">
+    <p class="text-body" style="margin:0 0 16px;">Comment veux-tu ajouter cette recette ?</p>
+    <button type="button" class="secondary-btn" style="margin-bottom:10px;" onclick="chooseNewRecipe()"><i class="bi bi-pencil"></i> Créer une nouvelle recette</button>
+    <button type="button" class="secondary-btn" onclick="toggleImportPanel()"><i class="bi bi-link-45deg"></i> Importer depuis un site web</button>
 
-  <label class="field-label">Portions de référence</label>
-  <input id="f_servings" class="field-input" type="number" value="4" />
-
-  <div style="display:flex; gap:10px;">
-    <div style="flex:1;">
-      <label class="field-label">Cuisson (min)</label>
-      <input id="f_cook" class="field-input" type="number" />
-    </div>
-    <div style="flex:1;">
-      <label class="field-label">Four (°C)</label>
-      <input id="f_oven" class="field-input" type="number" />
+    <div id="importPanel" style="display:none;margin-top:16px;">
+      <label class="field-label">Lien de la recette</label>
+      <input id="import_url" class="field-input" placeholder="https://www.exemple.com/recette..." />
+      <button type="button" id="importFetchBtn" class="primary-btn" onclick="performImport()">Récupérer la recette</button>
+      <p id="importStatus" style="font-size:14px;color:var(--text-icon-secondary);margin-top:8px;"></p>
     </div>
   </div>
 
-  <label class="field-label">Note (optionnel)</label>
-  <input id="f_notes" class="field-input" placeholder="Ex: Attention aux oeufs avec le chocolat chaud !" />
+  <!-- Étape 2 : informations -->
+  <div id="wizardStep2" class="wizard-step" style="display:none;">
+    <label class="field-label">Titre</label>
+    <input id="f_title" class="field-input" placeholder="Ex: Gâteau au yaourt" />
 
-  <h2>Ingrédients</h2>
-  <div id="f_ingredients" style="position:relative;"></div>
-  <button type="button" id="addIngBtn" class="secondary-btn">+ Ajouter un ingrédient</button>
+    <label class="field-label">Photo</label>
+    <div id="photoPreviewWrap" style="display:none;margin-bottom:8px;position:relative;">
+      <img id="photoPreview" style="width:100%;height:160px;object-fit:cover;border-radius:12px;" />
+      <button type="button" id="removePhotoBtn" class="icon-btn" style="position:absolute;top:8px;right:8px;"><i class="bi bi-trash icon"></i></button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <button type="button" id="choosePhotoBtn" class="secondary-btn" style="margin-top:0;flex:1;"><i class="bi bi-images"></i> Galerie</button>
+      <button type="button" id="takePhotoBtn" class="secondary-btn" style="margin-top:0;flex:1;"><i class="bi bi-camera"></i> Appareil photo</button>
+    </div>
+    <input type="file" id="photoFileInput" accept="image/*" style="display:none;" />
+    <input type="file" id="photoCameraInput" accept="image/*" capture="environment" style="display:none;" />
+    <input id="f_photo" class="field-input" placeholder="ou colle un lien URL..." style="margin-bottom:4px;" />
+    <p id="photoUploadStatus" style="font-size:12px;color:var(--text-icon-secondary);margin:0;"></p>
 
-  <h2>Étapes</h2>
-  <label class="field-label">Étapes (une par ligne)</label>
-  <textarea id="f_steps" class="field-input" style="min-height:140px;resize:vertical;" placeholder="Préchauffer le four à 180°.&#10;Mélanger le beurre et le sucre.&#10;Ajouter la farine..."></textarea>
+    <label class="field-label">Type de repas</label>
+    <div id="f_mealTypes" class="tag-filters" style="margin-bottom:4px;"></div>
 
-  <button type="button" id="saveBtn" class="primary-btn">Enregistrer la recette</button>
+    <label class="field-label">Portions de référence</label>
+    <input id="f_servings" class="field-input" type="number" value="4" />
+
+    <div style="display:flex; gap:10px;">
+      <div style="flex:1;">
+        <label class="field-label">Cuisson (min)</label>
+        <input id="f_cook" class="field-input" type="number" />
+      </div>
+      <div style="flex:1;">
+        <label class="field-label">Four (°C)</label>
+        <input id="f_oven" class="field-input" type="number" />
+      </div>
+    </div>
+
+    <label class="field-label">Note (optionnel)</label>
+    <input id="f_notes" class="field-input" placeholder="Ex: Attention aux oeufs avec le chocolat chaud !" />
+  </div>
+
+  <!-- Étape 3 : ingrédients -->
+  <div id="wizardStep3" class="wizard-step" style="display:none;">
+    <h2 style="margin-top:0;">Ingrédients</h2>
+    <div id="f_ingredients" style="position:relative;"></div>
+    <button type="button" id="addIngBtn" class="secondary-btn">+ Ajouter un ingrédient</button>
+  </div>
+
+  <!-- Étape 4 : étapes -->
+  <div id="wizardStep4" class="wizard-step" style="display:none;">
+    <h2 style="margin-top:0;">Étapes</h2>
+    <label class="field-label">Étapes (une par ligne)</label>
+    <textarea id="f_steps" class="field-input" style="min-height:200px;resize:vertical;" placeholder="Préchauffer le four à 180°.&#10;Mélanger le beurre et le sucre.&#10;Ajouter la farine..."></textarea>
+  </div>
+
   <p id="formError" style="color:#B3261E;font-size:13px;"></p>
+
+  <div style="display:flex;gap:10px;margin-top:var(--space-section-gap);">
+    <button type="button" id="wizardBackBtn" class="secondary-btn" style="margin-top:0;display:none;flex:0 0 auto;width:auto;padding:0 20px;">Précédent</button>
+    <button type="button" id="wizardNextBtn" class="primary-btn" style="margin-top:0;flex:1;">Suivant</button>
+  </div>
 </div>
 
 <nav id="bottomNav" style="display:none;">
@@ -964,8 +994,103 @@
     document.getElementById('navAdd').classList.add('active');
     updateNavIcons();
     resetForm();
+    goToWizardStep(1);
     sessionStorage.setItem('lastView', 'form');
   }
+
+  // ---- Navigation du parcours d'ajout en 4 étapes ----
+  let wizardStep = 1;
+  const wizardStepLabels = ['', 'Source', 'Infos', 'Ingrédients', 'Étapes'];
+
+  function goToWizardStep(step) {
+    wizardStep = step;
+    window.scrollTo(0, 0);
+    for (let s = 1; s <= 4; s++) {
+      document.getElementById('wizardStep' + s).style.display = (s === step) ? 'block' : 'none';
+    }
+    document.getElementById('wizardStepLabel').textContent = editingId ? '' : `Étape ${step} / 4 · ${wizardStepLabels[step]}`;
+    document.getElementById('wizardBackBtn').style.display = (step > 1) ? 'block' : 'none';
+    document.getElementById('wizardNextBtn').textContent = (step === 4) ? 'Enregistrer la recette' : 'Suivant';
+    document.getElementById('formError').textContent = '';
+  }
+
+  function chooseNewRecipe() {
+    goToWizardStep(2);
+  }
+
+  function toggleImportPanel() {
+    const panel = document.getElementById('importPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  }
+
+  async function performImport() {
+    const url = document.getElementById('import_url').value.trim();
+    const statusEl = document.getElementById('importStatus');
+    const btn = document.getElementById('importFetchBtn');
+    statusEl.style.color = 'var(--text-icon-secondary)';
+    statusEl.textContent = '';
+
+    if (!url) {
+      statusEl.style.color = '#B3261E';
+      statusEl.textContent = "Colle d'abord un lien.";
+      return;
+    }
+
+    btn.disabled = true;
+    statusEl.textContent = "Récupération de la recette...";
+
+    try {
+      const response = await fetch(`/api/import-recipe?url=${encodeURIComponent(url)}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        statusEl.style.color = '#B3261E';
+        statusEl.textContent = data.error || "Erreur lors de l'import.";
+        btn.disabled = false;
+        return;
+      }
+
+      // Préremplit les champs avec les données importées
+      document.getElementById('f_title').value = data.title || '';
+      document.getElementById('f_photo').value = data.photo_url || '';
+      updatePhotoPreview(data.photo_url || null);
+      document.getElementById('f_servings').value = data.servings || 4;
+      document.getElementById('f_cook').value = data.cook_time_minutes || '';
+      document.getElementById('f_oven').value = data.oven_temp_celsius || '';
+
+      ingRows = (data.ingredients || []).map(ing => ({
+        qtyUnitText: [ing.quantity, ing.unit].filter(v => v != null && v !== '').join(' '),
+        name: ing.name || ''
+      }));
+      if (ingRows.length === 0) ingRows = [{ qtyUnitText: '', name: '' }];
+      renderIngRows();
+
+      document.getElementById('f_steps').value = (data.steps || []).join('\n');
+
+      statusEl.style.color = '#3D5A34';
+      statusEl.textContent = "Recette importée ! Vérifie et complète les informations ci-dessous.";
+      btn.disabled = false;
+
+      setTimeout(() => goToWizardStep(2), 600);
+    } catch (err) {
+      statusEl.style.color = '#B3261E';
+      statusEl.textContent = "Erreur réseau : " + err.message;
+      btn.disabled = false;
+    }
+  }
+
+  document.getElementById('wizardNextBtn').onclick = () => {
+    if (wizardStep < 4) {
+      if (wizardStep === 1) return; // on attend un choix explicite (nouvelle recette / import)
+      goToWizardStep(wizardStep + 1);
+    } else {
+      saveRecipe();
+    }
+  };
+
+  document.getElementById('wizardBackBtn').onclick = () => {
+    if (wizardStep > 1) goToWizardStep(wizardStep - 1);
+  };
 
   function showPlanning() {
     window.scrollTo(0, 0);
@@ -1109,6 +1234,7 @@
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('formView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
+    goToWizardStep(2);
   }
 
   async function shareCurrentRecipe(i) {
@@ -1389,6 +1515,9 @@
     editingId = null;
     currentSessionUploadPath = null;
     originalPhotoUrlForSession = null;
+    document.getElementById('import_url').value = '';
+    document.getElementById('importPanel').style.display = 'none';
+    document.getElementById('importStatus').textContent = '';
     document.getElementById('formTitle').textContent = "Nouvelle recette";
     document.getElementById('f_title').value = '';
     document.getElementById('f_photo').value = '';
@@ -1406,13 +1535,14 @@
     renderIngRows();
   }
 
-  document.getElementById('saveBtn').onclick = async () => {
+  async function saveRecipe() {
     const title = document.getElementById('f_title').value.trim();
     const errEl = document.getElementById('formError');
     errEl.textContent = '';
 
     if (!title) {
       errEl.textContent = "Le titre est obligatoire.";
+      goToWizardStep(2);
       return;
     }
 
@@ -1445,18 +1575,19 @@
       steps
     };
 
-    document.getElementById('saveBtn').textContent = "Enregistrement...";
-    document.getElementById('saveBtn').disabled = true;
+    const nextBtn = document.getElementById('wizardNextBtn');
+    nextBtn.textContent = "Enregistrement...";
+    nextBtn.disabled = true;
 
     const { error } = editingId
       ? await sb.from('recipes').update(payload).eq('id', editingId)
       : await sb.from('recipes').insert(payload);
 
-    document.getElementById('saveBtn').textContent = "Enregistrer la recette";
-    document.getElementById('saveBtn').disabled = false;
+    nextBtn.disabled = false;
 
     if (error) {
       errEl.textContent = "Erreur lors de l'enregistrement : " + error.message;
+      nextBtn.textContent = "Enregistrer la recette";
       console.error(error);
       return;
     }
@@ -1478,7 +1609,7 @@
       if (idx !== -1) { showDetail(idx); return; }
     }
     showHome();
-  };
+  }
 
   resetForm();
 
