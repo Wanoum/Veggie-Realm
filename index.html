@@ -19,7 +19,7 @@
     background: var(--surface-low);
     color: var(--text-icon-primary);
     margin: 0;
-    padding: var(--space-page-edge) var(--space-page-edge) 100px;
+    padding: calc(var(--space-page-edge) + env(safe-area-inset-top)) var(--space-page-edge) 100px;
   }
   .serif { font-family: 'Krylon', Georgia, serif; }
   h1 { font-family: 'Krylon', Georgia, serif; font-size: 48px; line-height: 100%; font-weight: 400; margin: 0 0 var(--space-section-gap); color: var(--text-icon-primary); }
@@ -97,18 +97,18 @@
   .detail-photo {
     position: fixed;
     top: 0; left: 0; right: 0;
-    height: 320px;
+    height: 400px;
     background: var(--surface-high);
     overflow: hidden;
   }
   .detail-photo img { width: 100%; height: 100%; object-fit: cover; }
   .detail-sheet {
     position: relative;
-    margin-top: 280px;
+    margin-top: 360px;
     background: var(--surface-high);
     border-radius: 22px 22px 0 0;
     padding: 12px 16px 24px;
-    min-height: calc(100vh - 280px);
+    min-height: calc(100vh - 360px);
   }
   .detail-sheet-handle {
     width: 36px; height: 4px;
@@ -546,10 +546,6 @@
 
   <div style="display:flex; gap:10px;">
     <div style="flex:1;">
-      <label class="field-label">Préparation (min)</label>
-      <input id="f_prep" class="field-input" type="number" />
-    </div>
-    <div style="flex:1;">
       <label class="field-label">Cuisson (min)</label>
       <input id="f_cook" class="field-input" type="number" />
     </div>
@@ -576,19 +572,19 @@
 
 <nav id="bottomNav" style="display:none;">
   <button id="navHome" class="nav-btn active">
-    <span class="nav-icon-wrap"><i class="bi bi-book nav-icon"></i></span>
+    <span class="nav-icon-wrap"><i class="bi bi-book-fill nav-icon" data-outline="bi-book" data-filled="bi-book-fill"></i></span>
     <span class="nav-label">Recettes</span>
   </button>
   <button id="navPlanning" class="nav-btn">
-    <span class="nav-icon-wrap"><i class="bi bi-calendar3 nav-icon"></i></span>
+    <span class="nav-icon-wrap"><i class="bi bi-calendar nav-icon" data-outline="bi-calendar" data-filled="bi-calendar-fill"></i></span>
     <span class="nav-label">Planning</span>
   </button>
   <button id="navAdd" class="nav-btn">
-    <span class="nav-icon-wrap"><i class="bi bi-plus-square nav-icon"></i></span>
+    <span class="nav-icon-wrap"><i class="bi bi-plus-square nav-icon" data-outline="bi-plus-square" data-filled="bi-plus-square-fill"></i></span>
     <span class="nav-label">Ajouter</span>
   </button>
   <button id="navAccount" class="nav-btn">
-    <span class="nav-icon-wrap"><i class="bi bi-person-circle nav-icon"></i></span>
+    <span class="nav-icon-wrap"><i class="bi bi-person nav-icon" data-outline="bi-person" data-filled="bi-person-fill"></i></span>
     <span class="nav-label">Compte</span>
   </button>
 </nav>
@@ -614,10 +610,7 @@
 </div>
 
 <div id="planningView" style="display:none;">
-  <div style="display:flex;align-items:center;justify-content:space-between;">
-    <h1>Planning</h1>
-    <button id="resetPlanningBtn" class="icon-btn"><i class="bi bi-arrow-counterclockwise icon"></i></button>
-  </div>
+  <h1>Planning</h1>
   <div class="subtabs">
     <button id="subtabRecipes" class="subtab-btn active">Recettes</button>
     <button id="subtabCourses" class="subtab-btn">Liste de courses</button>
@@ -626,6 +619,7 @@
   <div id="planningRecipesPanel">
     <div id="planSummary" class="plan-summary"></div>
     <div id="planningRecipeList"></div>
+    <button id="resetPlanningBtn" style="display:block;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;">Réinitialiser le planning</button>
   </div>
 
   <div id="planningCoursesPanel" style="display:none;">
@@ -697,7 +691,7 @@
     }
     cardsEl.innerHTML = filteredIndices.map(i => {
       const r = recipes[i];
-      const totalTime = (r.prep_time_minutes || 0) + (r.cook_time_minutes || 0);
+      const totalTime = r.cook_time_minutes || 0;
       return `
       <div class="card" onclick="showDetail(${i})">
         <div class="card-photo">
@@ -755,8 +749,7 @@
     const base = r.servings || 4;
     const s = currentServings[i];
     const metaPills = [];
-    if (r.prep_time_minutes) metaPills.push(`<span class="meta-pill"><i class="bi bi-clock" style="font-size:13px;color:var(--text-icon-primary);"></i> ${r.prep_time_minutes} min</span>`);
-    if (r.cook_time_minutes) metaPills.push(`<span class="meta-pill"><i class="bi bi-fire" style="font-size:13px;color:var(--text-icon-primary);"></i> ${r.cook_time_minutes} min</span>`);
+        if (r.cook_time_minutes) metaPills.push(`<span class="meta-pill"><i class="bi bi-fire" style="font-size:13px;color:var(--text-icon-primary);"></i> ${r.cook_time_minutes} min</span>`);
     if (r.oven_temp_celsius) metaPills.push(`<span class="meta-pill"><i class="bi bi-thermometer-half" style="font-size:13px;color:var(--text-icon-primary);"></i> ${r.oven_temp_celsius}°</span>`);
 
     const sortedIngredients = [...(r.ingredients || [])].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
@@ -929,6 +922,13 @@
     if (wakeLock) { wakeLock.release(); wakeLock = null; }
   }
 
+  function updateNavIcons() {
+    document.querySelectorAll('.nav-btn .nav-icon').forEach(icon => {
+      const isActive = icon.closest('.nav-btn').classList.contains('active');
+      icon.className = `bi ${isActive ? icon.dataset.filled : icon.dataset.outline} nav-icon`;
+    });
+  }
+
   function hideAllViews() {
     discardAbandonedPhoto();
     document.body.style.background = '';
@@ -952,6 +952,7 @@
     document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('searchFab').style.display = 'block';
     document.getElementById('navHome').classList.add('active');
+    updateNavIcons();
     sessionStorage.setItem('lastView', 'home');
   }
 
@@ -961,6 +962,7 @@
     document.getElementById('formView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('navAdd').classList.add('active');
+    updateNavIcons();
     resetForm();
     sessionStorage.setItem('lastView', 'form');
   }
@@ -971,6 +973,7 @@
     document.getElementById('planningView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('navPlanning').classList.add('active');
+    updateNavIcons();
     renderPlanningRecipes();
     sessionStorage.setItem('lastView', 'planning');
   }
@@ -981,6 +984,7 @@
     document.getElementById('accountView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('navAccount').classList.add('active');
+    updateNavIcons();
     document.getElementById('account_email').value = currentUser ? currentUser.email : '';
     document.getElementById('account_new_password').value = '';
     document.getElementById('accountError').textContent = '';
@@ -1025,7 +1029,7 @@
       }
     }, { passive: true });
 
-    document.addEventListener('touchend', () => {
+    document.addEventListener('touchend', async () => {
       if (!pulling) return;
       pulling = false;
       const currentHeight = parseInt(indicator.style.height) || 0;
@@ -1033,7 +1037,10 @@
         indicator.style.height = '50px';
         icon.className = 'bi bi-arrow-repeat';
         icon.style.animation = 'spin 0.6s linear infinite';
-        location.href = location.pathname + '?t=' + Date.now();
+        await Promise.all([loadRecipes(), loadMealPlan()]);
+        icon.style.animation = '';
+        icon.className = 'bi bi-arrow-clockwise';
+        indicator.style.height = '0';
       } else {
         indicator.style.height = '0';
       }
@@ -1089,7 +1096,6 @@
     selectedMealTypes = [...(r.tags || [])].filter(t => MEAL_TYPES.includes(t));
     renderMealTypeToggles();
     document.getElementById('f_servings').value = r.servings || 4;
-    document.getElementById('f_prep').value = r.prep_time_minutes || '';
     document.getElementById('f_cook').value = r.cook_time_minutes || '';
     document.getElementById('f_oven').value = r.oven_temp_celsius || '';
     document.getElementById('f_notes').value = r.notes || '';
@@ -1391,7 +1397,6 @@
     selectedMealTypes = [];
     renderMealTypeToggles();
     document.getElementById('f_servings').value = 4;
-    document.getElementById('f_prep').value = '';
     document.getElementById('f_cook').value = '';
     document.getElementById('f_oven').value = '';
     document.getElementById('f_notes').value = '';
@@ -1433,7 +1438,6 @@
       photo_url: document.getElementById('f_photo').value.trim() || null,
       tags,
       servings: Number(document.getElementById('f_servings').value) || 4,
-      prep_time_minutes: document.getElementById('f_prep').value ? Number(document.getElementById('f_prep').value) : null,
       cook_time_minutes: document.getElementById('f_cook').value ? Number(document.getElementById('f_cook').value) : null,
       oven_temp_celsius: document.getElementById('f_oven').value ? Number(document.getElementById('f_oven').value) : null,
       notes: document.getElementById('f_notes').value.trim() || null,
