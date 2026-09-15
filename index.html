@@ -405,28 +405,32 @@
     margin-bottom: 20px;
   }
   .meal-category-card {
-    background: var(--interaction-primary-pale);
+    height: 86px;
+    background: var(--surface-lowest);
     border-radius: 16px;
-    padding: 14px 6px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
   }
-  .meal-category-number { font-family: 'IBM Plex Mono', monospace; font-size: 40px; line-height: 40%; font-weight: 400; color: var(--text-icon-primary); margin: 0; }
-  .meal-category-label { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 120%; color: var(--text-icon-primary); margin: 8px 0 0; }
+  .meal-category-number { font-family: 'IBM Plex Mono', monospace; font-size: 40px; line-height: 100%; font-weight: 400; color: var(--text-icon-primary); margin: 0; }
+  .meal-category-label { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 120%; color: var(--text-icon-secondary); margin: 6px 0 0; }
   .plan-recipe-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: var(--surface-highest);
-    border: 1px solid var(--border-divider);
-    border-radius: 14px;
-    padding: 12px 14px;
-    margin-bottom: 8px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border-divider);
+    border-radius: 0;
+    padding: 0 0 16px;
+    margin-bottom: 16px;
   }
-  .plan-recipe-row .plan-recipe-name { font-size: 14px; font-weight: 500; }
+  .plan-recipe-row .plan-recipe-name { font-size: 16px; font-weight: 500; }
   .plan-recipe-row .plan-recipe-tags { font-size: 14px; color: var(--text-icon-secondary); margin-top: 2px; }
-  .plan-stepper { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-  .plan-stepper button { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border-divider); background: var(--surface-highest); font-size: 15px; }
-  .plan-stepper span { min-width: 14px; text-align: center; font-weight: 600; }
+
   .autocomplete-box {
     position: absolute;
     background: var(--surface-highest);
@@ -1667,17 +1671,17 @@
       return `
         <div class="plan-recipe-row">
           <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:44px;height:44px;border-radius:10px;overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+            <div style="width:72px;height:72px;border-radius:10px;overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;">
               ${r.photo_url
                 ? `<img src="${r.photo_url}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
                 : '<i class="bi bi-image" style="font-size:16px;color:var(--text-icon-secondary);"></i>'}
             </div>
             <div class="plan-recipe-name">${r.title}</div>
           </div>
-          <div class="plan-stepper">
-            <button type="button" data-plan-recipe="${r.id}" data-delta="-1">−</button>
-            <span data-plan-count="${r.id}">${count}</span>
-            <button type="button" data-plan-recipe="${r.id}" data-delta="1">+</button>
+          <div class="servings-stepper">
+            <button class="servings-minus" type="button" data-plan-recipe="${r.id}" data-delta="-1"><i class="bi bi-dash"></i></button>
+            <span class="servings-value" data-plan-count="${r.id}">${count}</span>
+            <button class="servings-plus" type="button" data-plan-recipe="${r.id}" data-delta="1"><i class="bi bi-plus"></i></button>
           </div>
         </div>
       `;
