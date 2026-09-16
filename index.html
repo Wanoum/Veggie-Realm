@@ -1633,8 +1633,8 @@
     originalPhotoUrlForSession = null;
     importedSourceUrl = null;
     document.getElementById('import_url').value = '';
-    document.getElementById('importPanel').style.display = 'none';
     document.getElementById('importStatus').textContent = '';
+    document.getElementById('importFetchBtn').disabled = true;
     document.getElementById('formTitle').textContent = "Nouvelle recette";
     document.getElementById('f_title').value = '';
     document.getElementById('f_photo').value = '';
