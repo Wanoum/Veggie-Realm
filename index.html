@@ -577,7 +577,7 @@
   <!-- Étape 1 : source -->
   <div id="wizardStep1" class="wizard-step">
     <button type="button" class="wizard-source-tile" onclick="chooseNewRecipe()">
-      <i class="bi bi-magic"></i>
+      <i class="bi bi-egg-fried"></i>
       <span>Créer une nouvelle recette</span>
     </button>
 
@@ -1163,7 +1163,7 @@
         qtyUnitText: [ing.quantity, ing.unit].filter(v => v != null && v !== '').join(' '),
         name: ing.name || ''
       }));
-      if (ingRows.length === 0) ingRows = [{ qtyUnitText: '', name: '' }];
+      ingRows.push({ qtyUnitText: '', name: '' });
       renderIngRows();
 
       document.getElementById('f_steps').value = (data.steps || []).join('\n');
@@ -1336,7 +1336,7 @@
       qtyUnitText: [ing.quantity, ing.unit].filter(v => v != null && v !== '').join(' '),
       name: ing.name ?? ''
     }));
-    if (ingRows.length === 0) ingRows = [{ qtyUnitText: '', name: '' }];
+    ingRows.push({ qtyUnitText: '', name: '' });
     document.getElementById('f_steps').value = (r.steps || []).join('\n');
     renderIngRows();
     document.getElementById('detailView').style.display = 'none';
