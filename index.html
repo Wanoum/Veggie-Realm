@@ -711,7 +711,11 @@
 <script>
   const SUPABASE_URL = "https://bhsftmcluaqztkfnwobx.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoc2Z0bWNsdWFxenRrZm53b2J4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyMTE1ODgsImV4cCI6MjEwNDc4NzU4OH0.ovrCW7IRhkH8tfMYyExNp6zKt60EJMpJLcehlastIAI";
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    global: {
+      fetch: (url, options = {}) => fetch(url, { ...options, cache: 'no-store' })
+    }
+  });
 
   let recipes = [];
   let currentServings = {};
