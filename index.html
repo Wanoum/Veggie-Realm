@@ -415,6 +415,58 @@
     font-weight: 500;
   }
   .wizard-source-tile i { font-size: 48px; }
+
+  .step-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-divider);
+    background: var(--surface-low);
+  }
+  .step-row.dragging { opacity: 0.4; }
+  .step-drag-handle {
+    color: var(--text-icon-secondary);
+    font-size: 18px;
+    padding: 6px;
+    touch-action: none;
+    cursor: grab;
+    flex-shrink: 0;
+  }
+  .step-row-number {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    color: var(--text-icon-secondary);
+    flex-shrink: 0;
+    width: 18px;
+  }
+  .step-row-text {
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 130%;
+    color: var(--text-icon-primary);
+  }
+  .step-row-remove {
+    background: none;
+    border: none;
+    color: var(--text-icon-secondary);
+    font-size: 20px;
+    padding: 4px;
+    flex-shrink: 0;
+  }
+  .steps-inline-input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    padding: 14px 0;
+    margin-top: 4px;
+    color: var(--text-icon-primary);
+  }
+  .steps-inline-input::placeholder { color: var(--text-icon-secondary); }
+  .steps-inline-input:focus { outline: none; }
   .wizard-bar {
     flex: 1;
     height: 4px;
@@ -638,8 +690,8 @@
   <!-- Étape 4 : étapes -->
   <div id="wizardStep4" class="wizard-step" style="display:none;">
     <h1 style="margin-bottom:var(--space-section-gap);">Étapes</h1>
-    <label class="field-label">Une étape par ligne</label>
-    <textarea id="f_steps" class="field-input" style="min-height:200px;resize:vertical;" oninput="validateWizardStep()" placeholder="Préchauffer le four à 180°.&#10;Mélanger le beurre et le sucre.&#10;Ajouter la farine..."></textarea>
+    <div id="stepsListContainer"></div>
+    <input id="stepEntryInput" class="steps-inline-input" placeholder="Tape une étape, puis appuie sur Entrée..." />
   </div>
 
   <p id="formError" style="color:#B3261E;font-size:13px;"></p>
@@ -1104,7 +1156,7 @@
     } else if (wizardStep === 3) {
       valid = ingRows.some(ing => ing.name && ing.name.trim() !== '');
     } else if (wizardStep === 4) {
-      valid = document.getElementById('f_steps').value.trim() !== '';
+      valid = stepRows.length > 0 || document.getElementById('stepEntryInput').value.trim() !== '';
     }
     nextBtn.disabled = !valid;
   }
@@ -1166,7 +1218,8 @@
       ingRows.push({ qtyUnitText: '', name: '' });
       renderIngRows();
 
-      document.getElementById('f_steps').value = (data.steps || []).join('\n');
+      stepRows = [...(data.steps || [])];
+      renderStepsList();
 
       statusEl.style.color = '#3D5A34';
       statusEl.textContent = "Recette importée ! Vérifie et complète les informations ci-dessous.";
@@ -1337,7 +1390,8 @@
       name: ing.name ?? ''
     }));
     ingRows.push({ qtyUnitText: '', name: '' });
-    document.getElementById('f_steps').value = (r.steps || []).join('\n');
+    stepRows = [...(r.steps || [])];
+    renderStepsList();
     renderIngRows();
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('formView').style.display = 'block';
@@ -1522,6 +1576,90 @@
     });
   }
 
+  // ---- Étapes : liste réorganisable + saisie intégrée ----
+  let stepRows = [];
+  let stepDragIdx = null;
+  let stepDragStartY = 0;
+
+  function renderStepsList() {
+    const container = document.getElementById('stepsListContainer');
+    container.innerHTML = stepRows.map((text, idx) => `
+      <div class="step-row" data-idx="${idx}">
+        <span class="step-drag-handle" data-drag-idx="${idx}"><i class="bi bi-grip-vertical"></i></span>
+        <span class="step-row-number">${idx + 1}</span>
+        <span class="step-row-text">${text}</span>
+        <button type="button" class="step-row-remove" data-remove-step="${idx}"><i class="bi bi-x-lg"></i></button>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('[data-remove-step]').forEach(btn => {
+      btn.onclick = () => {
+        stepRows.splice(Number(btn.dataset.removeStep), 1);
+        renderStepsList();
+        validateWizardStep();
+      };
+    });
+
+    container.querySelectorAll('.step-drag-handle').forEach(handle => {
+      handle.addEventListener('touchstart', onStepDragStart, { passive: false });
+      handle.addEventListener('mousedown', onStepDragStart);
+    });
+  }
+
+  function onStepDragStart(e) {
+    e.preventDefault();
+    stepDragIdx = Number(e.currentTarget.dataset.dragIdx);
+    stepDragStartY = e.touches ? e.touches[0].clientY : e.clientY;
+    const rows = document.querySelectorAll('.step-row');
+    rows[stepDragIdx]?.classList.add('dragging');
+    document.addEventListener('touchmove', onStepDragMove, { passive: false });
+    document.addEventListener('mousemove', onStepDragMove);
+    document.addEventListener('touchend', onStepDragEnd);
+    document.addEventListener('mouseup', onStepDragEnd);
+  }
+
+  function onStepDragMove(e) {
+    if (stepDragIdx == null) return;
+    e.preventDefault();
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    const rows = document.querySelectorAll('.step-row');
+    const rowHeight = rows[0]?.offsetHeight || 48;
+    const diff = y - stepDragStartY;
+    const shift = Math.round(diff / rowHeight);
+    const targetIdx = Math.min(Math.max(stepDragIdx + shift, 0), stepRows.length - 1);
+    if (targetIdx !== stepDragIdx) {
+      const [moved] = stepRows.splice(stepDragIdx, 1);
+      stepRows.splice(targetIdx, 0, moved);
+      stepDragIdx = targetIdx;
+      stepDragStartY = y;
+      renderStepsList();
+      document.querySelectorAll('.step-row')[stepDragIdx]?.classList.add('dragging');
+    }
+  }
+
+  function onStepDragEnd() {
+    stepDragIdx = null;
+    document.removeEventListener('touchmove', onStepDragMove);
+    document.removeEventListener('mousemove', onStepDragMove);
+    document.removeEventListener('touchend', onStepDragEnd);
+    document.removeEventListener('mouseup', onStepDragEnd);
+    document.querySelectorAll('.step-row.dragging').forEach(el => el.classList.remove('dragging'));
+  }
+
+  document.getElementById('stepEntryInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const val = e.target.value.trim();
+      if (val) {
+        stepRows.push(val);
+        e.target.value = '';
+        renderStepsList();
+      }
+      validateWizardStep();
+    }
+  });
+  document.getElementById('stepEntryInput').addEventListener('input', validateWizardStep);
+
   // ---- Upload de photo (galerie / appareil photo) ----
   let currentSessionUploadPath = null; // photo uploadée cette session, pas encore enregistrée en base
   let originalPhotoUrlForSession = null; // photo déjà enregistrée avant édition (null si ajout)
@@ -1648,7 +1786,9 @@
     document.getElementById('f_cook').value = '';
     document.getElementById('f_oven').value = '';
     document.getElementById('f_notes').value = '';
-    document.getElementById('f_steps').value = '';
+    stepRows = [];
+    document.getElementById('stepEntryInput').value = '';
+    renderStepsList();
     document.getElementById('formError').textContent = '';
     ingRows = [{ qtyUnitText: '', name: '' }];
     renderIngRows();
@@ -1678,8 +1818,8 @@
         };
       });
 
-    const steps = document.getElementById('f_steps').value
-      .split('\n').map(s => s.trim()).filter(Boolean);
+    const pendingStep = document.getElementById('stepEntryInput').value.trim();
+    const steps = [...stepRows, ...(pendingStep ? [pendingStep] : [])];
 
     const payload = {
       title,
