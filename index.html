@@ -392,6 +392,13 @@
     justify-content: center;
     white-space: nowrap;
   }
+  .wizard-bar {
+    flex: 1;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--surface-lowest);
+  }
+  .wizard-bar.active { background: var(--interaction-primary); }
   .subtab-btn.active, .filter-chip.active {
     background: var(--interaction-primary);
     color: var(--text-icon-on-primary);
@@ -535,12 +542,14 @@
   <div id="cookingScroll" class="cooking-scroll" style="flex:1;overflow-y:auto;scroll-snap-type:y mandatory;"></div>
 </div>
 
-<div id="formView" style="display:none;">
-  <button id="wizardTopBackBtn" class="icon-btn" style="display:none;margin-bottom:12px;" onclick="wizardGoBack()"><i class="bi bi-arrow-left icon"></i></button>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-    <h1 id="formTitle" style="margin-bottom:0;">Nouvelle recette</h1>
-    <span id="wizardStepLabel" class="text-small" style="color:var(--text-icon-secondary);"></span>
+<div id="formView" style="display:none;padding-bottom:110px;">
+  <div id="wizardProgressBars" style="display:none;gap:6px;margin-bottom:16px;">
+    <div class="wizard-bar" data-bar="1"></div>
+    <div class="wizard-bar" data-bar="2"></div>
+    <div class="wizard-bar" data-bar="3"></div>
   </div>
+
+  <h1 id="formTitle" style="margin-bottom:var(--space-section-gap);">Nouvelle recette</h1>
 
   <!-- Étape 1 : source -->
   <div id="wizardStep1" class="wizard-step">
@@ -592,28 +601,28 @@
     </div>
 
     <label class="field-label">Note (optionnel)</label>
-    <input id="f_notes" class="field-input" placeholder="Ex: Attention aux oeufs avec le chocolat chaud !" />
+    <textarea id="f_notes" class="field-input" style="min-height:90px;resize:vertical;" placeholder="Ex: Attention aux oeufs avec le chocolat chaud !"></textarea>
   </div>
 
   <!-- Étape 3 : ingrédients -->
   <div id="wizardStep3" class="wizard-step" style="display:none;">
-    <h2 style="margin-top:0;">Ingrédients</h2>
+    <h1 style="margin-bottom:var(--space-section-gap);">Ingrédients</h1>
     <div id="f_ingredients" style="position:relative;"></div>
-    <button type="button" id="addIngBtn" class="secondary-btn">+ Ajouter un ingrédient</button>
   </div>
 
   <!-- Étape 4 : étapes -->
   <div id="wizardStep4" class="wizard-step" style="display:none;">
-    <h2 style="margin-top:0;">Étapes</h2>
-    <label class="field-label">Étapes (une par ligne)</label>
+    <h1 style="margin-bottom:var(--space-section-gap);">Étapes</h1>
+    <label class="field-label">Une étape par ligne</label>
     <textarea id="f_steps" class="field-input" style="min-height:200px;resize:vertical;" placeholder="Préchauffer le four à 180°.&#10;Mélanger le beurre et le sucre.&#10;Ajouter la farine..."></textarea>
   </div>
 
   <p id="formError" style="color:#B3261E;font-size:13px;"></p>
+</div>
 
-  <div style="display:flex;gap:10px;margin-top:var(--space-section-gap);">
-    <button type="button" id="wizardNextBtn" class="primary-btn" style="margin-top:0;flex:1;">Suivant</button>
-  </div>
+<div id="wizardFooter" style="display:none;position:fixed;bottom:0;left:0;right:0;display:flex;gap:10px;padding:40px 16px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(to bottom, rgba(255, 253, 248, 0) 0px, rgba(255, 253, 248, 0.8) 40px, rgba(255, 253, 248, 0.8) 100%);z-index:50;">
+  <button type="button" id="wizardBackBtn" class="secondary-btn" style="margin-top:0;flex:1;">Précédent</button>
+  <button type="button" id="wizardNextBtn" class="primary-btn" style="margin-top:0;flex:1;">Suivant</button>
 </div>
 
 <nav id="bottomNav" style="display:none;">
@@ -1023,7 +1032,6 @@
   // ---- Navigation du parcours d'ajout en 4 étapes ----
   let wizardStep = 1;
   let importedSourceUrl = null;
-  const wizardStepLabels = ['', 'Source', 'Infos', 'Ingrédients', 'Étapes'];
 
   function goToWizardStep(step) {
     wizardStep = step;
@@ -1031,14 +1039,27 @@
     for (let s = 1; s <= 4; s++) {
       document.getElementById('wizardStep' + s).style.display = (s === step) ? 'block' : 'none';
     }
-    document.getElementById('wizardStepLabel').textContent = (editingId || step === 1)
-      ? ''
-      : `Étape ${step - 1} / 3 · ${wizardStepLabels[step]}`;
-    document.getElementById('wizardTopBackBtn').style.display = (step > 1) ? 'flex' : 'none';
+
+    // Barres de progression (une par vraie étape : Infos / Ingrédients / Étapes)
+    const progressBars = document.getElementById('wizardProgressBars');
+    if (step === 1) {
+      progressBars.style.display = 'none';
+      document.getElementById('formTitle').style.display = 'block';
+    } else {
+      progressBars.style.display = 'flex';
+      document.querySelectorAll('.wizard-bar').forEach(bar => {
+        bar.classList.toggle('active', Number(bar.dataset.bar) === (step - 1));
+      });
+      document.getElementById('formTitle').style.display = (step === 2) ? 'block' : 'none';
+    }
+
     document.getElementById('bottomNav').style.display = (step === 1) ? 'flex' : 'none';
+    document.getElementById('wizardFooter').style.display = (step === 1) ? 'none' : 'flex';
     document.getElementById('searchFab').style.display = 'none';
     document.getElementById('wizardNextBtn').textContent = (step === 4) ? 'Enregistrer la recette' : 'Suivant';
     document.getElementById('formError').textContent = '';
+
+    if (step === 3) renderIngRows();
   }
 
   function wizardGoBack() {
@@ -1119,6 +1140,8 @@
       saveRecipe();
     }
   };
+
+  document.getElementById('wizardBackBtn').onclick = wizardGoBack;
 
   function showPlanning() {
     window.scrollTo(0, 0);
@@ -1227,7 +1250,7 @@
 
   function renderMealTypeToggles() {
     document.getElementById('f_mealTypes').innerHTML = MEAL_TYPES.map(t => `
-      <button type="button" class="filter-chip ${selectedMealTypes.includes(t) ? 'active' : ''}" data-meal-type="${t}">${t}</button>
+      <button type="button" class="filter-chip filter-chip-vertical ${selectedMealTypes.includes(t) ? 'active' : ''}" data-meal-type="${t}"><i class="bi ${MEAL_TYPE_ICONS[t]}" style="font-size:24px;"></i>${t}</button>
     `).join('');
     document.querySelectorAll('[data-meal-type]').forEach(btn => {
       btn.onclick = () => {
@@ -1417,8 +1440,20 @@
     ).join('');
     document.querySelectorAll('#f_ingredients input').forEach(inp => {
       const handler = (e) => {
-        const idx = e.target.dataset.idx, field = e.target.dataset.field;
+        const idx = Number(e.target.dataset.idx), field = e.target.dataset.field;
         ingRows[idx][field] = e.target.value;
+
+        // Dès qu'on commence à remplir la dernière ligne, une nouvelle ligne vide apparaît automatiquement.
+        const isLastRow = idx === ingRows.length - 1;
+        if (isLastRow && field === 'name' && e.target.value.trim() !== '') {
+          ingRows.push({ qtyUnitText: '', name: '' });
+          renderIngRows();
+          const refocus = document.querySelector(`#f_ingredients input[data-idx="${idx}"][data-field="name"]`);
+          if (refocus) {
+            refocus.focus();
+            refocus.setSelectionRange(refocus.value.length, refocus.value.length);
+          }
+        }
       };
       inp.oninput = handler;
       inp.onchange = handler;
@@ -1431,6 +1466,7 @@
     document.querySelectorAll('[data-remove-ing]').forEach(btn => {
       btn.onclick = (e) => {
         ingRows.splice(Number(e.target.dataset.removeIng), 1);
+        if (ingRows.length === 0) ingRows = [{ qtyUnitText: '', name: '' }];
         renderIngRows();
       };
     });
@@ -1541,11 +1577,6 @@
     updatePhotoPreview(null);
     document.getElementById('photoFileInput').value = '';
     document.getElementById('photoCameraInput').value = '';
-  };
-
-  document.getElementById('addIngBtn').onclick = () => {
-    ingRows.push({ qtyUnitText: '', name: '' });
-    renderIngRows();
   };
 
   function resetForm() {
