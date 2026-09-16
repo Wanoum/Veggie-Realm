@@ -7,6 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <title>Veggie Realm</title>
 <link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="app-logo.png" />
+<link rel="icon" href="app-logo.png" />
 <meta name="theme-color" content="#f7f3eb" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 <link rel="stylesheet" href="tokens.css" />
@@ -518,7 +520,7 @@
 
 <button id="searchFab" class="fab-search" style="display:none;"><i class="bi bi-search icon" style="color:white;"></i></button>
 
-<div id="detailView" style="display:none;margin:calc(-1 * var(--space-page-edge)) calc(-1 * var(--space-page-edge)) 0;">
+<div id="detailView" style="display:none;margin:calc(-1 * (var(--space-page-edge) + env(safe-area-inset-top))) calc(-1 * var(--space-page-edge)) 0;">
   <div id="detailContent"></div>
 </div>
 
@@ -787,6 +789,7 @@
     renderDetail(i);
     sessionStorage.setItem('lastView', 'detail');
     sessionStorage.setItem('lastDetailRecipeId', r.id);
+    try { sessionStorage.setItem('lastDetailRecipeData', JSON.stringify(r)); } catch (e) { /* ignoré si trop volumineux */ }
   }
 
   function renderDetail(i) {
@@ -1872,8 +1875,16 @@
 
     const lastView = sessionStorage.getItem('lastView');
     const lastDetailId = sessionStorage.getItem('lastDetailRecipeId');
+    const lastDetailDataRaw = sessionStorage.getItem('lastDetailRecipeData');
 
-    if (lastView === 'planning') showPlanning();
+    if (lastView === 'detail' && lastDetailDataRaw) {
+      // Affichage instantané depuis le cache, sans attendre le réseau.
+      try {
+        const cachedRecipe = JSON.parse(lastDetailDataRaw);
+        recipes = [cachedRecipe];
+        showDetail(0);
+      } catch (e) { showHome(); }
+    } else if (lastView === 'planning') showPlanning();
     else if (lastView === 'form') showForm();
     else if (lastView === 'account') showAccount();
     else showHome();
@@ -1884,7 +1895,16 @@
 
     if (lastView === 'detail' && lastDetailId) {
       const idx = recipes.findIndex(r => r.id === lastDetailId);
-      if (idx !== -1) showDetail(idx);
+      if (idx !== -1) {
+        // On ne redéclenche showDetail que si la fiche recette est toujours à l'écran,
+        // pour ne pas interrompre une navigation déjà effectuée entre-temps.
+        if (document.getElementById('detailView').style.display !== 'none') {
+          showDetail(idx);
+        }
+      } else if (document.getElementById('detailView').style.display !== 'none') {
+        // La recette n'existe plus (supprimée) : retour à l'accueil.
+        showHome();
+      }
     }
   }
 
