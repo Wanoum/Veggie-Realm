@@ -4,7 +4,18 @@
   "description": "Mon carnet de recettes",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F4F2ED",
-  "theme_color": "#F4F2ED",
-  "icons": []
+  "background_color": "#f7f3eb",
+  "theme_color": "#f7f3eb",
+  "icons": [
+    {
+      "src": "app-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "app-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
