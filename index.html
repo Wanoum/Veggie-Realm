@@ -419,16 +419,19 @@
   .step-row {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px 0;
+    gap: 12px;
+    padding: 10px 0;
     border-bottom: 1px solid var(--border-divider);
-    background: var(--surface-low);
   }
   .step-row.dragging { opacity: 0.4; }
   .step-drag-handle {
     color: var(--text-icon-secondary);
-    font-size: 18px;
-    padding: 6px;
+    font-size: 20px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     touch-action: none;
     cursor: grab;
     flex-shrink: 0;
@@ -443,24 +446,31 @@
   .step-row-text {
     flex: 1;
     font-family: 'Inter', sans-serif;
-    font-size: 16px;
-    line-height: 130%;
+    font-size: 18px;
+    line-height: 1.6;
     color: var(--text-icon-primary);
   }
   .step-row-remove {
     background: none;
     border: none;
     color: var(--text-icon-secondary);
-    font-size: 20px;
-    padding: 4px;
+    font-size: 18px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
   }
   .steps-inline-input {
     width: 100%;
+    min-height: calc(100dvh - 360px);
     border: none;
     background: transparent;
+    resize: none;
     font-family: 'Inter', sans-serif;
-    font-size: 16px;
+    font-size: 18px;
+    line-height: 1.6;
     padding: 14px 0;
     margin-top: 4px;
     color: var(--text-icon-primary);
@@ -691,7 +701,7 @@
   <div id="wizardStep4" class="wizard-step" style="display:none;">
     <h1 style="margin-bottom:var(--space-section-gap);">Étapes</h1>
     <div id="stepsListContainer"></div>
-    <input id="stepEntryInput" class="steps-inline-input" placeholder="Tape une étape, puis appuie sur Entrée..." />
+    <textarea id="stepEntryInput" class="steps-inline-input" rows="1" placeholder="Tape une étape, puis appuie sur Entrée..."></textarea>
   </div>
 
   <p id="formError" style="color:#B3261E;font-size:13px;"></p>
@@ -1287,7 +1297,8 @@
 
     function isRefreshAllowed() {
       return document.getElementById('cookingModeView').style.display === 'none'
-          && document.getElementById('authView').style.display === 'none';
+          && document.getElementById('authView').style.display === 'none'
+          && stepDragIdx === null;
     }
 
     document.addEventListener('touchstart', (e) => {
@@ -1588,7 +1599,7 @@
         <span class="step-drag-handle" data-drag-idx="${idx}"><i class="bi bi-grip-vertical"></i></span>
         <span class="step-row-number">${idx + 1}</span>
         <span class="step-row-text">${text}</span>
-        <button type="button" class="step-row-remove" data-remove-step="${idx}"><i class="bi bi-x-lg"></i></button>
+        <button type="button" class="step-row-remove" data-remove-step="${idx}"><i class="bi bi-trash"></i></button>
       </div>
     `).join('');
 
