@@ -249,23 +249,23 @@
   .nav-label { font-size: 14px; line-height: 120%; font-weight: 400; color: var(--text-icon-secondary); }
   .nav-btn.active .nav-label { font-weight: 500; color: var(--text-icon-accent); }
   .icon { font-size: 20px; line-height: 1; color: var(--text-icon-primary); }
-  .fab-search {
-    position: fixed;
-    bottom: calc(70px + env(safe-area-inset-bottom));
-    right: 22px;
-    width: 50px; height: 50px;
-    border-radius: 50%;
-    background: var(--interaction-primary);
-    color: white;
-    border: none;
-    font-size: 18px;
-    box-shadow: none;
-    z-index: 150;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
   .empty { text-align: center; color: var(--text-icon-secondary); padding: 40px 0; font-size: 14px; grid-column: 1 / -1; }
+  .empty-state-large {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 80px 24px;
+  }
+  .empty-state-large i { font-size: 48px; color: var(--text-icon-secondary); display: block; margin-bottom: 16px; }
+  @keyframes skeleton-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  .skeleton-block, .skeleton-line {
+    background: var(--surface-lowest);
+    border-radius: 8px;
+    animation: skeleton-pulse 1.4s ease-in-out infinite;
+  }
+  .skeleton-block { border-radius: 16px; }
   .field-label { display:block; font-size:13px; color:var(--text-icon-secondary); margin:14px 0 4px; }
   .field-input {
     width: 100%;
@@ -595,10 +595,6 @@
 
 <div id="listView" style="display:none;">
   <h1>Veggie Realm</h1>
-  <div style="position:relative;display:none;margin:10px 0;" id="searchWrap">
-    <input id="searchInput" class="field-input" placeholder="Rechercher une recette..." style="padding-right:40px;" />
-    <button id="clearSearchBtn" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;padding:6px;color:var(--text-icon-secondary);"><i class="bi bi-x-circle-fill"></i></button>
-  </div>
   <div id="tagFilters" class="tag-filters"></div>
 
   <div id="savedRecipesSection" style="display:none;margin-bottom:20px;">
@@ -609,8 +605,6 @@
   <p class="count" id="count">Chargement...</p>
   <div id="cards" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;"></div>
 </div>
-
-<button id="searchFab" class="fab-search" style="display:none;"><i class="bi bi-search icon" style="color:white;"></i></button>
 
 <div id="detailView" style="display:none;margin:calc(-1 * (var(--space-page-edge) + env(safe-area-inset-top))) calc(-1 * var(--space-page-edge)) 0;">
   <div id="detailContent"></div>
@@ -780,6 +774,7 @@
   });
 
   let recipes = [];
+  let recipesLoaded = false;
   let currentServings = {};
 
   async function loadRecipes() {
@@ -790,13 +785,12 @@
       return;
     }
     recipes = data;
+    recipesLoaded = true;
     renderList();
     loadSavedRecipes();
   }
 
   let activeTagFilter = null;
-  let searchQuery = '';
-
   function renderTagFilters() {
     const container = document.getElementById('tagFilters');
     container.innerHTML = MEAL_TYPES.map(t => `
@@ -816,19 +810,36 @@
       .map((r, i) => i)
       .filter(i => {
         const r = recipes[i];
-        const matchesSearch = !searchQuery || r.title.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesTag = !activeTagFilter || (r.tags || []).includes(activeTagFilter);
-        return matchesSearch && matchesTag;
+        return matchesTag;
       });
   }
 
   function renderList() {
     renderTagFilters();
-    const filteredIndices = getFilteredIndices();
-    document.getElementById('count').textContent = '';
     const cardsEl = document.getElementById('cards');
+    document.getElementById('count').textContent = '';
+
+    if (!recipesLoaded) {
+      cardsEl.innerHTML = Array.from({ length: 6 }).map(() => `
+        <div class="card">
+          <div class="card-photo skeleton-block"></div>
+          <div class="skeleton-line" style="width:80%;height:18px;margin-top:8px;"></div>
+          <div class="skeleton-line" style="width:40%;height:14px;margin-top:6px;"></div>
+        </div>
+      `).join('');
+      return;
+    }
+
+    const filteredIndices = getFilteredIndices();
+
     if (recipes.length === 0) {
-      cardsEl.innerHTML = '<div class="empty">Aucune recette pour l\'instant.</div>';
+      cardsEl.innerHTML = `
+        <div class="empty-state-large">
+          <i class="bi bi-egg-fried"></i>
+          <p class="text-body" style="margin:0;">Ton carnet est encore vide.</p>
+          <p style="font-size:14px;color:var(--text-icon-secondary);margin:6px 0 0;">Ajoute ta première recette pour commencer.</p>
+        </div>`;
       return;
     }
     if (filteredIndices.length === 0) {
@@ -852,27 +863,6 @@
     }).join('');
   }
 
-  document.getElementById('searchFab').onclick = () => {
-    const wrap = document.getElementById('searchWrap');
-    const input = document.getElementById('searchInput');
-    const showing = wrap.style.display !== 'none';
-    wrap.style.display = showing ? 'none' : 'block';
-    if (!showing) input.focus();
-  };
-
-  document.getElementById('clearSearchBtn').onclick = () => {
-    const input = document.getElementById('searchInput');
-    input.value = '';
-    searchQuery = '';
-    renderList();
-    input.focus();
-  };
-
-  document.getElementById('searchInput').oninput = (e) => {
-    searchQuery = e.target.value;
-    renderList();
-  };
-
   let currentDetailIndex = null;
 
   function showDetail(i) {
@@ -885,7 +875,6 @@
     document.getElementById('wizardFooter').style.display = 'none';
     document.getElementById('detailView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'none';
-    document.getElementById('searchFab').style.display = 'none';
     document.body.style.background = 'var(--surface-high)';
     renderDetail(i);
     sessionStorage.setItem('lastView', 'detail');
@@ -981,7 +970,6 @@
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('listView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
-    document.getElementById('searchFab').style.display = 'block';
     document.body.style.background = '';
     sessionStorage.setItem('lastView', 'home');
   }
@@ -1089,10 +1077,6 @@
     document.getElementById('planningView').style.display = 'none';
     document.getElementById('accountView').style.display = 'none';
     document.getElementById('sharedRecipeView').style.display = 'none';
-    document.getElementById('searchFab').style.display = 'none';
-    document.getElementById('searchWrap').style.display = 'none';
-    document.getElementById('searchInput').value = '';
-    searchQuery = '';
     document.getElementById('navHome').classList.remove('active');
     document.getElementById('navAdd').classList.remove('active');
     document.getElementById('navPlanning').classList.remove('active');
@@ -1104,9 +1088,9 @@
     hideAllViews();
     document.getElementById('listView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
-    document.getElementById('searchFab').style.display = 'block';
     document.getElementById('navHome').classList.add('active');
     updateNavIcons();
+    renderList();
     sessionStorage.setItem('lastView', 'home');
   }
 
@@ -1148,7 +1132,6 @@
 
     document.getElementById('bottomNav').style.display = (step === 1) ? 'flex' : 'none';
     document.getElementById('wizardFooter').style.display = (step === 1) ? 'none' : 'flex';
-    document.getElementById('searchFab').style.display = 'none';
     document.getElementById('wizardNextBtn').innerHTML = (step === 4)
       ? 'Enregistrer la recette <i class="bi bi-check-lg"></i>'
       : 'Suivant <i class="bi bi-arrow-right"></i>';
@@ -2046,7 +2029,6 @@
     document.getElementById('planningView').style.display = 'none';
     document.getElementById('sharedRecipeView').style.display = 'none';
     document.getElementById('bottomNav').style.display = 'none';
-    document.getElementById('searchFab').style.display = 'none';
   }
 
   function showResetPasswordView() {
@@ -2057,7 +2039,6 @@
     document.getElementById('planningView').style.display = 'none';
     document.getElementById('sharedRecipeView').style.display = 'none';
     document.getElementById('bottomNav').style.display = 'none';
-    document.getElementById('searchFab').style.display = 'none';
     document.getElementById('resetPasswordView').style.display = 'block';
   }
 
@@ -2337,7 +2318,6 @@
     document.getElementById('accountView').style.display = 'none';
     document.getElementById('authView').style.display = 'none';
     document.getElementById('bottomNav').style.display = 'none';
-    document.getElementById('searchFab').style.display = 'none';
   }
 
   async function toggleSavedRecipe(recipeId) {
