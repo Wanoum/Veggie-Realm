@@ -1441,11 +1441,47 @@
     }, { passive: true });
   })();
 
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && document.getElementById('listView').style.display !== 'none') {
-      loadRecipes();
+  // Rafraîchit les données au retour au premier plan. Nécessaire notamment
+  // car sur iOS, en PWA installée (écran d'accueil), l'app est suspendue en
+  // mémoire plutôt que déchargée : revenir dessus ne refait pas de requête
+  // réseau tant qu'on ne l'a pas explicitement quittée (swipe dans le
+  // multitâche). On écoute plusieurs événements car `visibilitychange` seul
+  // est connu pour ne pas toujours se déclencher de façon fiable dans ce
+  // contexte sur iOS.
+  async function refreshAppData() {
+    await Promise.all([loadRecipes(), loadMealPlan()]);
+    if (document.getElementById('planningView').style.display !== 'none') {
+      if (document.getElementById('planningCoursesPanel').style.display !== 'none') {
+        renderCoursesList();
+      } else {
+        renderPlanningRecipes();
+      }
     }
+  }
+
+  function isResumeRefreshAllowed() {
+    return !!currentUser
+      && document.getElementById('cookingModeView').style.display === 'none'
+      && document.getElementById('authView').style.display === 'none'
+      && document.getElementById('formView').style.display === 'none';
+  }
+
+  let lastResumeRefresh = 0;
+  function handleAppResume() {
+    const now = Date.now();
+    // Évite un double déclenchement quand plusieurs événements
+    // (visibilitychange, pageshow, focus) se déclenchent quasi simultanément.
+    if (now - lastResumeRefresh < 2000) return;
+    lastResumeRefresh = now;
+    if (!isResumeRefreshAllowed()) return;
+    refreshAppData();
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') handleAppResume();
   });
+  window.addEventListener('pageshow', handleAppResume);
+  window.addEventListener('focus', handleAppResume);
 
   // ---- Gestion du formulaire d'ajout / édition ----
   const MEAL_TYPES = ['Petit-déj', 'Déjeuner', 'Dîner', 'Encas'];
