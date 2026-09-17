@@ -774,6 +774,32 @@
     }
   });
 
+  // Échappe le HTML avant injection dans le DOM. Nécessaire car titres, notes,
+  // ingrédients, étapes et pseudos peuvent provenir d'une recette importée
+  // depuis un site externe ou du profil d'un autre utilisateur (vue partagée),
+  // et ne doivent jamais pouvoir injecter du HTML/JS exécutable.
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // Ne retourne l'URL que si elle est http(s), sinon chaîne vide — empêche
+  // les liens/images en javascript: ou data: dans du contenu importé.
+  function safeUrl(url) {
+    if (!url) return '';
+    try {
+      const parsed = new URL(url, window.location.href);
+      return (parsed.protocol === 'http:' || parsed.protocol === 'https:') ? url : '';
+    } catch {
+      return '';
+    }
+  }
+
   let recipes = [];
   let recipesLoaded = false;
   let currentServings = {};
@@ -853,11 +879,11 @@
       return `
       <div class="card" onclick="showDetail(${i})">
         <div class="card-photo">
-          ${r.photo_url
-            ? `<img src="${r.photo_url}" alt="" onerror="this.parentElement.innerHTML='<div class=&quot;photo-empty&quot;><i class=&quot;bi bi-image&quot;></i></div>'" />`
+          ${safeUrl(r.photo_url)
+            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML='<div class=&quot;photo-empty&quot;><i class=&quot;bi bi-image&quot;></i></div>'" />`
             : '<div class="photo-empty"><i class="bi bi-image"></i></div>'}
         </div>
-        <h3>${r.title}</h3>
+        <h3>${escapeHtml(r.title)}</h3>
         ${totalTime > 0 ? `<span class="meta-pill"><i class="bi bi-clock" style="font-size:14px;color:var(--text-icon-primary);"></i> ${totalTime} min</span>` : ''}
       </div>
     `;
@@ -897,21 +923,21 @@
       const qDisplay = q != null ? (Number.isInteger(q) ? q : q.toFixed(1).replace(/[.]0$/, '')) : '';
       return `
       <div class="ing-row">
-        <span class="ing-row-name">${ing.name}${ing.note ? ' <span class="ing-row-note">(' + ing.note + ')</span>' : ''}</span>
-        <span class="ing-row-qty">${qDisplay} ${ing.unit || ''}</span>
+        <span class="ing-row-name">${escapeHtml(ing.name)}${ing.note ? ' <span class="ing-row-note">(' + escapeHtml(ing.note) + ')</span>' : ''}</span>
+        <span class="ing-row-qty">${qDisplay} ${escapeHtml(ing.unit)}</span>
       </div>`;
     }).join('');
 
     const stepsHtml = (r.steps && r.steps.length > 0)
-      ? '<h2>Étapes</h2><ol>' + r.steps.map(st => `<li>${st}</li>`).join('') + '</ol>'
+      ? '<h2>Étapes</h2><ol>' + r.steps.map(st => `<li>${escapeHtml(st)}</li>`).join('') + '</ol>'
       : '';
 
     const hasSteps = r.steps && r.steps.length > 0;
 
     document.getElementById('detailContent').innerHTML = `
       <div class="detail-photo">
-        ${r.photo_url
-          ? `<img src="${r.photo_url}" alt="" onerror="this.parentElement.querySelector('img').style.display='none'" />`
+        ${safeUrl(r.photo_url)
+          ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.querySelector('img').style.display='none'" />`
           : '<div class="photo-empty"><i class="bi bi-image" style="font-size:48px;"></i></div>'}
         <button class="icon-btn icon-btn-lg" style="position:absolute;top:calc(18px + env(safe-area-inset-top));left:18px;" onclick="goBackFromDetail()"><i class="bi bi-arrow-left icon"></i></button>
         <div style="position:absolute;top:calc(18px + env(safe-area-inset-top));right:18px;display:flex;gap:8px;">
@@ -924,9 +950,9 @@
         <div class="detail-sheet-handle"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--space-section-gap);">
           ${metaPills.join('')}
-          ${(r.tags || []).map(t => `<span class="tag">${t}</span>`).join('')}
+          ${(r.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
         </div>
-        <h1 style="margin-bottom:var(--space-section-gap);">${r.title}</h1>
+        <h1 style="margin-bottom:var(--space-section-gap);">${escapeHtml(r.title)}</h1>
 
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-section-gap);">
           <span class="text-body">Portions</span>
@@ -939,9 +965,9 @@
 
         <h2>Ingrédients</h2>
         ${ingredientsHtml}
-        ${r.notes ? `<div class="notice">${r.notes}</div>` : ''}
+        ${r.notes ? `<div class="notice">${escapeHtml(r.notes)}</div>` : ''}
         ${stepsHtml}
-        ${r.source_url ? `<p style="margin-top:var(--space-section-gap);"><a href="${r.source_url}" target="_blank" rel="noopener" style="color:var(--text-icon-accent);font-size:14px;">Source : ${new URL(r.source_url).hostname.replace('www.', '')}</a></p>` : ''}
+        ${safeUrl(r.source_url) ? `<p style="margin-top:var(--space-section-gap);"><a href="${escapeHtml(safeUrl(r.source_url))}" target="_blank" rel="noopener" style="color:var(--text-icon-accent);font-size:14px;">Source : ${escapeHtml(new URL(r.source_url).hostname.replace('www.', ''))}</a></p>` : ''}
         <div style="height:90px;"></div>
       </div>
 
@@ -1054,7 +1080,7 @@
     return matches.map(ing => {
       const q = ing.quantity != null ? (ing.quantity * target / base) : null;
       const qDisplay = q != null ? (Number.isInteger(q) ? q : q.toFixed(1).replace(/[.]0$/, '')) : '';
-      return `<span class="meta-pill" style="background:rgba(255,255,255,0.18);color:white;font-size:14px;padding:8px 14px;"><i class="bi bi-stars"></i> ${qDisplay} ${ing.unit || ''} ${ing.name}</span>`;
+      return `<span class="meta-pill" style="background:rgba(255,255,255,0.18);color:white;font-size:14px;padding:8px 14px;"><i class="bi bi-stars"></i> ${qDisplay} ${escapeHtml(ing.unit)} ${escapeHtml(ing.name)}</span>`;
     }).join('');
   }
 
@@ -1065,7 +1091,7 @@
       <div style="height:${spacerHeight}px;"></div>
       ${cookingSteps.map((stepText, idx) => `
         <div class="cooking-step" data-step-idx="${idx}" onclick="scrollToCookingStep(${idx})">
-          <p>${stepText}</p>
+          <p>${escapeHtml(stepText)}</p>
           <div class="cooking-step-ingredients">${ingredientChipsForStep(stepText)}</div>
         </div>
       `).join('')}
@@ -1562,7 +1588,7 @@
     acBox.style.left = inputEl.offsetLeft + 'px';
     acBox.style.top = (inputEl.offsetTop + inputEl.offsetHeight + 2) + 'px';
     acBox.style.width = inputEl.offsetWidth + 'px';
-    acBox.innerHTML = matches.map(n => `<div class="autocomplete-item" data-value="${n}">${n}</div>`).join('');
+    acBox.innerHTML = matches.map(n => `<div class="autocomplete-item" data-value="${escapeHtml(n)}">${escapeHtml(n)}</div>`).join('');
     inputEl.parentElement.appendChild(acBox);
 
     acBox.querySelectorAll('.autocomplete-item').forEach(item => {
@@ -1578,8 +1604,8 @@
   function renderIngRows() {
     document.getElementById('f_ingredients').innerHTML = ingRows.map((_, idx) => `
       <div class="row-item" style="position:relative;">
-        <input class="qty-input" placeholder="Qté (ex: 200g)" data-idx="${idx}" data-field="qtyUnitText" value="${ingRows[idx].qtyUnitText ?? ''}" />
-        <input class="ing-name-input" placeholder="Nom de l'ingrédient" autocomplete="off" data-idx="${idx}" data-field="name" value="${ingRows[idx].name ?? ''}" />
+        <input class="qty-input" placeholder="Qté (ex: 200g)" data-idx="${idx}" data-field="qtyUnitText" value="${escapeHtml(ingRows[idx].qtyUnitText)}" />
+        <input class="ing-name-input" placeholder="Nom de l'ingrédient" autocomplete="off" data-idx="${idx}" data-field="name" value="${escapeHtml(ingRows[idx].name)}" />
         <button type="button" class="remove-row" data-remove-ing="${idx}">✕</button>
       </div>`
     ).join('');
@@ -1630,7 +1656,7 @@
       <div class="step-row" data-idx="${idx}">
         <span class="step-drag-handle" data-drag-idx="${idx}"><i class="bi bi-grip-vertical"></i></span>
         <span class="step-row-number">${idx + 1}</span>
-        <span class="step-row-text">${text}</span>
+        <span class="step-row-text">${escapeHtml(text)}</span>
         <button type="button" class="step-row-remove" data-remove-step="${idx}"><i class="bi bi-trash"></i></button>
       </div>
     `).join('');
@@ -1954,11 +1980,11 @@
         <div class="plan-recipe-row">
           <div style="display:flex;align-items:center;gap:12px;">
             <div style="width:72px;height:72px;border-radius:12px;overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-              ${r.photo_url
-                ? `<img src="${r.photo_url}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
+              ${safeUrl(r.photo_url)
+                ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
                 : '<i class="bi bi-image" style="font-size:16px;color:var(--text-icon-secondary);"></i>'}
             </div>
-            <div class="plan-recipe-name">${r.title}</div>
+            <div class="plan-recipe-name">${escapeHtml(r.title)}</div>
           </div>
           <div class="servings-stepper">
             <button class="servings-minus" type="button" data-plan-recipe="${r.id}" data-delta="-1"><i class="bi bi-dash"></i></button>
@@ -2308,11 +2334,11 @@
     const sortedIngredients = [...(r.ingredients || [])].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
     const ingredientsHtml = sortedIngredients.map(ing => `
       <div class="ing-row">
-        <span class="ing-row-name">${ing.name}${ing.note ? ' <span class="ing-row-note">(' + ing.note + ')</span>' : ''}</span>
-        <span class="ing-row-qty">${ing.quantity ?? ''} ${ing.unit || ''}</span>
+        <span class="ing-row-name">${escapeHtml(ing.name)}${ing.note ? ' <span class="ing-row-note">(' + escapeHtml(ing.note) + ')</span>' : ''}</span>
+        <span class="ing-row-qty">${ing.quantity ?? ''} ${escapeHtml(ing.unit)}</span>
       </div>`).join('');
     const stepsHtml = (r.steps && r.steps.length > 0)
-      ? '<h2>Étapes</h2><ol>' + r.steps.map(st => `<li>${st}</li>`).join('') + '</ol>'
+      ? '<h2>Étapes</h2><ol>' + r.steps.map(st => `<li>${escapeHtml(st)}</li>`).join('') + '</ol>'
       : '';
 
     const isOwnRecipe = currentUser && currentUser.id === r.user_id;
@@ -2322,14 +2348,14 @@
     if (!currentUser) {
       banner = `
         <div style="background:var(--text-icon-primary);color:white;border-radius:16px;padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-          <span style="font-size:14px;">Recette partagée${authorName ? ' par ' + authorName : ' avec toi'} ✨</span>
+          <span style="font-size:14px;">Recette partagée${authorName ? ' par ' + escapeHtml(authorName) : ' avec toi'} ✨</span>
           <button type="button" onclick="location.href = location.pathname;" style="background:var(--surface-highest);color:var(--text-icon-primary);border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;white-space:nowrap;">Créer mon compte</button>
         </div>`;
     } else if (!isOwnRecipe) {
       const { data: existing } = await sb.from('saved_recipes').select('id').eq('user_id', currentUser.id).eq('recipe_id', r.id).maybeSingle();
       isSaved = !!existing;
       banner = `
-        ${authorName ? `<p style="font-size:14px;color:var(--text-icon-primary);margin:0 0 12px;"><i class="bi bi-person-circle"></i> Partagée par ${authorName}</p>` : ''}
+        ${authorName ? `<p style="font-size:14px;color:var(--text-icon-primary);margin:0 0 12px;"><i class="bi bi-person-circle"></i> Partagée par ${escapeHtml(authorName)}</p>` : ''}
         <button type="button" class="primary-btn" style="margin-top:0;margin-bottom:18px;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="toggleSavedRecipe('${r.id}')" id="saveSharedBtn" data-saved="${isSaved}">
           <i class="bi ${isSaved ? 'bi-bookmark-fill' : 'bi-bookmark'}" id="saveSharedIcon"></i> Enregistrer cette recette
         </button>`;
@@ -2337,21 +2363,21 @@
 
     document.getElementById('sharedRecipeContent').innerHTML = `
       <div style="height:400px;background:var(--surface-lowest);position:relative;">
-        ${r.photo_url
-          ? `<img src="${r.photo_url}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
+        ${safeUrl(r.photo_url)
+          ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
           : '<div class="photo-empty"><i class="bi bi-image" style="font-size:48px;"></i></div>'}
         ${currentUser ? `<button class="icon-btn icon-btn-lg" style="position:absolute;top:calc(18px + env(safe-area-inset-top));left:18px;" onclick="showHome()"><i class="bi bi-arrow-left icon"></i></button>` : ''}
       </div>
       <div style="background:var(--surface-high);border-radius:28px 28px 0 0;margin-top:-60px;position:relative;padding:24px 16px;">
         <div class="detail-sheet-handle"></div>
         ${banner}
-        <h1>${r.title}</h1>
-        <div class="tags" style="margin-bottom:14px;">${(r.tags || []).map(t => `<span class="tag">${t}</span>`).join('')}</div>
+        <h1>${escapeHtml(r.title)}</h1>
+        <div class="tags" style="margin-bottom:14px;">${(r.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>
         <h2>Ingrédients</h2>
         ${ingredientsHtml}
-        ${r.notes ? `<div class="notice" style="margin-top:16px;">${r.notes}</div>` : ''}
+        ${r.notes ? `<div class="notice" style="margin-top:16px;">${escapeHtml(r.notes)}</div>` : ''}
         ${stepsHtml}
-        ${r.source_url ? `<p style="margin-top:var(--space-section-gap);"><a href="${r.source_url}" target="_blank" rel="noopener" style="color:var(--text-icon-accent);font-size:14px;">Source : ${new URL(r.source_url).hostname.replace('www.', '')}</a></p>` : ''}
+        ${safeUrl(r.source_url) ? `<p style="margin-top:var(--space-section-gap);"><a href="${escapeHtml(safeUrl(r.source_url))}" target="_blank" rel="noopener" style="color:var(--text-icon-accent);font-size:14px;">Source : ${escapeHtml(new URL(r.source_url).hostname.replace('www.', ''))}</a></p>` : ''}
       </div>
     `;
     hideAllViewsForShared();
@@ -2416,10 +2442,10 @@
       const r = row.recipe;
       return `
         <div class="mini-card" onclick="loadSharedRecipe('${r.share_token}')">
-          <div class="mini-card-photo">${r.photo_url
-            ? `<img src="${r.photo_url}" alt="" onerror="this.parentElement.innerHTML='<div class=&quot;photo-empty&quot;><i class=&quot;bi bi-image&quot;></i></div>'" />`
+          <div class="mini-card-photo">${safeUrl(r.photo_url)
+            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML='<div class=&quot;photo-empty&quot;><i class=&quot;bi bi-image&quot;></i></div>'" />`
             : '<div class="photo-empty"><i class="bi bi-image"></i></div>'}</div>
-          <p>${r.title}</p>
+          <p>${escapeHtml(r.title)}</p>
         </div>`;
     }).join('');
   }
