@@ -367,6 +367,23 @@
   .course-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--interaction-primary); }
   .course-item.checked { color: var(--text-icon-secondary); text-decoration: line-through; }
   .course-qty { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 18px; line-height: 120%; color: var(--text-icon-secondary); white-space: nowrap; }
+  .course-sort-bar { display: flex; gap: 8px; margin-bottom: var(--space-section-gap); }
+  .course-sort-btn { height: 40px; font-size: 12px; }
+  .course-rayon-group { margin-bottom: 8px; }
+  .course-rayon-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: none;
+    border: none;
+    padding: 12px 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-icon-primary);
+  }
+  .course-rayon-count { font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: var(--text-icon-secondary); }
   .subtabs, .tag-filters, .segmented {
     display: flex;
     gap: 4px;
@@ -2016,8 +2033,43 @@
       .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // retire les accents
   }
 
+  // Catégorisation par rayon : heuristique par mots-clés sur le nom normalisé
+  // de l'ingrédient. Approximatif par nature (pas de champ "rayon" en base) —
+  // à affiner avec l'usage si des classements paraissent faux.
+  const RAYON_KEYWORDS = [
+    ['Fruits & légumes', ['tomate', 'carotte', 'oignon', 'ail', 'pomme de terre', 'patate douce', 'patate', 'courgette', 'aubergine', 'poivron', 'salade', 'laitue', 'epinard', 'brocoli', 'chou', 'champignon', 'citron', 'orange', 'pomme', 'poire', 'banane', 'fraise', 'framboise', 'myrtille', 'avocat', 'concombre', 'celeri', 'poireau', 'betterave', 'radis', 'navet', 'fenouil', 'persil', 'basilic', 'coriandre', 'menthe', 'ciboulette', 'thym', 'romarin', 'gingembre', 'mangue', 'ananas', 'raisin', 'abricot', 'peche', 'kiwi', 'courge', 'potiron', 'mais frais', 'edamame', 'haricot vert']],
+    ['Produits laitiers & oeufs', ['lait', 'oeuf', 'fromage', 'yaourt', 'beurre', 'creme', 'mascarpone', 'parmesan', 'mozzarella', 'feta', 'ricotta', 'skyr', 'tofu soyeux']],
+    ['Boulangerie', ['pain', 'baguette', 'brioche', 'tortilla', 'pita', 'naan', 'croissant']],
+    ['Surgelés', ['surgele', 'glace', 'sorbet']],
+    ['Boissons', ['eau', 'jus', 'vin', 'biere', 'soda', 'cafe', 'the', 'lait vegetal', 'lait d\'amande', 'lait de soja', 'lait d\'avoine', 'lait de coco']],
+    ['Épicerie sucrée', ['sucre', 'chocolat', 'cacao', 'miel', 'sirop', 'confiture', 'vanille', 'levure', 'farine', 'flocon d\'avoine', 'avoine', 'cereale']],
+    ['Épicerie salée', ['pates', 'riz', 'quinoa', 'lentille', 'pois chiche', 'haricot rouge', 'haricot blanc', 'huile', 'vinaigre', 'sel', 'poivre', 'epice', 'curry', 'cumin', 'paprika', 'bouillon', 'sauce soja', 'moutarde', 'ketchup', 'mayonnaise', 'conserve', 'coulis', 'tofu', 'seitan', 'proteine de soja', 'noix', 'amande', 'noisette', 'graine', 'sesame', 'pignon', 'cacahuete', 'olive', 'capre', 'biscotte', 'chapelure']],
+  ];
+  const RAYON_FALLBACK = 'Autres';
+
+  function categorizeIngredient(name) {
+    const n = normalize(name);
+    for (const [rayon, keywords] of RAYON_KEYWORDS) {
+      if (keywords.some(k => n.includes(k))) return rayon;
+    }
+    return RAYON_FALLBACK;
+  }
+
+  const COURSES_SORT_KEY = 'veggieRealm.coursesSortMode';
+  const COURSES_CHECKED_KEY = 'veggieRealm.coursesChecked';
+  let coursesSortMode = 'alpha'; // 'alpha' | 'rayon' | 'qty'
+  try { coursesSortMode = localStorage.getItem(COURSES_SORT_KEY) || 'alpha'; } catch { /* ignoré */ }
+  let collapsedRayons = new Set();
+
+  function loadCheckedCourses() {
+    try { return JSON.parse(localStorage.getItem(COURSES_CHECKED_KEY)) || {}; } catch { return {}; }
+  }
+  function saveCheckedCourses(state) {
+    try { localStorage.setItem(COURSES_CHECKED_KEY, JSON.stringify(state)); } catch { /* ignoré */ }
+  }
+
   function renderCoursesList() {
-    const aggregated = {}; // key: normalized name -> { displayName, units: { unitKey: { label, quantity } } }
+    const aggregated = {}; // key: normalized name -> { displayName, rayon, units: { unitKey: { label, quantity } } }
     let hasAnySelection = false;
 
     recipes.forEach(r => {
@@ -2026,12 +2078,13 @@
       hasAnySelection = true;
       const base = r.servings || 4;
       (r.ingredients || []).forEach(ing => {
+        if (!ing.name || !ing.name.trim()) return;
         const nameKey = normalize(ing.name).replace(/s$/, '');
         const unitKey = normalize(ing.unit);
         const scaledQty = ing.quantity != null ? (ing.quantity * count / base) : null;
 
         if (!aggregated[nameKey]) {
-          aggregated[nameKey] = { displayName: ing.name.trim(), units: {} };
+          aggregated[nameKey] = { displayName: ing.name.trim(), rayon: categorizeIngredient(ing.name), units: {} };
         }
         if (!aggregated[nameKey].units[unitKey]) {
           aggregated[nameKey].units[unitKey] = { label: ing.unit || '', quantity: scaledQty };
@@ -2050,27 +2103,106 @@
         </div>`;
       return;
     }
-    const items = Object.values(aggregated).sort((a, b) => a.displayName.localeCompare(b.displayName));
-    listEl.innerHTML = items.map((item, idx) => {
-      const qtyParts = Object.values(item.units).map(u => {
-        if (u.quantity == null) return u.label;
-        const qDisplay = Number.isInteger(u.quantity) ? u.quantity : u.quantity.toFixed(1).replace(/[.]0$/, '');
-        return `${qDisplay} ${u.label}`.trim();
-      }).filter(Boolean);
-      return `
-        <label class="course-item" id="course-${idx}">
-          <input type="checkbox" onchange="document.getElementById('course-${idx}').classList.toggle('checked', this.checked)" />
-          <span>${item.displayName}</span>
-          <span class="course-qty">${qtyParts.join(' + ')}</span>
-        </label>
-      `;
-    }).join('');
+
+    // Nettoie les cases cochées d'ingrédients qui ne sont plus dans la liste actuelle.
+    const checked = loadCheckedCourses();
+    const currentKeys = new Set(Object.keys(aggregated));
+    let checkedChanged = false;
+    Object.keys(checked).forEach(k => {
+      if (!currentKeys.has(k)) { delete checked[k]; checkedChanged = true; }
+    });
+    if (checkedChanged) saveCheckedCourses(checked);
+
+    const items = Object.entries(aggregated).map(([key, item]) => ({ key, ...item }));
+
+    const formatQty = (item) => Object.values(item.units).map(u => {
+      if (u.quantity == null) return escapeHtml(u.label);
+      const qDisplay = Number.isInteger(u.quantity) ? u.quantity : u.quantity.toFixed(1).replace(/[.]0$/, '');
+      return `${qDisplay} ${escapeHtml(u.label)}`.trim();
+    }).filter(Boolean).join(' + ');
+
+    const totalQty = (item) => Object.values(item.units).reduce((sum, u) => sum + (u.quantity || 0), 0);
+
+    const renderItemRow = (item) => `
+      <label class="course-item ${checked[item.key] ? 'checked' : ''}">
+        <input type="checkbox" data-course-checkbox="${escapeHtml(item.key)}" ${checked[item.key] ? 'checked' : ''} />
+        <span>${escapeHtml(item.displayName)}</span>
+        <span class="course-qty">${formatQty(item)}</span>
+      </label>
+    `;
+
+    let bodyHtml;
+    if (coursesSortMode === 'rayon') {
+      const byRayon = {};
+      items.forEach(item => {
+        (byRayon[item.rayon] = byRayon[item.rayon] || []).push(item);
+      });
+      const rayonOrder = [...RAYON_KEYWORDS.map(([r]) => r), RAYON_FALLBACK];
+      bodyHtml = rayonOrder.filter(rayon => byRayon[rayon]?.length).map(rayon => {
+        const rayonItems = byRayon[rayon].sort((a, b) => a.displayName.localeCompare(b.displayName, 'fr'));
+        const isCollapsed = collapsedRayons.has(rayon);
+        return `
+          <div class="course-rayon-group">
+            <button type="button" class="course-rayon-header" data-rayon-toggle="${escapeHtml(rayon)}">
+              <span>${escapeHtml(rayon)}</span>
+              <span style="display:flex;align-items:center;gap:8px;">
+                <span class="course-rayon-count">${rayonItems.length}</span>
+                <i class="bi ${isCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'}"></i>
+              </span>
+            </button>
+            <div ${isCollapsed ? 'style="display:none;"' : ''}>
+              ${rayonItems.map(renderItemRow).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    } else if (coursesSortMode === 'qty') {
+      bodyHtml = [...items].sort((a, b) => totalQty(b) - totalQty(a)).map(renderItemRow).join('');
+    } else {
+      bodyHtml = [...items].sort((a, b) => a.displayName.localeCompare(b.displayName, 'fr')).map(renderItemRow).join('');
+    }
+
+    listEl.innerHTML = `
+      <div class="course-sort-bar">
+        <button type="button" class="filter-chip course-sort-btn ${coursesSortMode === 'alpha' ? 'active' : ''}" data-sort-mode="alpha">Alphabétique</button>
+        <button type="button" class="filter-chip course-sort-btn ${coursesSortMode === 'rayon' ? 'active' : ''}" data-sort-mode="rayon">Par rayon</button>
+        <button type="button" class="filter-chip course-sort-btn ${coursesSortMode === 'qty' ? 'active' : ''}" data-sort-mode="qty">Par quantité</button>
+      </div>
+      ${bodyHtml}
+    `;
+
+    listEl.querySelectorAll('[data-sort-mode]').forEach(btn => {
+      btn.onclick = () => {
+        coursesSortMode = btn.dataset.sortMode;
+        try { localStorage.setItem(COURSES_SORT_KEY, coursesSortMode); } catch { /* ignoré */ }
+        renderCoursesList();
+      };
+    });
+
+    listEl.querySelectorAll('[data-rayon-toggle]').forEach(btn => {
+      btn.onclick = () => {
+        const rayon = btn.dataset.rayonToggle;
+        if (collapsedRayons.has(rayon)) collapsedRayons.delete(rayon); else collapsedRayons.add(rayon);
+        renderCoursesList();
+      };
+    });
+
+    listEl.querySelectorAll('[data-course-checkbox]').forEach(cb => {
+      cb.onchange = () => {
+        const key = cb.dataset.courseCheckbox;
+        const state = loadCheckedCourses();
+        if (cb.checked) state[key] = true; else delete state[key];
+        saveCheckedCourses(state);
+        cb.closest('.course-item').classList.toggle('checked', cb.checked);
+      };
+    });
   }
 
   document.getElementById('resetPlanningBtn').onclick = async () => {
     if (!confirm("Réinitialiser tout le planning de la semaine ?")) return;
     await sb.from('meal_plan').delete().neq('recipe_id', '00000000-0000-0000-0000-000000000000');
     mealPlan = {};
+    try { localStorage.removeItem(COURSES_CHECKED_KEY); } catch { /* ignoré */ }
     renderPlanningRecipes();
   };
 
