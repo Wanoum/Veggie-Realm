@@ -754,6 +754,16 @@
   </div>
 </div>
 
+<div id="mealTypeChoiceModal" style="display:none;position:fixed;inset:0;z-index:400;align-items:flex-end;">
+  <div id="mealTypeChoiceOverlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.4);" onclick="closeMealTypeChoiceModal()"></div>
+  <div style="position:relative;width:100%;background:var(--surface-high);border-radius:28px 28px 0 0;padding:20px var(--space-page-edge) calc(20px + env(safe-area-inset-bottom));">
+    <div class="detail-sheet-handle"></div>
+    <h2 style="margin-bottom:var(--space-section-gap);">À quel repas ajouter cette recette ?</h2>
+    <div id="mealTypeChoiceOptions" style="display:flex;gap:8px;margin-bottom:20px;"></div>
+    <button type="button" class="secondary-btn" style="width:100%;margin-top:0;" onclick="closeMealTypeChoiceModal()">Annuler</button>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   const SUPABASE_URL = "https://bhsftmcluaqztkfnwobx.supabase.co";
@@ -942,11 +952,58 @@
     `;
   }
 
-  async function addCurrentRecipeToPlanning(recipeId) {
+  function addCurrentRecipeToPlanning(recipeId) {
     const selectedServings = currentServings[currentDetailIndex] || 1;
-    const newVal = (mealPlan[recipeId] || 0) + selectedServings;
-    mealPlan[recipeId] = newVal;
-    await sb.from('meal_plan').upsert({ recipe_id: recipeId, count: newVal, user_id: currentUser.id });
+    requestMealTypeForPlanning(recipeId, async (mealType) => {
+      const newVal = (mealPlan[recipeId]?.count || 0) + selectedServings;
+      await applyMealPlanChange(recipeId, newVal, mealType);
+    });
+  }
+
+  // Détermine à quel type de repas rattacher l'ajout : reprend celui déjà choisi
+  // pour cette recette, l'unique tag repas de la recette, ou demande à l'utilisateur
+  // si la recette a plusieurs tags repas.
+  function requestMealTypeForPlanning(recipeId, onResolved) {
+    const existing = mealPlan[recipeId];
+    if (existing) { onResolved(existing.mealType); return; }
+    const r = recipes.find(x => x.id === recipeId);
+    const tags = (r?.tags || []).filter(t => MEAL_TYPES.includes(t));
+    if (tags.length > 1) {
+      openMealTypeChoiceModal(tags, onResolved);
+    } else {
+      onResolved(tags[0] || null);
+    }
+  }
+
+  async function applyMealPlanChange(recipeId, newCount, mealType) {
+    if (newCount <= 0) {
+      delete mealPlan[recipeId];
+      await sb.from('meal_plan').delete().eq('recipe_id', recipeId);
+    } else {
+      mealPlan[recipeId] = { count: newCount, mealType };
+      await sb.from('meal_plan').upsert({ recipe_id: recipeId, count: newCount, meal_type: mealType, user_id: currentUser.id });
+    }
+  }
+
+  let mealTypeChoiceCallback = null;
+  function openMealTypeChoiceModal(tags, callback) {
+    mealTypeChoiceCallback = callback;
+    document.getElementById('mealTypeChoiceOptions').innerHTML = tags.map(t => `
+      <button type="button" class="filter-chip filter-chip-vertical" data-choice-type="${t}"><i class="bi ${MEAL_TYPE_ICONS[t]}" style="font-size:24px;"></i>${t}</button>
+    `).join('');
+    document.querySelectorAll('[data-choice-type]').forEach(btn => {
+      btn.onclick = (e) => {
+        const t = e.currentTarget.dataset.choiceType;
+        const cb = mealTypeChoiceCallback;
+        closeMealTypeChoiceModal();
+        if (cb) cb(t);
+      };
+    });
+    document.getElementById('mealTypeChoiceModal').style.display = 'flex';
+  }
+  function closeMealTypeChoiceModal() {
+    document.getElementById('mealTypeChoiceModal').style.display = 'none';
+    mealTypeChoiceCallback = null;
   }
 
   function changeServings(i, delta) {
@@ -1068,6 +1125,7 @@
     document.getElementById('planningView').style.display = 'none';
     document.getElementById('accountView').style.display = 'none';
     document.getElementById('sharedRecipeView').style.display = 'none';
+    closeMealTypeChoiceModal();
     document.getElementById('navHome').classList.remove('active');
     document.getElementById('navAdd').classList.remove('active');
     document.getElementById('navPlanning').classList.remove('active');
@@ -1859,22 +1917,24 @@
   resetForm();
 
   // ---- Planning (sélection par compteur) ----
-  let mealPlan = {}; // { recipe_id: count }
+  let mealPlan = {}; // { recipe_id: { count, mealType } }
 
   async function loadMealPlan() {
     const { data, error } = await sb.from('meal_plan').select('*');
     if (error) { console.error(error); return; }
     mealPlan = {};
-    (data || []).forEach(row => { mealPlan[row.recipe_id] = row.count; });
+    (data || []).forEach(row => { mealPlan[row.recipe_id] = { count: row.count, mealType: row.meal_type }; });
   }
 
   function renderPlanningRecipes() {
     const counts = MEAL_TYPES.map(type => {
       let total = 0;
       recipes.forEach(r => {
-        const count = mealPlan[r.id] || 0;
-        if (count === 0) return;
-        if ((r.tags || []).includes(type)) total += count;
+        const entry = mealPlan[r.id];
+        if (!entry || !entry.count) return;
+        // Repli sur le premier tag repas pour les entrées créées avant l'ajout de meal_type.
+        const effectiveType = entry.mealType || (r.tags || []).find(t => MEAL_TYPES.includes(t));
+        if (effectiveType === type) total += entry.count;
       });
       return total;
     });
@@ -1889,7 +1949,7 @@
     // Liste des recettes avec stepper
     const listEl = document.getElementById('planningRecipeList');
     listEl.innerHTML = recipes.map(r => {
-      const count = mealPlan[r.id] || 0;
+      const count = mealPlan[r.id]?.count || 0;
       return `
         <div class="plan-recipe-row">
           <div style="display:flex;align-items:center;gap:12px;">
@@ -1910,18 +1970,15 @@
     }).join('');
 
     document.querySelectorAll('[data-plan-recipe]').forEach(btn => {
-      btn.onclick = async (e) => {
+      btn.onclick = (e) => {
         const recipeId = e.currentTarget.dataset.planRecipe;
         const delta = Number(e.currentTarget.dataset.delta);
-        const newVal = Math.max(0, (mealPlan[recipeId] || 0) + delta);
-        mealPlan[recipeId] = newVal;
-
-        if (newVal === 0) {
-          await sb.from('meal_plan').delete().eq('recipe_id', recipeId);
-        } else {
-          await sb.from('meal_plan').upsert({ recipe_id: recipeId, count: newVal, user_id: currentUser.id });
-        }
-        renderPlanningRecipes();
+        if (delta < 0 && !mealPlan[recipeId]) return;
+        requestMealTypeForPlanning(recipeId, async (mealType) => {
+          const newVal = Math.max(0, (mealPlan[recipeId]?.count || 0) + delta);
+          await applyMealPlanChange(recipeId, newVal, mealType);
+          renderPlanningRecipes();
+        });
       };
     });
   }
@@ -1938,7 +1995,7 @@
     let hasAnySelection = false;
 
     recipes.forEach(r => {
-      const count = mealPlan[r.id] || 0;
+      const count = mealPlan[r.id]?.count || 0;
       if (count === 0) return;
       hasAnySelection = true;
       const base = r.servings || 4;
