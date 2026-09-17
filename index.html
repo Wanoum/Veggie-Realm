@@ -118,6 +118,16 @@
     justify-content: center;
     gap: 16px;
     padding: 24px 28px;
+    overflow: hidden;
+  }
+  .cooking-step-preview {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 1.4;
+    margin: 0;
+    opacity: 0.35;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
   }
   .cooking-step-text {
     font-family: 'Krylon', Georgia, serif;
@@ -626,7 +636,7 @@
   <div id="detailContent"></div>
 </div>
 
-<div id="cookingModeView" style="display:none;position:fixed;inset:0;background:var(--text-icon-accent-strong);color:white;z-index:300;flex-direction:column;">
+<div id="cookingModeView" style="display:none;position:fixed;inset:0;overflow:hidden;background:var(--text-icon-accent-strong);color:white;z-index:300;flex-direction:column;">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:16px;padding-top:calc(16px + env(safe-area-inset-top));">
     <div>
       <p id="cookingRecipeTitle" style="font-family:'Inter',sans-serif;font-size:20px;line-height:120%;font-weight:600;margin:0 0 2px;"></p>
@@ -634,10 +644,11 @@
     </div>
     <button class="icon-btn" style="background:var(--surface-high);border:none;" onclick="closeCookingMode()"><i class="bi bi-x-lg icon"></i></button>
   </div>
-  <p id="cookingProgress" style="text-align:center;font-family:'IBM Plex Mono',monospace;font-size:14px;color:rgba(255,255,255,0.5);margin:0;"></p>
-  <div id="cookingScroll" class="cooking-scroll" style="flex:1;">
+  <div id="cookingScroll" class="cooking-scroll" style="flex:1;overflow:hidden;">
+    <p id="cookingStepPrev" class="cooking-step-preview"></p>
     <p id="cookingStepText" class="cooking-step-text"></p>
     <div id="cookingStepIngredients" class="cooking-step-ingredients"></div>
+    <p id="cookingStepNext" class="cooking-step-preview"></p>
   </div>
 </div>
 
@@ -1120,38 +1131,42 @@
     showCookingStep(0, false);
   }
 
-  // Affiche une étape : une seule à la fois, toujours dans le même style
-  // (plus de redimensionnement/changement de police qui faisait "sauter" le
-  // texte). Le changement d'étape se fait par un fondu enchaîné plutôt qu'un
-  // défilement.
+  // Affiche une étape avec un aperçu (en fondu, non cliquable-plein) de la
+  // précédente et de la suivante. Le changement d'étape se fait par un fondu
+  // enchaîné (tout s'efface, le contenu est remplacé, tout réapparaît à son
+  // opacité de repos) plutôt qu'un défilement.
   function showCookingStep(idx, animate = true) {
     idx = Math.max(0, Math.min(cookingSteps.length - 1, idx));
+    const prevEl = document.getElementById('cookingStepPrev');
     const textEl = document.getElementById('cookingStepText');
     const chipsEl = document.getElementById('cookingStepIngredients');
-    const progressEl = document.getElementById('cookingProgress');
+    const nextEl = document.getElementById('cookingStepNext');
+    const fadeEls = [prevEl, textEl, chipsEl, nextEl];
 
     const applyContent = () => {
       cookingStepIndex = idx;
+      const hasPrev = idx > 0;
+      const hasNext = idx < cookingSteps.length - 1;
+      prevEl.textContent = hasPrev ? cookingSteps[idx - 1] : '';
+      prevEl.style.display = hasPrev ? '' : 'none';
       textEl.textContent = cookingSteps[idx];
       chipsEl.innerHTML = ingredientChipsForStep(cookingSteps[idx]);
-      progressEl.textContent = `Étape ${idx + 1} / ${cookingSteps.length}`;
+      nextEl.textContent = hasNext ? cookingSteps[idx + 1] : '';
+      nextEl.style.display = hasNext ? '' : 'none';
     };
 
     if (cookingFadeTimeout) { clearTimeout(cookingFadeTimeout); cookingFadeTimeout = null; }
 
     if (!animate) {
       applyContent();
-      textEl.style.opacity = '1';
-      chipsEl.style.opacity = '1';
+      fadeEls.forEach(el => { el.style.opacity = ''; });
       return;
     }
 
-    textEl.style.opacity = '0';
-    chipsEl.style.opacity = '0';
+    fadeEls.forEach(el => { el.style.opacity = '0'; });
     cookingFadeTimeout = setTimeout(() => {
       applyContent();
-      textEl.style.opacity = '1';
-      chipsEl.style.opacity = '1';
+      fadeEls.forEach(el => { el.style.opacity = ''; });
       cookingFadeTimeout = null;
     }, COOKING_FADE_MS);
   }
@@ -1164,9 +1179,12 @@
     if (cookingStepIndex > 0) showCookingStep(cookingStepIndex - 1);
   }
 
-  // Un tap simple passe à l'étape suivante ; un balayage vertical permet
-  // d'avancer (vers le haut) ou reculer (vers le bas) — pratique quand les
-  // mains sont occupées ou salies en cuisinant.
+  // Cliquer sur l'aperçu (en fondu) de l'étape précédente/suivante y navigue
+  // directement. Un balayage vertical fait de même (avance vers le haut,
+  // recule vers le bas) — pratique quand les mains sont occupées en cuisinant.
+  document.getElementById('cookingStepPrev').addEventListener('click', prevCookingStep);
+  document.getElementById('cookingStepNext').addEventListener('click', nextCookingStep);
+
   (function setupCookingSwipe() {
     const area = document.getElementById('cookingScroll');
     const SWIPE_THRESHOLD = 40;
@@ -1180,9 +1198,7 @@
       if (startY == null) return;
       const diff = e.changedTouches[0].clientY - startY;
       startY = null;
-      if (Math.abs(diff) < 10) {
-        nextCookingStep();
-      } else if (diff < -SWIPE_THRESHOLD) {
+      if (diff < -SWIPE_THRESHOLD) {
         nextCookingStep();
       } else if (diff > SWIPE_THRESHOLD) {
         prevCookingStep();
@@ -2240,10 +2256,10 @@
         return `
           <div class="course-rayon-group">
             <button type="button" class="course-rayon-header" data-rayon-toggle="${escapeHtml(rayon)}">
-              <span class="text-headline" style="color:var(--text-icon-primary);">${escapeHtml(rayon)}</span>
+              <span class="text-body" style="font-weight:700;color:var(--text-icon-primary);">${escapeHtml(rayon)}</span>
               <span style="display:flex;align-items:center;gap:8px;">
                 <span class="course-rayon-count text-quantity-mono">${checkedCount} de ${rayonItems.length}</span>
-                <i class="bi ${isCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'}"></i>
+                <i class="bi ${isCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'}" style="color:var(--text-icon-primary);"></i>
               </span>
             </button>
             <div ${isCollapsed ? 'style="display:none;"' : ''}>
