@@ -9,7 +9,7 @@
 <link rel="manifest" href="manifest.json" />
 <link rel="apple-touch-icon" href="app-logo.png" />
 <link rel="icon" href="app-logo.png" />
-<meta name="theme-color" content="#f7f3eb" />
+<meta name="theme-color" content="#f4f1e9" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 <link rel="stylesheet" href="tokens.css" />
 <style>
@@ -29,7 +29,7 @@
   .serif { font-family: 'Krylon', Georgia, serif; }
   h1 { font-family: 'Krylon', Georgia, serif; font-size: 48px; line-height: 100%; font-weight: 400; margin: 0 0 var(--space-section-gap); color: var(--text-icon-primary); }
   h2 { font-family: 'Inter', sans-serif; font-size: 24px; line-height: 120%; font-weight: 600; margin: var(--space-section-gap) 0 12px; color: var(--text-icon-primary); }
-  .count { font-size: 13px; color: var(--text-icon-secondary); margin-bottom: 14px; }
+  .count { font-size: 14px; color: var(--text-icon-secondary); margin-bottom: 14px; }
   .icon-btn {
     width: 40px; height: 40px;
     border-radius: 999px;
@@ -47,7 +47,7 @@
   }
   .mini-card-photo {
     height: 90px;
-    border-radius: 14px;
+    border-radius: 12px;
     background: var(--surface-low);
     overflow: hidden;
     margin-bottom: 6px;
@@ -75,7 +75,7 @@
   .meta-pill {
     font-size: 14px;
     padding: 3px 9px;
-    border-radius: 20px;
+    border-radius: 999px;
     background: var(--surface-lowest);
     color: var(--text-icon-primary);
     display: inline-flex;
@@ -88,16 +88,7 @@
     background: var(--surface-lowest);
     color: var(--text-icon-primary);
     padding: 3px 9px;
-    border-radius: 20px;
-  }
-  #backBtn {
-    background: var(--surface-highest);
-    border: 1px solid var(--border-divider);
-    border-radius: 12px;
-    padding: 8px 14px;
-    font-size: 14px;
-    margin-bottom: 12px;
-    color: var(--text-icon-primary);
+    border-radius: 999px;
   }
   .detail-photo {
     position: fixed;
@@ -266,7 +257,7 @@
     animation: skeleton-pulse 1.4s ease-in-out infinite;
   }
   .skeleton-block { border-radius: 16px; }
-  .field-label { display:block; font-size:13px; color:var(--text-icon-secondary); margin:14px 0 4px; }
+  .field-label { display:block; font-size:14px; color:var(--text-icon-secondary); margin:14px 0 4px; }
   .field-input {
     width: 100%;
     padding: 11px 13px;
@@ -331,7 +322,7 @@
     padding: 10px 12px;
     border: 1px solid var(--border-divider);
     border-radius: 12px;
-    font-size: 15px;
+    font-size: 14px;
     background: var(--surface-highest);
   }
   .row-item input { flex: 2; min-width: 0; }
@@ -340,7 +331,7 @@
   .remove-row {
     background: none;
     border: none;
-    color: #B3261E;
+    color: var(--status-error);
     font-size: 18px;
     padding: 4px 8px;
   }
@@ -356,12 +347,12 @@
   .day-row {
     background: var(--surface-highest);
     border: 1px solid var(--border-divider);
-    border-radius: 14px;
+    border-radius: 12px;
     padding: 12px 14px;
     margin-bottom: 10px;
   }
-  .day-row .day-name { font-size: 13px; color: var(--text-icon-secondary); margin-bottom: 6px; text-transform: capitalize; }
-  .day-row select { width: 100%; padding: 9px 10px; border: 1px solid var(--border-divider); border-radius: 10px; font-size: 14px; background: var(--surface-highest); margin-bottom: 6px; }
+  .day-row .day-name { font-size: 14px; color: var(--text-icon-secondary); margin-bottom: 6px; text-transform: capitalize; }
+  .day-row select { width: 100%; padding: 9px 10px; border: 1px solid var(--border-divider); border-radius: 12px; font-size: 14px; background: var(--surface-highest); margin-bottom: 6px; }
   .day-row .servings-mini { display: flex; align-items: center; gap: 10px; }
   .day-row .servings-mini button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border-divider); background: var(--surface-highest); font-size: 14px; }
   .course-item {
@@ -408,7 +399,7 @@
     gap: 14px;
     background: var(--interaction-primary-pale);
     border: none;
-    border-radius: 20px;
+    border-radius: 16px;
     color: var(--text-icon-accent);
     font-family: 'Inter', sans-serif;
     font-size: 16px;
@@ -564,7 +555,7 @@
     <label class="field-label">Mot de passe</label>
     <input id="auth_password" class="field-input" type="password" placeholder="••••••••" autocomplete="current-password" />
 
-    <p id="authError" style="color:#B3261E;font-size:13px;margin-top:10px;"></p>
+    <p id="authError" style="color:var(--status-error);font-size:14px;margin-top:10px;"></p>
 
     <button type="button" id="authSubmitBtn" class="primary-btn">Se connecter</button>
     <button type="button" id="forgotPasswordBtn" style="width:100%;background:none;border:none;padding:14px;color:var(--text-icon-primary);font-size:14px;">Mot de passe oublié ?</button>
@@ -572,14 +563,14 @@
 </div>
 
 <div id="resetPasswordView" style="display:none;padding-top:60px;">
-  <h1 class="serif" style="font-size:26px;text-align:center;">Nouveau mot de passe</h1>
+  <h1 class="serif" style="font-size:30px;text-align:center;">Nouveau mot de passe</h1>
   <p style="text-align:center;color:var(--text-icon-primary);margin-bottom:24px;">Choisis un nouveau mot de passe pour ton compte</p>
 
   <div style="max-width:340px;margin:0 auto;">
     <label class="field-label">Nouveau mot de passe</label>
     <input id="reset_password" class="field-input" type="password" placeholder="••••••••" autocomplete="new-password" />
 
-    <p id="resetError" style="color:#B3261E;font-size:13px;margin-top:10px;"></p>
+    <p id="resetError" style="color:var(--status-error);font-size:14px;margin-top:10px;"></p>
 
     <button type="button" id="resetSubmitBtn" class="primary-btn">Enregistrer le mot de passe</button>
   </div>
@@ -598,7 +589,7 @@
   <div id="tagFilters" class="tag-filters"></div>
 
   <div id="savedRecipesSection" style="display:none;margin-bottom:20px;">
-    <h2 style="margin:0 0 10px;font-size:15px;">Recettes partagées avec toi</h2>
+    <h2 style="margin:0 0 10px;font-size:14px;">Recettes partagées avec toi</h2>
     <div id="savedRecipesStrip" style="display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;"></div>
   </div>
 
@@ -698,7 +689,7 @@
     <textarea id="stepEntryInput" class="steps-inline-input" rows="1" placeholder="Tape une étape, puis appuie sur Entrée..."></textarea>
   </div>
 
-  <p id="formError" style="color:#B3261E;font-size:13px;"></p>
+  <p id="formError" style="color:var(--status-error);font-size:14px;"></p>
 </div>
 
 <div id="wizardFooter" style="display:none;position:fixed;bottom:0;left:0;right:0;display:flex;gap:10px;padding:40px 16px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(to bottom, rgba(255, 253, 248, 0) 0px, rgba(255, 253, 248, 0.8) 40px, rgba(255, 253, 248, 0.8) 100%);z-index:50;">
@@ -738,10 +729,10 @@
     <label class="field-label" style="margin-top:22px;">Nouveau mot de passe</label>
     <input id="account_new_password" class="field-input" type="password" placeholder="Laisser vide pour ne pas changer" autocomplete="new-password" />
 
-    <p id="accountError" style="color:#B3261E;font-size:13px;margin-top:10px;"></p>
+    <p id="accountError" style="color:var(--status-error);font-size:14px;margin-top:10px;"></p>
 
     <button type="button" id="updatePasswordBtn" class="secondary-btn">Mettre à jour le mot de passe</button>
-    <button type="button" id="logoutBtn" class="primary-btn" style="background:#B3261E;">Se déconnecter</button>
+    <button type="button" id="logoutBtn" class="primary-btn" style="background:var(--status-error);">Se déconnecter</button>
   </div>
 </div>
 
@@ -857,7 +848,7 @@
             : '<div class="photo-empty"><i class="bi bi-image"></i></div>'}
         </div>
         <h3>${r.title}</h3>
-        ${totalTime > 0 ? `<span class="meta-pill"><i class="bi bi-clock" style="font-size:13px;color:var(--text-icon-primary);"></i> ${totalTime} min</span>` : ''}
+        ${totalTime > 0 ? `<span class="meta-pill"><i class="bi bi-clock" style="font-size:14px;color:var(--text-icon-primary);"></i> ${totalTime} min</span>` : ''}
       </div>
     `;
     }).join('');
@@ -887,8 +878,8 @@
     const base = r.servings || 4;
     const s = currentServings[i];
     const metaPills = [];
-        if (r.cook_time_minutes) metaPills.push(`<span class="meta-pill"><i class="bi bi-fire" style="font-size:13px;color:var(--text-icon-primary);"></i> ${r.cook_time_minutes} min</span>`);
-    if (r.oven_temp_celsius) metaPills.push(`<span class="meta-pill"><i class="bi bi-thermometer-half" style="font-size:13px;color:var(--text-icon-primary);"></i> ${r.oven_temp_celsius}°</span>`);
+        if (r.cook_time_minutes) metaPills.push(`<span class="meta-pill"><i class="bi bi-fire" style="font-size:14px;color:var(--text-icon-primary);"></i> ${r.cook_time_minutes} min</span>`);
+    if (r.oven_temp_celsius) metaPills.push(`<span class="meta-pill"><i class="bi bi-thermometer-half" style="font-size:14px;color:var(--text-icon-primary);"></i> ${r.oven_temp_celsius}°</span>`);
 
     const sortedIngredients = [...(r.ingredients || [])].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
     const ingredientsHtml = sortedIngredients.map(ing => {
@@ -1176,7 +1167,7 @@
     statusEl.textContent = '';
 
     if (!url) {
-      statusEl.style.color = '#B3261E';
+      statusEl.style.color = 'var(--status-error)';
       statusEl.textContent = "Colle d'abord un lien.";
       return;
     }
@@ -1189,7 +1180,7 @@
       const data = await response.json();
 
       if (!response.ok) {
-        statusEl.style.color = '#B3261E';
+        statusEl.style.color = 'var(--status-error)';
         statusEl.textContent = data.error || "Erreur lors de l'import.";
         btn.disabled = false;
         return;
@@ -1214,13 +1205,13 @@
       stepRows = [...(data.steps || [])];
       renderStepsList();
 
-      statusEl.style.color = '#3D5A34';
+      statusEl.style.color = 'var(--status-success)';
       statusEl.textContent = "Recette importée ! Vérifie et complète les informations ci-dessous.";
       btn.disabled = false;
 
       setTimeout(() => goToWizardStep(2), 600);
     } catch (err) {
-      statusEl.style.color = '#B3261E';
+      statusEl.style.color = 'var(--status-error)';
       statusEl.textContent = "Erreur réseau : " + err.message;
       btn.disabled = false;
     }
@@ -1902,7 +1893,7 @@
       return `
         <div class="plan-recipe-row">
           <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:72px;height:72px;border-radius:10px;overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+            <div style="width:72px;height:72px;border-radius:12px;overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;">
               ${r.photo_url
                 ? `<img src="${r.photo_url}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
                 : '<i class="bi bi-image" style="font-size:16px;color:var(--text-icon-secondary);"></i>'}
@@ -2045,7 +2036,7 @@
   document.getElementById('forgotPasswordBtn').onclick = async () => {
     const email = document.getElementById('auth_email').value.trim();
     const errEl = document.getElementById('authError');
-    errEl.style.color = '#B3261E';
+    errEl.style.color = 'var(--status-error)';
     errEl.textContent = '';
 
     if (!email) {
@@ -2068,7 +2059,7 @@
   document.getElementById('resetSubmitBtn').onclick = async () => {
     const newPassword = document.getElementById('reset_password').value;
     const errEl = document.getElementById('resetError');
-    errEl.style.color = '#B3261E';
+    errEl.style.color = 'var(--status-error)';
     errEl.textContent = '';
 
     if (!newPassword || newPassword.length < 6) {
@@ -2183,7 +2174,7 @@
   document.getElementById('updateNameBtn').onclick = async () => {
     const name = document.getElementById('account_display_name').value.trim();
     const errEl = document.getElementById('accountError');
-    errEl.style.color = '#B3261E';
+    errEl.style.color = 'var(--status-error)';
     errEl.textContent = '';
 
     if (!name) {
@@ -2203,7 +2194,7 @@
   document.getElementById('updatePasswordBtn').onclick = async () => {
     const newPassword = document.getElementById('account_new_password').value;
     const errEl = document.getElementById('accountError');
-    errEl.style.color = '#B3261E';
+    errEl.style.color = 'var(--status-error)';
     errEl.textContent = '';
 
     if (!newPassword) {
@@ -2273,31 +2264,32 @@
 
     if (!currentUser) {
       banner = `
-        <div style="background:var(--text-icon-primary);color:white;border-radius:14px;padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-          <span style="font-size:13px;">Recette partagée${authorName ? ' par ' + authorName : ' avec toi'} ✨</span>
+        <div style="background:var(--text-icon-primary);color:white;border-radius:16px;padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <span style="font-size:14px;">Recette partagée${authorName ? ' par ' + authorName : ' avec toi'} ✨</span>
           <button type="button" onclick="location.href = location.pathname;" style="background:var(--surface-highest);color:var(--text-icon-primary);border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;white-space:nowrap;">Créer mon compte</button>
         </div>`;
     } else if (!isOwnRecipe) {
       const { data: existing } = await sb.from('saved_recipes').select('id').eq('user_id', currentUser.id).eq('recipe_id', r.id).maybeSingle();
       isSaved = !!existing;
       banner = `
-        ${authorName ? `<p style="font-size:13px;color:var(--text-icon-primary);margin:0 0 12px;"><i class="bi bi-person-circle"></i> Partagée par ${authorName}</p>` : ''}
+        ${authorName ? `<p style="font-size:14px;color:var(--text-icon-primary);margin:0 0 12px;"><i class="bi bi-person-circle"></i> Partagée par ${authorName}</p>` : ''}
         <button type="button" class="primary-btn" style="margin-top:0;margin-bottom:18px;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="toggleSavedRecipe('${r.id}')" id="saveSharedBtn" data-saved="${isSaved}">
           <i class="bi ${isSaved ? 'bi-bookmark-fill' : 'bi-bookmark'}" id="saveSharedIcon"></i> Enregistrer cette recette
         </button>`;
     }
 
     document.getElementById('sharedRecipeContent').innerHTML = `
-      <div style="height:260px;background:var(--surface-lowest);position:relative;">
+      <div style="height:400px;background:var(--surface-lowest);position:relative;">
         ${r.photo_url
           ? `<img src="${r.photo_url}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
           : '<div class="photo-empty"><i class="bi bi-image" style="font-size:48px;"></i></div>'}
         ${currentUser ? `<button class="icon-btn icon-btn-lg" style="position:absolute;top:calc(18px + env(safe-area-inset-top));left:18px;" onclick="showHome()"><i class="bi bi-arrow-left icon"></i></button>` : ''}
       </div>
-      <div style="background:var(--surface-high);border-radius:22px 22px 0 0;margin-top:-18px;position:relative;padding:24px 16px;">
+      <div style="background:var(--surface-high);border-radius:28px 28px 0 0;margin-top:-60px;position:relative;padding:24px 16px;">
+        <div class="detail-sheet-handle"></div>
         ${banner}
         <h1>${r.title}</h1>
-        <div class="tags" style="margin-bottom:14px;">${(r.tags || []).map(t => `<span class="tag">#${t}</span>`).join('')}</div>
+        <div class="tags" style="margin-bottom:14px;">${(r.tags || []).map(t => `<span class="tag">${t}</span>`).join('')}</div>
         <h2>Ingrédients</h2>
         ${ingredientsHtml}
         ${r.notes ? `<div class="notice" style="margin-top:16px;">${r.notes}</div>` : ''}
