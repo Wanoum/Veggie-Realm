@@ -1269,6 +1269,17 @@
   }
 
   function wizardGoBack() {
+    // En édition, le wizard démarre directement à l'étape 2 (pas d'étape
+    // Source) : reculer depuis l'étape 2 doit donc quitter vers la fiche
+    // recette plutôt que d'atterrir sur l'étape 1 (choix nouvelle recette/
+    // import), qui n'a pas de sens en contexte d'édition.
+    if (editingId && wizardStep === 2) {
+      const idx = currentDetailIndex;
+      discardAbandonedPhoto();
+      resetForm();
+      showDetail(idx);
+      return;
+    }
     if (wizardStep > 1) goToWizardStep(wizardStep - 1);
   }
 
