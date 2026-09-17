@@ -1468,6 +1468,37 @@
     }, { passive: true });
   })();
 
+  // ---- Glisser depuis le bord gauche pour revenir en arrière (fiche recette) ----
+  // Reproduit le edge-swipe natif iOS : un geste démarré tout près du bord
+  // gauche de l'écran et tiré vers la droite renvoie à l'écran précédent.
+  (function setupEdgeSwipeBack() {
+    const EDGE_ZONE = 24; // px depuis le bord gauche où le geste doit démarrer
+    const SWIPE_THRESHOLD = 80;
+    let startX = null;
+    let startY = null;
+    let tracking = false;
+
+    document.addEventListener('touchstart', (e) => {
+      tracking = false;
+      if (document.getElementById('detailView').style.display === 'none') return;
+      const x = e.touches[0].clientX;
+      if (x > EDGE_ZONE) return;
+      startX = x;
+      startY = e.touches[0].clientY;
+      tracking = true;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+      if (!tracking || startX == null) { tracking = false; return; }
+      tracking = false;
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = Math.abs(e.changedTouches[0].clientY - startY);
+      if (dx > SWIPE_THRESHOLD && dy < dx) {
+        goBackFromDetail();
+      }
+    }, { passive: true });
+  })();
+
   // Rafraîchit les données au retour au premier plan. Nécessaire notamment
   // car sur iOS, en PWA installée (écran d'accueil), l'app est suspendue en
   // mémoire plutôt que déchargée : revenir dessus ne refait pas de requête
