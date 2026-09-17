@@ -2597,8 +2597,8 @@
 
     let authorName = null;
     if (r.user_id) {
-      const { data: authorProfile } = await sb.from('profiles').select('display_name, email').eq('id', r.user_id).maybeSingle();
-      if (authorProfile) authorName = authorProfile.display_name || authorProfile.email;
+      const { data: authorProfile } = await sb.from('profiles').select('display_name').eq('id', r.user_id).maybeSingle();
+      if (authorProfile) authorName = authorProfile.display_name || null;
     }
 
     const sortedIngredients = [...(r.ingredients || [])].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
