@@ -2562,7 +2562,11 @@
   let currentSharedRecipe = null;
 
   async function loadSharedRecipe(token) {
-    const { data, error } = await sb.from('recipes').select('*').eq('share_token', token).single();
+    // Passe par une fonction serveur (get_shared_recipe) plutôt qu'un select
+    // direct sur recipes : elle ne renvoie la recette que si le token exact
+    // correspond, indépendamment des policies RLS de la table (voir
+    // migration SQL associée).
+    const { data, error } = await sb.rpc('get_shared_recipe', { p_token: token }).single();
     if (error || !data) {
       document.getElementById('sharedRecipeContent').innerHTML = '<div class="empty" style="padding-top:60px;">Cette recette n\'est plus disponible.</div>';
       document.getElementById('sharedRecipeView').style.display = 'block';
