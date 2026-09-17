@@ -216,8 +216,38 @@ async function fetchHtmlSafely(startUrl) {
   throw httpError(400, 'Trop de redirections.');
 }
 
+// Anon key publique, déjà embarquée dans index.html (client-side) : ce n'est
+// pas un secret, elle sert uniquement à valider le token de session envoyé
+// par l'appelant auprès de l'API Auth de Supabase.
+const SUPABASE_URL = 'https://bhsftmcluaqztkfnwobx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoc2Z0bWNsdWFxenRrZm53b2J4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyMTE1ODgsImV4cCI6MjEwNDc4NzU4OH0.ovrCW7IRhkH8tfMYyExNp6zKt60EJMpJLcehlastIAI';
+
+// Cet endpoint fait une requête serveur vers une URL externe ; sans
+// authentification, n'importe qui sur internet peut l'appeler comme
+// "fetcher" HTTP gratuit hébergé sur ce compte Vercel. On exige donc un
+// utilisateur Veggie Realm connecté.
+async function assertAuthenticated(req) {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!token) throw httpError(401, 'Authentification requise.');
+
+  let response;
+  try {
+    response = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { Authorization: `Bearer ${token}`, apikey: SUPABASE_ANON_KEY }
+    });
+  } catch {
+    throw httpError(401, 'Authentification invalide.');
+  }
+  if (!response.ok) throw httpError(401, 'Authentification invalide.');
+}
+
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  try {
+    await assertAuthenticated(req);
+  } catch (err) {
+    return res.status(err.status || 401).json({ error: err.message });
+  }
 
   const { url } = req.query;
   if (!url) {

@@ -1299,7 +1299,10 @@
     statusEl.textContent = "Récupération de la recette...";
 
     try {
-      const response = await fetch(`/api/import-recipe?url=${encodeURIComponent(url)}`);
+      const { data: { session } } = await sb.auth.getSession();
+      const response = await fetch(`/api/import-recipe?url=${encodeURIComponent(url)}`, {
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
+      });
       const data = await response.json();
 
       if (!response.ok) {
