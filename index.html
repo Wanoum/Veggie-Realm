@@ -635,6 +635,8 @@
   <div id="cards" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;"></div>
 </div>
 
+<div id="edgeSwipeScrim" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:290;pointer-events:none;"></div>
+
 <div id="detailView" style="display:none;margin:calc(-1 * (var(--space-page-edge) + env(safe-area-inset-top))) calc(-1 * var(--space-page-edge)) 0;">
   <div id="detailContent"></div>
 </div>
@@ -1084,6 +1086,11 @@
     detailEl.style.transition = '';
     detailEl.style.transform = '';
     detailEl.style.opacity = '';
+    detailEl.style.position = '';
+    detailEl.style.inset = '';
+    detailEl.style.zIndex = '';
+    document.getElementById('edgeSwipeScrim').style.display = 'none';
+    document.getElementById('edgeSwipeScrim').style.opacity = '';
     document.getElementById('listView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
     document.body.style.background = '';
@@ -1207,6 +1214,10 @@
     document.getElementById('planningView').style.display = 'none';
     document.getElementById('accountView').style.display = 'none';
     document.getElementById('sharedRecipeView').style.display = 'none';
+    document.getElementById('edgeSwipeScrim').style.display = 'none';
+    document.getElementById('detailView').style.position = '';
+    document.getElementById('detailView').style.inset = '';
+    document.getElementById('detailView').style.transform = '';
     closeMealTypeChoiceModal();
     document.getElementById('navHome').classList.remove('active');
     document.getElementById('navAdd').classList.remove('active');
@@ -1474,28 +1485,67 @@
 
   // ---- Glisser depuis le bord gauche pour revenir en arrière (fiche recette) ----
   // Reproduit le edge-swipe natif iOS : la fiche suit le doigt en direct
-  // pendant le geste (translation + fondu), puis termine sa course en
-  // glissant hors de l'écran (retour effectif) ou en revenant à sa place
-  // (geste abandonné), avec l'accélération utilisée par iOS pour ses
-  // transitions de navigation.
+  // (translation + léger fondu), l'accueil apparaît en dessous assombri par
+  // un voile qui s'éclaircit à mesure qu'on tire, puis le geste se termine
+  // soit en glissant la fiche hors de l'écran (retour confirmé), soit en la
+  // ramenant à sa place (geste abandonné) — avec l'accélération utilisée par
+  // iOS pour ses transitions de navigation.
+  //
+  // Détail technique : la photo d'en-tête de la fiche est en position:fixed
+  // pour rester collée en haut pendant le défilement normal. Or dès qu'on
+  // applique une transform à un ancêtre, cet ancêtre devient le nouveau
+  // repère de positionnement de tout élément fixed qu'il contient (règle
+  // CSS) — la photo "décrochait" donc visuellement pendant le geste. On la
+  // bascule ici en position:absolute uniquement pendant le geste (la fiche
+  // elle-même passe en position:fixed à ce moment-là, donc le rendu ne
+  // change pas visuellement), puis on la restaure en fixed si le geste est
+  // abandonné.
   (function setupEdgeSwipeBack() {
     const EDGE_ZONE = 24; // px depuis le bord gauche où le geste doit démarrer
     const AXIS_LOCK_PX = 8; // mouvement minimal avant de trancher horizontal/vertical
     const COMPLETE_RATIO = 0.35; // fraction de la largeur d'écran à partir de laquelle le retour se confirme
     const IOS_EASING = 'cubic-bezier(0.32, 0.72, 0, 1)';
     const ANIMATION_MS = 280;
+    const SCRIM_MAX_OPACITY = 0.35;
 
     const detailEl = document.getElementById('detailView');
+    const scrimEl = document.getElementById('edgeSwipeScrim');
     let startX = null;
     let startY = null;
     let tracking = false; // un geste a démarré dans la zone de bord, sur la fiche recette
     let dragging = false; // confirmé horizontal (au-delà du verrou d'axe)
     let liveAnimationEnabled = false;
+    let photoEl = null;
 
-    function resetTransform() {
+    function beginLiveDrag() {
+      photoEl = detailEl.querySelector('.detail-photo');
+      detailEl.style.position = 'fixed';
+      detailEl.style.inset = '0';
+      detailEl.style.zIndex = '295';
+      if (photoEl) photoEl.style.position = 'absolute';
+      document.getElementById('listView').style.display = 'block';
+      scrimEl.style.display = 'block';
+      scrimEl.style.opacity = String(SCRIM_MAX_OPACITY);
+    }
+
+    function endLiveDrag(restoreNormalFlow) {
       detailEl.style.transition = '';
       detailEl.style.transform = '';
       detailEl.style.opacity = '';
+      scrimEl.style.display = 'none';
+      scrimEl.style.opacity = '';
+      scrimEl.style.transition = '';
+      if (restoreNormalFlow) {
+        // Geste abandonné : on reste sur la fiche, il faut donc redonner à
+        // tout son état normal (photo collée, fiche dans le flux de page).
+        detailEl.style.position = '';
+        detailEl.style.inset = '';
+        detailEl.style.zIndex = '';
+        if (photoEl) photoEl.style.position = '';
+        document.getElementById('listView').style.display = 'none';
+      }
+      // Si le retour est confirmé, goBackFromDetail() remet de toute façon
+      // tout à zéro (et la fiche est reconstruite au prochain affichage).
     }
 
     document.addEventListener('touchstart', (e) => {
@@ -1507,11 +1557,6 @@
       startX = x;
       startY = e.touches[0].clientY;
       tracking = true;
-      // Le suivi en direct déplace la fiche (et sa photo d'en-tête, en
-      // position fixed) via une transform sur un ancêtre, ce qui change son
-      // repère de positionnement si la page est scrollée. On ne l'active
-      // donc que depuis le haut de la fiche ; sinon le geste reste utilisable
-      // (seuil simple) mais sans le suivi visuel.
       liveAnimationEnabled = (window.scrollY || document.documentElement.scrollTop || 0) === 0;
     }, { passive: true });
 
@@ -1523,13 +1568,19 @@
         if (Math.max(dx, dy) < AXIS_LOCK_PX) return;
         if (dy > dx) { tracking = false; return; } // plutôt un scroll vertical, on abandonne le geste
         dragging = true;
+        if (liveAnimationEnabled) beginLiveDrag();
       }
       if (liveAnimationEnabled) {
+        // Bloque le défilement vertical pendant un geste horizontal confirmé :
+        // ce geste ne doit se déplacer que de gauche à droite.
+        e.preventDefault();
         const clamped = Math.max(0, Math.min(dx, window.innerWidth));
+        const progress = clamped / window.innerWidth;
         detailEl.style.transform = `translateX(${clamped}px)`;
-        detailEl.style.opacity = String(1 - (clamped / window.innerWidth) * 0.4);
+        detailEl.style.opacity = String(1 - progress * 0.15);
+        scrimEl.style.opacity = String(SCRIM_MAX_OPACITY * (1 - progress));
       }
-    }, { passive: true });
+    }, { passive: false });
 
     document.addEventListener('touchend', (e) => {
       if (!tracking) return;
@@ -1547,14 +1598,16 @@
       }
 
       detailEl.style.transition = `transform ${ANIMATION_MS}ms ${IOS_EASING}, opacity ${ANIMATION_MS}ms ${IOS_EASING}`;
+      scrimEl.style.transition = `opacity ${ANIMATION_MS}ms ${IOS_EASING}`;
       if (completed) {
         detailEl.style.transform = `translateX(${window.innerWidth}px)`;
-        detailEl.style.opacity = '0';
-        setTimeout(() => { resetTransform(); goBackFromDetail(); }, ANIMATION_MS);
+        scrimEl.style.opacity = '0';
+        setTimeout(() => { endLiveDrag(false); goBackFromDetail(); }, ANIMATION_MS);
       } else {
         detailEl.style.transform = 'translateX(0)';
         detailEl.style.opacity = '1';
-        setTimeout(resetTransform, ANIMATION_MS);
+        scrimEl.style.opacity = String(SCRIM_MAX_OPACITY);
+        setTimeout(() => endLiveDrag(true), ANIMATION_MS);
       }
     }, { passive: true });
   })();
