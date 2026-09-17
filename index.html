@@ -2123,6 +2123,8 @@
     return (str || '')
       .toLowerCase()
       .trim()
+      .replace(/\u0153/g, 'oe')
+      .replace(/\u00e6/g, 'ae')
       .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // retire les accents
   }
 
