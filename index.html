@@ -1919,7 +1919,7 @@
       blob = file;
     }
 
-    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+    const path = `${currentUser.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
     const { error } = await sb.storage.from('recipe-photos').upload(path, blob, { contentType: 'image/jpeg' });
     if (error) {
       statusEl.textContent = "Erreur d'envoi : " + error.message;
