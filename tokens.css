@@ -34,6 +34,8 @@
   /* ---- Colors ---- */
   --border-divider: var(--light-500);
   --border-strong: var(--green-300);
+  --status-error: #B3261E;
+  --status-success: #3D5A34;
   --interaction-primary: var(--green-700);
   --interaction-primary-pale: var(--green-100);
   --surface-high: var(--light-50);
