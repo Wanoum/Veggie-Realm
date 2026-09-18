@@ -113,40 +113,27 @@
     margin: 0 auto 20px;
   }
   .cooking-scroll {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  .cooking-scroll::-webkit-scrollbar { display: none; }
-  .cooking-step {
-    scroll-snap-align: center;
-    scroll-snap-stop: always;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 16px;
-    padding: 20px 28px;
-    cursor: pointer;
+    gap: 20px;
+    padding: 24px 28px;
   }
-  /* Toutes les étapes gardent la même taille de boîte (même police, même
-     taille) pour que le passage actif/inactif ne fasse jamais bouger la mise
-     en page : seules des propriétés sans effet sur le layout (transform,
-     opacity) changent, à la façon des paroles défilantes de Spotify/YouTube
-     Music. L'échelle et l'opacité des étapes non actives sont recalculées en
-     continu pendant le défilement (voir updateActiveCookingStep), ceci ne
-     définit que l'état de repos de l'étape active. */
-  .cooking-step p {
+  .cooking-step-text {
     font-family: 'Krylon', Georgia, serif;
-    font-size: 30px;
-    line-height: 1.4;
+    font-size: 48px;
+    line-height: 100%;
+    font-weight: 400;
     margin: 0;
-    transform-origin: left center;
+    color: white;
+    transition: opacity 0.25s ease;
   }
   .cooking-step-ingredients {
-    display: none;
+    display: flex;
     flex-wrap: wrap;
     gap: 8px;
+    transition: opacity 0.25s ease;
   }
-  .cooking-step.active .cooking-step-ingredients { display: flex; }
   .detail-footer {
     position: fixed;
     bottom: 0; left: 0; right: 0;
@@ -649,7 +636,10 @@
     </div>
     <button class="icon-btn" style="background:var(--surface-high);border:none;" onclick="closeCookingMode()"><i class="bi bi-x-lg icon"></i></button>
   </div>
-  <div id="cookingScroll" class="cooking-scroll" style="flex:1;overflow-y:auto;scroll-snap-type:y mandatory;"></div>
+  <div id="cookingScroll" class="cooking-scroll" style="flex:1;">
+    <p id="cookingStepText" class="cooking-step-text"></p>
+    <div id="cookingStepIngredients" class="cooking-step-ingredients"></div>
+  </div>
 </div>
 
 <div id="formView" style="display:none;padding-bottom:110px;">
@@ -1133,65 +1123,86 @@
     }).join('');
   }
 
-  function renderCookingSteps() {
-    const scrollEl = document.getElementById('cookingScroll');
-    const spacerHeight = Math.round(scrollEl.clientHeight / 2);
-    scrollEl.innerHTML = `
-      <div style="height:${spacerHeight}px;"></div>
-      ${cookingSteps.map((stepText, idx) => `
-        <div class="cooking-step" data-step-idx="${idx}" onclick="scrollToCookingStep(${idx})">
-          <p>${escapeHtml(stepText)}</p>
-          <div class="cooking-step-ingredients">${ingredientChipsForStep(stepText)}</div>
-        </div>
-      `).join('')}
-      <div style="height:${spacerHeight}px;"></div>
-    `;
+  const COOKING_FADE_MS = 200;
+  let cookingFadeTimeout = null;
 
-    scrollEl.onscroll = () => {
-      window.requestAnimationFrame(updateActiveCookingStep);
+  function renderCookingSteps() {
+    showCookingStep(0, false);
+  }
+
+  // Une seule étape affichée à la fois (style h1 par défaut). Le changement
+  // d'étape se fait par un simple fondu (tout s'efface, le contenu est
+  // remplacé, tout réapparaît), pas de défilement ni de mise à l'échelle.
+  function showCookingStep(idx, animate = true) {
+    idx = Math.max(0, Math.min(cookingSteps.length - 1, idx));
+    const textEl = document.getElementById('cookingStepText');
+    const chipsEl = document.getElementById('cookingStepIngredients');
+
+    const applyContent = () => {
+      cookingStepIndex = idx;
+      textEl.textContent = cookingSteps[idx];
+      chipsEl.innerHTML = ingredientChipsForStep(cookingSteps[idx]);
     };
 
-    // Positionne sur la première étape sans animation, puis calcule l'état
-    // visuel initial (une fois la position réellement posée).
-    scrollEl.querySelector('.cooking-step').scrollIntoView({ block: 'center' });
-    updateActiveCookingStep();
+    if (cookingFadeTimeout) { clearTimeout(cookingFadeTimeout); cookingFadeTimeout = null; }
+
+    if (!animate) {
+      applyContent();
+      textEl.style.opacity = '1';
+      chipsEl.style.opacity = '1';
+      return;
+    }
+
+    textEl.style.opacity = '0';
+    chipsEl.style.opacity = '0';
+    cookingFadeTimeout = setTimeout(() => {
+      applyContent();
+      textEl.style.opacity = '1';
+      chipsEl.style.opacity = '1';
+      cookingFadeTimeout = null;
+    }, COOKING_FADE_MS);
   }
 
-  // Fondu continu façon "paroles" (Spotify/YouTube Music) : chaque étape
-  // reste à taille de boîte fixe (voir CSS .cooking-step p), seules son
-  // opacité et son échelle varient en fonction de sa distance réelle au
-  // centre de l'écran, recalculées à chaque frame de défilement — que ce
-  // défilement soit un balayage manuel ou un scrollIntoView animé au clic.
-  const COOKING_FALLOFF_PX = 90;
-
-  function updateActiveCookingStep() {
-    const scrollEl = document.getElementById('cookingScroll');
-    const center = scrollEl.scrollTop + scrollEl.clientHeight / 2;
-    const steps = scrollEl.querySelectorAll('.cooking-step');
-
-    let closestIdx = 0;
-    let closestDist = Infinity;
-    steps.forEach((el, idx) => {
-      const dist = Math.abs((el.offsetTop + el.offsetHeight / 2) - center);
-      if (dist < closestDist) { closestDist = dist; closestIdx = idx; }
-    });
-    if (closestIdx !== cookingStepIndex) cookingStepIndex = closestIdx;
-
-    steps.forEach((el, idx) => {
-      const dist = Math.abs((el.offsetTop + el.offsetHeight / 2) - center);
-      const t = Math.min(1, dist / COOKING_FALLOFF_PX); // 0 = centrée, 1 = pleinement écartée
-      const p = el.querySelector('p');
-      p.style.opacity = String(Math.max(0.25, 1 - t * 0.75));
-      p.style.transform = `scale(${Math.max(0.58, 1 - t * 0.42)})`;
-      el.classList.toggle('active', idx === closestIdx);
-    });
+  function nextCookingStep() {
+    if (cookingStepIndex < cookingSteps.length - 1) showCookingStep(cookingStepIndex + 1);
   }
 
-  function scrollToCookingStep(idx) {
-    const scrollEl = document.getElementById('cookingScroll');
-    const target = scrollEl.querySelectorAll('.cooking-step')[idx];
-    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  function prevCookingStep() {
+    if (cookingStepIndex > 0) showCookingStep(cookingStepIndex - 1);
   }
+
+  // Scroller/balayer verticalement passe à l'étape suivante ou précédente,
+  // avec le fondu ci-dessus. Un seul changement par geste (verrou le temps
+  // du geste, sinon un balayage un peu long ferait défiler plusieurs étapes).
+  (function setupCookingStepNav() {
+    const area = document.getElementById('cookingScroll');
+    const SWIPE_THRESHOLD = 40;
+    let startY = null;
+    let locked = false;
+
+    area.addEventListener('touchstart', (e) => {
+      startY = e.touches[0].clientY;
+      locked = false;
+    }, { passive: true });
+
+    area.addEventListener('touchmove', (e) => {
+      if (locked || startY == null) return;
+      const diff = e.touches[0].clientY - startY;
+      if (Math.abs(diff) < SWIPE_THRESHOLD) return;
+      locked = true;
+      if (diff < 0) nextCookingStep(); else prevCookingStep();
+    }, { passive: true });
+
+    area.addEventListener('touchend', () => { startY = null; locked = false; });
+
+    let wheelLocked = false;
+    area.addEventListener('wheel', (e) => {
+      if (wheelLocked || Math.abs(e.deltaY) < 20) return;
+      wheelLocked = true;
+      if (e.deltaY > 0) nextCookingStep(); else prevCookingStep();
+      setTimeout(() => { wheelLocked = false; }, 400);
+    }, { passive: true });
+  })();
 
   function closeCookingMode() {
     document.getElementById('cookingModeView').style.display = 'none';

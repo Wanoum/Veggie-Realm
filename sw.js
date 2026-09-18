@@ -1,13 +1,9 @@
+// Ce service worker n'intercepte volontairement aucune requête réseau : il
+// ne met jamais rien en cache (aucun cache.put() n'est appelé nulle part),
+// donc son ancien fetch handler n'apportait aucun vrai support hors-ligne —
+// juste un risque, déjà constaté, de perturber le contournement de cache
+// (cache: 'no-store') mis en place côté client pour l'API Supabase.
+// Sa seule utilité ici est de satisfaire l'enregistrement du service worker
+// pour l'installation en PWA.
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', () => self.clients.claim());
-self.addEventListener('fetch', (event) => {
-  // Ne jamais intercepter les appels vers un autre domaine (API Supabase
-  // notamment) : refaire la requête ici via fetch(event.request) ne préserve
-  // pas fiablement l'option cache: 'no-store' du fetch personnalisé du
-  // client, ce qui réintroduisait le cache agressif de Safari iOS sur les
-  // réponses de l'API REST et cassait le rafraîchissement des données.
-  const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin) return;
-
-  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
-});
