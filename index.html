@@ -1218,7 +1218,10 @@
     document.getElementById('detailView').style.position = '';
     document.getElementById('detailView').style.inset = '';
     document.getElementById('detailView').style.transform = '';
-    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
     document.documentElement.style.overflow = '';
     closeMealTypeChoiceModal();
     document.getElementById('navHome').classList.remove('active');
@@ -1518,8 +1521,27 @@
     let dragging = false; // confirmé horizontal (au-delà du verrou d'axe)
     let liveAnimationEnabled = false;
     let photoEl = null;
-    let savedBodyOverflow = '';
-    let savedHtmlOverflow = '';
+
+    function lockBackgroundScroll() {
+      // overflow:hidden seul ne bloque pas fiablement le scroll tactile sur
+      // Safari iOS. La technique robuste consiste à passer body en
+      // position:fixed le temps du geste (on part toujours de scrollY===0
+      // ici, voir liveAnimationEnabled, donc pas besoin de compenser un
+      // décalage de scroll à restaurer).
+      document.body.style.position = 'fixed';
+      document.body.style.top = '0';
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.documentElement.style.overflow = 'hidden';
+    }
+
+    function unlockBackgroundScroll() {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.documentElement.style.overflow = '';
+    }
 
     function beginLiveDrag() {
       photoEl = detailEl.querySelector('.detail-photo');
@@ -1530,13 +1552,7 @@
       document.getElementById('listView').style.display = 'block';
       scrimEl.style.display = 'block';
       scrimEl.style.opacity = String(SCRIM_MAX_OPACITY);
-      // Verrouille complètement le défilement de la page pendant le geste :
-      // l'écran d'accueil révélé en dessous ne doit pas pouvoir bouger, même
-      // avec un léger résidu de mouvement vertical du doigt.
-      savedBodyOverflow = document.body.style.overflow;
-      savedHtmlOverflow = document.documentElement.style.overflow;
-      document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
+      lockBackgroundScroll();
     }
 
     function endLiveDrag(restoreNormalFlow) {
@@ -1545,8 +1561,7 @@
       scrimEl.style.display = 'none';
       scrimEl.style.opacity = '';
       scrimEl.style.transition = '';
-      document.body.style.overflow = savedBodyOverflow;
-      document.documentElement.style.overflow = savedHtmlOverflow;
+      unlockBackgroundScroll();
       if (restoreNormalFlow) {
         // Geste abandonné : on reste sur la fiche, il faut donc redonner à
         // tout son état normal (photo collée, fiche dans le flux de page).
