@@ -1563,7 +1563,10 @@
       document.getElementById('listView').style.display = 'block';
       scrimEl.style.display = 'block';
       scrimEl.style.opacity = String(SCRIM_MAX_OPACITY);
-      lockBackgroundScroll();
+      // lockBackgroundScroll() est déjà appelé dès le premier micro-mouvement
+      // (voir touchmove) : une fois qu'iOS a commencé son propre scroll pour
+      // un geste, un preventDefault() tardif ne l'arrête plus. On verrouille
+      // donc avant même de savoir si le geste sera horizontal ou vertical.
     }
 
     function endLiveDrag(restoreNormalFlow) {
@@ -1600,19 +1603,29 @@
 
     document.addEventListener('touchmove', (e) => {
       if (!tracking || startX == null) return;
+      if (liveAnimationEnabled) {
+        // Bloque tout scroll/rebond natif dès le tout premier mouvement, avant
+        // même de savoir si le geste sera horizontal ou vertical : une fois
+        // qu'iOS a démarré son propre scroll pour un geste donné, appeler
+        // preventDefault() plus tard sur ce même geste ne l'arrête plus.
+        e.preventDefault();
+        if (!dragging) lockBackgroundScroll();
+      }
       const dx = e.touches[0].clientX - startX;
       const dy = Math.abs(e.touches[0].clientY - startY);
       if (!dragging) {
         if (Math.max(dx, dy) < AXIS_LOCK_PX) return;
-        if (dy > dx) { tracking = false; return; } // plutôt un scroll vertical, on abandonne le geste
+        if (dy > dx) {
+          // Plutôt un scroll vertical : on abandonne le geste et on relâche
+          // aussitôt le verrou (rien d'autre n'a eu le temps de s'activer).
+          tracking = false;
+          if (liveAnimationEnabled) unlockBackgroundScroll();
+          return;
+        }
         dragging = true;
         if (liveAnimationEnabled) beginLiveDrag();
       }
       if (liveAnimationEnabled) {
-        // Bloque le défilement vertical pendant un geste horizontal confirmé :
-        // ce geste ne doit se déplacer que de gauche à droite. La fiche reste
-        // pleinement opaque, seul le voile sur l'écran d'accueil varie.
-        e.preventDefault();
         const clamped = Math.max(0, Math.min(dx, window.innerWidth));
         const progress = clamped / window.innerWidth;
         detailEl.style.transform = `translateX(${clamped}px)`;
@@ -1620,11 +1633,23 @@
       }
     }, { passive: false });
 
-    document.addEventListener('touchend', (e) => {
-      if (!tracking) return;
+    function abortTracking() {
+      if (!tracking) return false;
       const wasDragging = dragging;
       tracking = false;
       dragging = false;
+      if (liveAnimationEnabled && !wasDragging) {
+        // Le geste n'a jamais été confirmé (micro-mouvement ou interruption) :
+        // le verrou peut avoir été posé dès le premier touchmove, on le relâche.
+        unlockBackgroundScroll();
+      }
+      return wasDragging;
+    }
+
+    document.addEventListener('touchcancel', abortTracking);
+
+    document.addEventListener('touchend', (e) => {
+      const wasDragging = abortTracking();
       if (!wasDragging) return;
 
       const dx = e.changedTouches[0].clientX - startX;
