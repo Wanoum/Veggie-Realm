@@ -1218,6 +1218,8 @@
     document.getElementById('detailView').style.position = '';
     document.getElementById('detailView').style.inset = '';
     document.getElementById('detailView').style.transform = '';
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
     closeMealTypeChoiceModal();
     document.getElementById('navHome').classList.remove('active');
     document.getElementById('navAdd').classList.remove('active');
@@ -1502,7 +1504,7 @@
   // abandonné.
   (function setupEdgeSwipeBack() {
     const EDGE_ZONE = 24; // px depuis le bord gauche où le geste doit démarrer
-    const AXIS_LOCK_PX = 8; // mouvement minimal avant de trancher horizontal/vertical
+    const AXIS_LOCK_PX = 4; // mouvement minimal avant de trancher horizontal/vertical (faible : on tranche tôt pour ne laisser fuiter aucun scroll)
     const COMPLETE_RATIO = 0.35; // fraction de la largeur d'écran à partir de laquelle le retour se confirme
     const IOS_EASING = 'cubic-bezier(0.32, 0.72, 0, 1)';
     const ANIMATION_MS = 280;
@@ -1516,6 +1518,8 @@
     let dragging = false; // confirmé horizontal (au-delà du verrou d'axe)
     let liveAnimationEnabled = false;
     let photoEl = null;
+    let savedBodyOverflow = '';
+    let savedHtmlOverflow = '';
 
     function beginLiveDrag() {
       photoEl = detailEl.querySelector('.detail-photo');
@@ -1526,15 +1530,23 @@
       document.getElementById('listView').style.display = 'block';
       scrimEl.style.display = 'block';
       scrimEl.style.opacity = String(SCRIM_MAX_OPACITY);
+      // Verrouille complètement le défilement de la page pendant le geste :
+      // l'écran d'accueil révélé en dessous ne doit pas pouvoir bouger, même
+      // avec un léger résidu de mouvement vertical du doigt.
+      savedBodyOverflow = document.body.style.overflow;
+      savedHtmlOverflow = document.documentElement.style.overflow;
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     }
 
     function endLiveDrag(restoreNormalFlow) {
       detailEl.style.transition = '';
       detailEl.style.transform = '';
-      detailEl.style.opacity = '';
       scrimEl.style.display = 'none';
       scrimEl.style.opacity = '';
       scrimEl.style.transition = '';
+      document.body.style.overflow = savedBodyOverflow;
+      document.documentElement.style.overflow = savedHtmlOverflow;
       if (restoreNormalFlow) {
         // Geste abandonné : on reste sur la fiche, il faut donc redonner à
         // tout son état normal (photo collée, fiche dans le flux de page).
@@ -1572,12 +1584,12 @@
       }
       if (liveAnimationEnabled) {
         // Bloque le défilement vertical pendant un geste horizontal confirmé :
-        // ce geste ne doit se déplacer que de gauche à droite.
+        // ce geste ne doit se déplacer que de gauche à droite. La fiche reste
+        // pleinement opaque, seul le voile sur l'écran d'accueil varie.
         e.preventDefault();
         const clamped = Math.max(0, Math.min(dx, window.innerWidth));
         const progress = clamped / window.innerWidth;
         detailEl.style.transform = `translateX(${clamped}px)`;
-        detailEl.style.opacity = String(1 - progress * 0.15);
         scrimEl.style.opacity = String(SCRIM_MAX_OPACITY * (1 - progress));
       }
     }, { passive: false });
@@ -1597,7 +1609,7 @@
         return;
       }
 
-      detailEl.style.transition = `transform ${ANIMATION_MS}ms ${IOS_EASING}, opacity ${ANIMATION_MS}ms ${IOS_EASING}`;
+      detailEl.style.transition = `transform ${ANIMATION_MS}ms ${IOS_EASING}`;
       scrimEl.style.transition = `opacity ${ANIMATION_MS}ms ${IOS_EASING}`;
       if (completed) {
         detailEl.style.transform = `translateX(${window.innerWidth}px)`;
@@ -1605,7 +1617,6 @@
         setTimeout(() => { endLiveDrag(false); goBackFromDetail(); }, ANIMATION_MS);
       } else {
         detailEl.style.transform = 'translateX(0)';
-        detailEl.style.opacity = '1';
         scrimEl.style.opacity = String(SCRIM_MAX_OPACITY);
         setTimeout(() => endLiveDrag(true), ANIMATION_MS);
       }
