@@ -297,9 +297,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   justify-content: space-between;
   background: none;
   border: none;
-  border-bottom: 1px solid var(--border-divider);
   border-radius: 0;
-  padding: 0 0 16px;
   margin-bottom: 16px;
 }
 .plan-recipe-row .plan-recipe-name { font-size: 16px; font-weight: 500; }
