@@ -255,16 +255,17 @@
   </div>
 
   <div id="planningRecipesPanel">
+    <p class="text-small-medium" id="planDefaultServingsLabel" style="color:var(--text-icon-secondary);margin:0 0 12px;"></p>
+    <div id="planSummary" class="plan-summary"></div>
     <div class="plan-summary-header">
       <div class="course-sort-wrap" style="justify-content:flex-start;margin-bottom:0;">
-        <button type="button" class="secondary-btn course-sort-btn" id="planSortBtn">
+        <button type="button" class="tertiary-btn course-sort-btn" id="planSortBtn">
           <i class="bi bi-sort-down"></i> <span id="planSortLabel"></span>
         </button>
         <div class="course-sort-menu" id="planSortMenu" style="display:none;"></div>
       </div>
-      <span class="text-small-medium" style="color:var(--text-icon-secondary);text-align:right;">Nombre de repas<br><button type="button" class="secondary-btn" style="margin:4px 0 0;height:24px;padding:0 8px;font-size:12px;" onclick="showAccount()"><i class="bi bi-people"></i> <span id="planDefaultServingsLabel"></span></button></span>
+      <span class="text-small-medium" style="color:var(--text-icon-secondary);">Nombre de repas</span>
     </div>
-    <div id="planSummary" class="plan-summary"></div>
     <div id="planningRecipeList"></div>
     <button id="resetPlanningBtn" style="display:block;margin:16px auto 32px;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;">Réinitialiser le planning</button>
   </div>
@@ -2349,7 +2350,7 @@
     const sortLabels = { alpha: 'Alphabétique', rayon: 'Par rayon', qty: 'Par quantité' };
     listEl.innerHTML = `
       <div class="course-sort-wrap">
-        <button type="button" class="secondary-btn course-sort-btn" id="courseSortBtn">
+        <button type="button" class="tertiary-btn course-sort-btn" id="courseSortBtn">
           <i class="bi bi-sort-down"></i> ${sortLabels[coursesSortMode]}
         </button>
         <div class="course-sort-menu" id="courseSortMenu" style="display:none;">

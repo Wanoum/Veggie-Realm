@@ -64,6 +64,22 @@
   border-color: var(--surface-lowest);
   cursor: not-allowed;
 }
+.tertiary-btn {
+  height: 40px;
+  padding: 0 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px 16px 8px 16px;
+  background: var(--interaction-secondary);
+  color: var(--text-icon-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 120%;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
 
 /* ---- Chips / tags / segmented control ---- */
 .meta-pill {
@@ -145,7 +161,7 @@
 
 /* ---- Menu déroulant de tri (liste de courses, planning) ---- */
 .course-sort-wrap { position: relative; display: flex; justify-content: flex-end; margin-bottom: var(--space-section-gap); }
-.course-sort-btn { width: auto; height: 44px; margin-top: 0; padding: 0 16px; }
+.course-sort-btn { width: auto; margin-top: 0; }
 .course-sort-menu {
   position: absolute;
   top: calc(100% + 6px);
