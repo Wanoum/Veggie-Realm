@@ -20,7 +20,7 @@
   position: relative;
   margin-top: 340px;
   background: var(--surface-high);
-  border-radius: 28px 28px 0 0;
+  border-radius: var(--corner-radius-xlarge) var(--corner-radius-xlarge) 0 0;
   padding: 12px 16px 24px;
   min-height: calc(100vh - 340px);
 }
@@ -46,7 +46,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   background: var(--surface-lowest);
   color: var(--text-icon-default);
   padding: 12px 14px;
-  border-radius: 12px;
+  border-radius: var(--corner-radius-large);
   font-family: 'Inter', sans-serif;
   font-size: 14px;
   line-height: 120%;
@@ -134,7 +134,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--border-divider);
-  border-radius: 12px;
+  border-radius: var(--corner-radius-large);
   font-size: 14px;
   resize: vertical;
   min-height: 44px;
@@ -168,7 +168,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   padding: 24px;
   background: var(--interaction-tertiary);
   border: 2px dashed var(--border-default);
-  border-radius: 16px;
+  border-radius: var(--corner-radius-large);
   color: var(--text-icon-default);
   font-family: 'Inter', sans-serif;
   font-size: 22px;
@@ -267,7 +267,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 .wizard-bar {
   flex: 1;
   height: 4px;
-  border-radius: 999px;
+  border-radius: var(--corner-radius-round);
   background: var(--surface-lowest);
 }
 .wizard-bar.active { background: var(--interaction-primary); }
@@ -277,12 +277,12 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 .day-row {
   background: var(--surface-highest);
   border: 1px solid var(--border-divider);
-  border-radius: 12px;
+  border-radius: var(--corner-radius-large);
   padding: 12px 14px;
   margin-bottom: 10px;
 }
 .day-row .day-name { font-size: 14px; color: var(--text-icon-secondary); margin-bottom: 6px; text-transform: capitalize; }
-.day-row select { width: 100%; padding: 9px 10px; border: 1px solid var(--border-divider); border-radius: 12px; font-size: 14px; background: var(--surface-highest); margin-bottom: 6px; }
+.day-row select { width: 100%; padding: 9px 10px; border: 1px solid var(--border-divider); border-radius: var(--corner-radius-large); font-size: 14px; background: var(--surface-highest); margin-bottom: 6px; }
 .day-row .servings-mini { display: flex; align-items: center; gap: 10px; }
 .day-row .servings-mini button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border-divider); background: var(--surface-highest); font-size: 14px; }
 
@@ -323,7 +323,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 .meal-category-card {
   height: 86px;
   background: var(--surface-lowest);
-  border-radius: 16px;
+  border-radius: var(--corner-radius-large);
   padding: 0;
   display: flex;
   flex-direction: column;
