@@ -896,8 +896,17 @@
     document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('navAdd').classList.add('active');
     updateNavIcons();
+    // Une création de recette en cours (pas une édition) reprend exactement
+    // où elle en était plutôt que de repartir de zéro, que ce soit après un
+    // aller-retour sur un autre onglet ou un redémarrage de la page.
+    const draft = loadWizardDraft();
     resetForm();
-    goToWizardStep(1);
+    if (draft) {
+      applyWizardDraft(draft);
+      goToWizardStep(draft.step && draft.step >= 2 ? draft.step : 2);
+    } else {
+      goToWizardStep(1);
+    }
     sessionStorage.setItem('lastView', 'form');
   }
 
@@ -927,6 +936,7 @@
     if (step === 3) renderIngRows();
     if (step === 2) autoResizeTextarea(document.getElementById('f_notes'));
     validateWizardStep();
+    saveWizardDraft();
   }
 
   function autoResizeTextarea(el) {
@@ -1043,6 +1053,17 @@
   };
 
   document.getElementById('wizardBackBtn').onclick = wizardGoBack;
+
+  // Sauvegarde continue du brouillon : toute frappe dans les étapes du
+  // formulaire (délégation, un seul listener par étape) et tout passage en
+  // arrière-plan (l'app peut être redémarrée par iOS au retour).
+  ['wizardStep2', 'wizardStep3', 'wizardStep4'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => saveWizardDraft());
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveWizardDraft();
+  });
+  window.addEventListener('pagehide', () => saveWizardDraft());
 
   function showPlanning() {
     window.scrollTo(0, 0);
@@ -2125,6 +2146,68 @@
     renderIngRows();
   }
 
+  // ---- Brouillon de l'ajout de recette : conservé si on quitte l'écran ----
+  // (bascule sur un autre onglet, mise en arrière-plan, ou même redémarrage
+  // de la page par iOS) et restauré à la même étape au retour. On ne
+  // persiste jamais une session d'édition (editingId défini) : seule la
+  // création d'une nouvelle recette a besoin de survivre à une interruption.
+  const WIZARD_DRAFT_KEY = 'wizardDraft';
+
+  function getWizardDraftData() {
+    return {
+      step: wizardStep,
+      title: document.getElementById('f_title').value,
+      photo: document.getElementById('f_photo').value,
+      mealTypes: [...selectedMealTypes],
+      servings: document.getElementById('f_servings').value,
+      servingMode: formServingMode,
+      cook: document.getElementById('f_cook').value,
+      oven: document.getElementById('f_oven').value,
+      notes: document.getElementById('f_notes').value,
+      ingRows,
+      stepRows,
+      stepEntry: document.getElementById('stepEntryInput').value,
+      importedSourceUrl
+    };
+  }
+
+  function saveWizardDraft() {
+    if (editingId) return;
+    try { sessionStorage.setItem(WIZARD_DRAFT_KEY, JSON.stringify(getWizardDraftData())); } catch { /* ignoré */ }
+  }
+
+  function loadWizardDraft() {
+    try {
+      const raw = sessionStorage.getItem(WIZARD_DRAFT_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  }
+
+  function clearWizardDraft() {
+    try { sessionStorage.removeItem(WIZARD_DRAFT_KEY); } catch { /* ignoré */ }
+  }
+
+  function applyWizardDraft(data) {
+    document.getElementById('f_title').value = data.title || '';
+    document.getElementById('f_photo').value = data.photo || '';
+    updatePhotoPreview(data.photo || null);
+    selectedMealTypes = Array.isArray(data.mealTypes) ? data.mealTypes : [];
+    renderMealTypeToggles();
+    document.getElementById('f_servings').value = data.servings || '';
+    setFormServingMode(data.servingMode === 'piece' ? 'piece' : 'portion');
+    document.getElementById('f_cook').value = data.cook || '';
+    document.getElementById('f_oven').value = data.oven || '';
+    document.getElementById('f_notes').value = data.notes || '';
+    autoResizeTextarea(document.getElementById('f_notes'));
+    ingRows = Array.isArray(data.ingRows) && data.ingRows.length ? data.ingRows : [{ qtyUnitText: '', name: '' }];
+    renderIngRows();
+    stepRows = Array.isArray(data.stepRows) ? data.stepRows : [];
+    document.getElementById('stepEntryInput').value = data.stepEntry || '';
+    renderStepsList();
+    importedSourceUrl = data.importedSourceUrl || null;
+    validateWizardStep();
+  }
+
   async function saveRecipe() {
     const title = document.getElementById('f_title').value.trim();
     const errEl = document.getElementById('formError');
@@ -2194,6 +2277,7 @@
 
     const wasEditing = editingId;
     resetForm();
+    clearWizardDraft();
     await loadRecipes();
 
     if (wasEditing) {
