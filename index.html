@@ -1067,7 +1067,7 @@
           <span class="text-body">${isPieceMode(r) ? 'Pièce(s)' : 'Portions'}</span>
           <div class="servings-stepper">
             <button class="servings-minus" onclick="changeServings(${i}, -1)"><i class="bi bi-dash"></i></button>
-            <span class="servings-value">${isPieceMode(r) ? '×' + s : s}</span>
+            <span class="servings-value">${isPieceMode(r) ? s + 'x' : s}</span>
             <button class="servings-plus" onclick="changeServings(${i}, 1)"><i class="bi bi-plus"></i></button>
           </div>
         </div>
@@ -2454,7 +2454,7 @@
           </div>
           <div class="servings-stepper">
             <button class="servings-minus" type="button" data-plan-recipe="${r.id}" data-delta="-1"><i class="bi bi-dash"></i></button>
-            <span class="servings-value" data-plan-count="${r.id}">${isPieceMode(r) ? '×' + count : count}</span>
+            <span class="servings-value" data-plan-count="${r.id}">${isPieceMode(r) ? count + 'x' : count}</span>
             <button class="servings-plus" type="button" data-plan-recipe="${r.id}" data-delta="1"><i class="bi bi-plus"></i></button>
           </div>
         </div>
