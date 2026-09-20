@@ -963,11 +963,28 @@
 
   let currentDetailIndex = null;
 
+  // Certaines recettes (gâteaux, tartes, pains...) se préparent en une seule
+  // fois quelle que soit la taille du foyer : on retient donc le dernier
+  // nombre de portions choisi pour CHAQUE recette, plutôt que de toujours
+  // reproposer le nombre de portions par défaut du profil.
+  const RECIPE_SERVINGS_KEY = 'veggieRealm.recipeServings';
+  function loadRecipeServings() {
+    try { return JSON.parse(localStorage.getItem(RECIPE_SERVINGS_KEY)) || {}; } catch { return {}; }
+  }
+  function saveRecipeServing(recipeId, value) {
+    try {
+      const state = loadRecipeServings();
+      state[recipeId] = value;
+      localStorage.setItem(RECIPE_SERVINGS_KEY, JSON.stringify(state));
+    } catch { /* ignoré */ }
+  }
+
   function showDetail(i) {
     window.scrollTo(0, 0);
     currentDetailIndex = i;
     const r = recipes[i];
-    currentServings[i] = userDefaultServings;
+    const savedServings = loadRecipeServings()[r.id];
+    currentServings[i] = savedServings != null ? savedServings : userDefaultServings;
     document.getElementById('listView').style.display = 'none';
     document.getElementById('formView').style.display = 'none';
     document.getElementById('wizardFooter').style.display = 'none';
@@ -1107,6 +1124,7 @@
     const newVal = currentServings[i] + delta;
     if (newVal < 1) return;
     currentServings[i] = newVal;
+    saveRecipeServing(recipes[i].id, newVal);
     renderDetail(i);
   }
 
