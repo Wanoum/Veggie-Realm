@@ -106,17 +106,22 @@
 
   <!-- Étape 1 : source -->
   <div id="wizardStep1" class="wizard-step">
+    <p class="text-body-medium" style="margin:0 0 12px;">Importer une recette depuis un site web</p>
+    <div style="display:flex;gap:8px;">
+      <input id="import_url" class="field-input" style="flex:1;min-width:0;" placeholder="https://www.marmiton.org" oninput="updateImportButtonState()" />
+      <button type="button" id="importFetchBtn" class="secondary-btn" style="width:auto;margin-top:0;" onclick="performImport()" disabled>Go</button>
+    </div>
+    <p id="importStatus" style="font-size:14px;color:var(--text-icon-secondary);margin:8px 0 0;"></p>
+
+    <button type="button" class="wizard-source-tile" style="margin-top:20px;" onclick="alert('Bientôt disponible !')">
+      <i class="bi bi-camera"></i>
+      <span>Photographier une recette</span>
+    </button>
+
     <button type="button" class="wizard-source-tile" onclick="chooseNewRecipe()">
       <i class="bi bi-egg-fried"></i>
       <span>Créer une nouvelle recette</span>
     </button>
-
-    <div style="margin-top:28px;">
-      <label class="field-label">Ou importer depuis un site web</label>
-      <input id="import_url" class="field-input" placeholder="https://www.exemple.com/recette..." oninput="updateImportButtonState()" />
-      <button type="button" id="importFetchBtn" class="primary-btn" onclick="performImport()" disabled>Récupérer la recette</button>
-      <p id="importStatus" style="font-size:14px;color:var(--text-icon-secondary);margin-top:8px;"></p>
-    </div>
   </div>
 
   <!-- Étape 2 : informations -->

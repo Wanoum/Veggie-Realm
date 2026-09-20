@@ -127,21 +127,23 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 }
 .wizard-source-tile {
   width: 100%;
-  min-height: 180px;
+  min-height: 340px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 20px;
   background: var(--interaction-primary-pale);
-  border: none;
+  border: 2px dashed var(--border-strong);
   border-radius: 16px;
-  color: var(--text-icon-accent);
+  color: var(--text-icon-primary);
   font-family: 'Inter', sans-serif;
-  font-size: 16px;
+  font-size: 22px;
   font-weight: 500;
+  margin-bottom: 20px;
 }
-.wizard-source-tile i { font-size: 48px; }
+.wizard-source-tile:last-child { margin-bottom: 0; }
+.wizard-source-tile i { font-size: 96px; }
 .step-row {
   display: flex;
   align-items: center;
