@@ -1071,8 +1071,7 @@
         if (r.cook_time_minutes) metaPills.push(`<span class="meta-pill"><i class="bi bi-fire" style="font-size:14px;color:var(--text-icon-primary);"></i> ${r.cook_time_minutes} min</span>`);
     if (r.oven_temp_celsius) metaPills.push(`<span class="meta-pill"><i class="bi bi-thermometer-half" style="font-size:14px;color:var(--text-icon-primary);"></i> ${r.oven_temp_celsius}°</span>`);
 
-    const sortedIngredients = [...(r.ingredients || [])].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
-    const ingredientsHtml = sortedIngredients.map(ing => {
+    const ingredientsHtml = (r.ingredients || []).map(ing => {
       const q = ing.quantity != null ? (ing.quantity * s / base) : null;
       const qDisplay = q != null ? (Number.isInteger(q) ? q : q.toFixed(1).replace(/[.]0$/, '')) : '';
       return `
@@ -3110,8 +3109,7 @@
       if (authorProfile) authorName = authorProfile.display_name || null;
     }
 
-    const sortedIngredients = [...(r.ingredients || [])].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
-    const ingredientsHtml = sortedIngredients.map(ing => `
+    const ingredientsHtml = (r.ingredients || []).map(ing => `
       <div class="ing-row">
         <span class="ing-row-name">${escapeHtml(ing.name)}${ing.note ? ' <span class="ing-row-note">(' + escapeHtml(ing.note) + ')</span>' : ''}</span>
         <span class="ing-row-qty">${ing.quantity ?? ''} ${escapeHtml(ing.unit)}</span>
