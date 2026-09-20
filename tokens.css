@@ -58,7 +58,7 @@
    Format : taille / line-height (% de la taille)
    H1              : 40px, 100%   — Krylon
    Display Numeric : 40px, 40%    — IBM Plex Mono
-   Headline        : 20px, 120%   — Inter, 600
+   Headline        : 20px, 100%   — Inter, 600
    Body            : 16px, 120%   — Inter, 400
    Body Medium     : 16px, 120%   — Inter, 500
    Quantity Mono   : 16px, 120%   — IBM Plex Mono, 400
@@ -71,7 +71,7 @@
 */
 .text-h1 { font-family: 'Krylon', Georgia, serif; font-size: 48px; line-height: 100%; font-weight: 400; }
 .text-display-numeric { font-family: 'IBM Plex Mono', monospace; font-size: 40px; line-height: 40%; font-weight: 400; }
-.text-headline { font-family: 'Inter', sans-serif; font-size: 24px; line-height: 120%; font-weight: 600; }
+.text-headline { font-family: 'Inter', sans-serif; font-size: 24px; line-height: 100%; font-weight: 600; }
 .text-body { font-family: 'Inter', sans-serif; font-size: 18px; line-height: 120%; font-weight: 400; }
 .text-body-medium { font-family: 'Inter', sans-serif; font-size: 18px; line-height: 120%; font-weight: 500; }
 .text-quantity-mono { font-family: 'IBM Plex Mono', monospace; font-size: 18px; line-height: 120%; font-weight: 400; }
