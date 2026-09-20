@@ -992,7 +992,7 @@
       const r = recipes[i];
       const totalTime = r.cook_time_minutes || 0;
       return `
-      <div class="card" onclick="showDetail(${i})">
+      <div class="card" onclick="openRecipeDetail(${i})">
         <div class="card-photo">
           ${safeUrl(r.photo_url)
             ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML='<div class=&quot;photo-empty&quot;><i class=&quot;bi bi-image&quot;></i></div>'" />`
@@ -1041,6 +1041,25 @@
     document.getElementById('f_servingModePortion').classList.toggle('active', mode === 'portion');
     document.getElementById('f_servingModePiece').classList.toggle('active', mode === 'piece');
     document.getElementById('f_servingsGroup').style.display = mode === 'piece' ? 'none' : 'block';
+  }
+
+  // Journal d'engagement par recette (pas encore affiché) : deux signaux
+  // enregistrés séparément — ouverture de la fiche et complétion du cook
+  // mode — pour pouvoir décider plus tard, avec de la vraie donnée, ce qui
+  // définit "cuisiné" plutôt que de figer une formule maintenant.
+  async function logRecipeEngagement(recipeId, eventType) {
+    try { await sb.from('recipe_engagement_events').insert({ recipe_id: recipeId, user_id: currentUser.id, event_type: eventType }); } catch (e) { /* best-effort, ne bloque jamais l'UI */ }
+  }
+
+  // Point d'entrée pour une VRAIE navigation vers une fiche recette (clic
+  // depuis l'accueil ou le planning) — distinct de showDetail() elle-même,
+  // qui est aussi rappelée pour restaurer l'écran après un rechargement ou
+  // un retour d'édition : logger dans showDetail compterait ces
+  // restaurations comme de nouvelles consultations.
+  function openRecipeDetail(i, returnView) {
+    const r = recipes[i];
+    if (r) logRecipeEngagement(r.id, 'detail_viewed');
+    showDetail(i, returnView);
   }
 
   function showDetail(i, returnView) {
@@ -1225,10 +1244,12 @@
   let cookingStepIndex = 0;
   let cookingRecipe = null;
   let wakeLock = null;
+  let cookingCompletionLogged = false;
 
   async function openCookingMode(i) {
     const r = recipes[i];
     cookingRecipe = r;
+    cookingCompletionLogged = false;
     cookingSteps = r.steps || [];
     if (cookingSteps.length === 0) return;
     cookingStepIndex = 0;
@@ -1270,6 +1291,15 @@
   // remplacé, tout réapparaît), pas de défilement ni de mise à l'échelle.
   function showCookingStep(idx, animate = true) {
     idx = Math.max(0, Math.min(cookingSteps.length - 1, idx));
+
+    // Complétion journalisée seulement en cas de vraie navigation vers la
+    // dernière étape (pas à l'ouverture du cook mode sur une recette d'une
+    // seule étape, qui n'implique aucun engagement réel).
+    if (animate && idx === cookingSteps.length - 1 && !cookingCompletionLogged && cookingRecipe) {
+      cookingCompletionLogged = true;
+      logRecipeEngagement(cookingRecipe.id, 'cook_mode_completed');
+    }
+
     const textEl = document.getElementById('cookingStepText');
     const chipsEl = document.getElementById('cookingStepIngredients');
 
@@ -2620,7 +2650,7 @@
       return `
         <div class="plan-recipe-row">
           <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:72px;height:72px;border-radius:12px;overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;" onclick="showDetail(${detailIdx}, 'planning')">
+            <div style="width:72px;height:72px;border-radius:12px;overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;" onclick="openRecipeDetail(${detailIdx}, 'planning')">
               ${safeUrl(r.photo_url)
                 ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
                 : '<i class="bi bi-image" style="font-size:16px;color:var(--text-icon-secondary);"></i>'}
