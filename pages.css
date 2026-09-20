@@ -21,7 +21,7 @@
   margin-top: 340px;
   background: var(--surface-high);
   border-radius: var(--corner-radius-xlarge) var(--corner-radius-xlarge) 0 0;
-  padding: 12px 16px 24px;
+  padding: 12px var(--padding-horizontal-app) var(--gap-vertical-section);
   min-height: calc(100vh - 340px);
 }
 .detail-sheet-handle {

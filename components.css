@@ -24,11 +24,11 @@
 .secondary-btn {
   width: 100%;
   height: var(--height-default);
-  padding: 0 14px;
+  padding: 0 var(--padding-horizontal-default);
   margin-top: 8px;
   border: 1px solid var(--border-default);
   border-radius: var(--corner-radius-default) var(--corner-radius-large) var(--corner-radius-default) var(--corner-radius-large);
-  background: var(--interaction-tertiary);
+  background: var(--interaction-secondary);
   font-family: 'Inter', sans-serif;
   color: var(--text-icon-accent);
   font-size: 18px;
@@ -37,12 +37,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--gap-default);
+  box-shadow: none;
 }
 .primary-btn {
   width: 100%;
   height: var(--height-default);
-  padding: 0 14px;
+  padding: 0 var(--padding-horizontal-default);
   margin-top: var(--gap-vertical-section);
   border: none;
   border-radius: var(--corner-radius-large) var(--corner-radius-default) var(--corner-radius-large) var(--corner-radius-default);
@@ -55,7 +56,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--gap-default);
+  box-shadow: none;
 }
 .btn-square { width: var(--height-default); flex: 0 0 var(--height-default); padding: 0; }
 .primary-btn:disabled, .secondary-btn:disabled {
@@ -65,11 +67,11 @@
   cursor: not-allowed;
 }
 .tertiary-btn {
-  height: 40px;
-  padding: 0 8px;
+  height: var(--height-default);
+  padding: 0 var(--padding-horizontal-default);
   border: 1px solid var(--border-default);
-  border-radius: var(--corner-radius-default) var(--corner-radius-large) var(--corner-radius-default) var(--corner-radius-large);
-  background: var(--interaction-secondary);
+  border-radius: var(--corner-radius-default);
+  background: var(--interaction-tertiary);
   color: var(--text-icon-default);
   font-family: 'Inter', sans-serif;
   font-size: 14px;
@@ -78,7 +80,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--gap-default);
+  box-shadow: none;
 }
 
 /* ---- Chips / tags / segmented control ---- */
@@ -283,10 +286,11 @@
   right: 0;
   display: flex;
   align-items: center;
-  min-height: 56px;
+  gap: var(--gap-xsmall);
+  min-height: var(--height-default);
   background: var(--surface-high);
   border-top: 1px solid var(--border-divider);
-  padding: 6px 16px calc(6px + env(safe-area-inset-bottom));
+  padding: 6px var(--padding-horizontal-app) calc(6px + env(safe-area-inset-bottom));
   z-index: 100;
 }
 .nav-btn {
@@ -296,7 +300,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: var(--gap-xsmall);
   background: none;
   border: none;
   font-family: 'Inter', sans-serif;

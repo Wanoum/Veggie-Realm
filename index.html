@@ -72,7 +72,7 @@
   </div>
 
   <p class="count" id="count">Chargement...</p>
-  <div id="cards" style="display:grid;grid-template-columns:1fr;gap:14px;"></div>
+  <div id="cards" style="display:grid;grid-template-columns:1fr;gap:var(--gap-large);"></div>
 </div>
 
 <div id="edgeSwipeScrim" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:290;pointer-events:none;"></div>
@@ -254,7 +254,7 @@
     <button type="button" class="icon-btn" onclick="closeAccountEdit()"><i class="bi bi-arrow-left icon"></i></button>
     <h1 id="accountEditTitle" style="margin:0;font-size:30px;"></h1>
   </div>
-  <div style="max-width:340px;">
+  <div>
     <div id="accountEditContent"></div>
     <p id="accountEditError" style="color:var(--text-icon-error);font-size:14px;margin-top:10px;"></p>
     <button type="button" id="accountEditSaveBtn" class="primary-btn">Enregistrer</button>
@@ -593,7 +593,7 @@
       </div>
       <div class="detail-sheet">
         <div class="detail-sheet-handle"></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--gap-vertical-section);">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--gap-default);">
           ${metaPills.join('')}
           ${mealTypeTagsHtml(r)}
         </div>
@@ -2797,7 +2797,7 @@
       <div style="background:var(--surface-high);border-radius:var(--corner-radius-xlarge) var(--corner-radius-xlarge) 0 0;margin-top:-60px;position:relative;padding:24px 16px;">
         <div class="detail-sheet-handle"></div>
         ${banner}
-        <h1>${escapeHtml(r.title)}</h1>
+        <h1 style="margin-bottom:var(--gap-default);">${escapeHtml(r.title)}</h1>
         <div class="tags" style="margin-bottom:14px;">${mealTypeTagsHtml(r)}</div>
         <h2>Ingrédients</h2>
         ${ingredientsHtml}
