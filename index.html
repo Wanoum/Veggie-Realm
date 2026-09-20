@@ -72,6 +72,44 @@
   .photo-empty i { font-size: 32px; color: var(--text-icon-secondary); }
   .card h3 { margin: 0 0 6px; font-family: 'Inter', sans-serif; font-size: 18px; line-height: 120%; font-weight: 500; color: var(--text-icon-primary); }
   .card-thumb { display: none; }
+  .card-v2 {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    aspect-ratio: 16 / 10;
+    background: var(--surface-low);
+    cursor: pointer;
+  }
+  .card-v2-photo { position: absolute; inset: 0; }
+  .card-v2-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .card-v2-textwrap {
+    position: absolute;
+    inset: 0 50% 0 0;
+    overflow: hidden;
+  }
+  .card-blur-layer { position: absolute; inset: 0; }
+  .card-v2-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.08) 20%, rgba(0,0,0,0.3) 100%);
+  }
+  .card-v2-content {
+    position: absolute;
+    inset: 0 50% 0 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 18px;
+  }
+  .card-v2-content h3 {
+    margin: 0 0 4px;
+    font-family: 'Inter', sans-serif;
+    font-size: 24px;
+    line-height: 1.15;
+    font-weight: 700;
+    color: white;
+  }
+  .card-v2-sub { margin: 0; font-family: 'Inter', sans-serif; font-size: 14px; color: rgba(255,255,255,0.85); }
   .meta-pill {
     font-size: 14px;
     padding: 3px 9px;
@@ -655,7 +693,7 @@
   </div>
 
   <p class="count" id="count">Chargement...</p>
-  <div id="cards" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;"></div>
+  <div id="cards" style="display:grid;grid-template-columns:1fr;gap:14px;"></div>
 </div>
 
 <div id="edgeSwipeScrim" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:290;pointer-events:none;"></div>
@@ -957,18 +995,36 @@
       });
   }
 
+  // Flou "progressif" (0 à gauche, 12px à droite) sur le fond de la carte
+  // recette : CSS n'a pas de flou à intensité variable, donc on superpose
+  // plusieurs couches backdrop-filter, chacune masquée sur une bande
+  // horizontale qui se fond dans ses voisines (dégradés de transparence qui
+  // se chevauchent), pour simuler une transition continue.
+  function progressiveBlurLayersHtml() {
+    const steps = [0, 4, 8, 12];
+    const n = steps.length;
+    const centers = steps.map((_, i) => (i / (n - 1)) * 100);
+    return steps.map((blur, i) => {
+      if (blur === 0) return '';
+      const prev = centers[i - 1];
+      const curr = centers[i];
+      const isLast = i === n - 1;
+      const stops = isLast
+        ? `transparent ${prev}%, black ${curr}%, black 100%`
+        : `transparent ${prev}%, black ${curr}%, transparent ${centers[i + 1]}%`;
+      const mask = `linear-gradient(to right, ${stops})`;
+      return `<div class="card-blur-layer" style="backdrop-filter:blur(${blur}px);-webkit-backdrop-filter:blur(${blur}px);mask-image:${mask};-webkit-mask-image:${mask};"></div>`;
+    }).join('');
+  }
+
   function renderList() {
     renderTagFilters();
     const cardsEl = document.getElementById('cards');
     document.getElementById('count').textContent = '';
 
     if (!recipesLoaded) {
-      cardsEl.innerHTML = Array.from({ length: 6 }).map(() => `
-        <div class="card">
-          <div class="card-photo skeleton-block"></div>
-          <div class="skeleton-line" style="width:80%;height:18px;margin-top:8px;"></div>
-          <div class="skeleton-line" style="width:40%;height:14px;margin-top:6px;"></div>
-        </div>
+      cardsEl.innerHTML = Array.from({ length: 4 }).map(() => `
+        <div class="card-v2 skeleton-block"></div>
       `).join('');
       return;
     }
@@ -992,14 +1048,20 @@
       const r = recipes[i];
       const totalTime = r.cook_time_minutes || 0;
       return `
-      <div class="card" onclick="openRecipeDetail(${i})">
-        <div class="card-photo">
+      <div class="card-v2" onclick="openRecipeDetail(${i})">
+        <div class="card-v2-photo">
           ${safeUrl(r.photo_url)
-            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML='<div class=&quot;photo-empty&quot;><i class=&quot;bi bi-image&quot;></i></div>'" />`
-            : '<div class="photo-empty"><i class="bi bi-image"></i></div>'}
+            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML='<div class=&quot;photo-empty&quot; style=&quot;background:var(--grey-600);&quot;><i class=&quot;bi bi-image&quot; style=&quot;color:white;&quot;></i></div>'" />`
+            : '<div class="photo-empty" style="background:var(--grey-600);"><i class="bi bi-image" style="color:white;"></i></div>'}
         </div>
-        <h3>${escapeHtml(r.title)}</h3>
-        ${totalTime > 0 ? `<span class="meta-pill"><i class="bi bi-clock" style="font-size:14px;color:var(--text-icon-primary);"></i> ${totalTime} min</span>` : ''}
+        <div class="card-v2-textwrap">
+          ${progressiveBlurLayersHtml()}
+          <div class="card-v2-gradient"></div>
+        </div>
+        <div class="card-v2-content">
+          <h3>${escapeHtml(r.title)}</h3>
+          ${totalTime > 0 ? `<p class="card-v2-sub">${totalTime} min</p>` : ''}
+        </div>
       </div>
     `;
     }).join('');
