@@ -538,6 +538,7 @@
     gap: 8px;
     margin-bottom: 20px;
   }
+  .plan-summary-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
   .meal-category-card {
     height: 86px;
     background: var(--surface-lowest);
@@ -822,6 +823,10 @@
   </div>
 
   <div id="planningRecipesPanel">
+    <div class="plan-summary-header">
+      <button type="button" class="secondary-btn" style="margin-top:0;height:36px;padding:0 14px;font-size:14px;" onclick="showAccount()"><i class="bi bi-people"></i> <span id="planDefaultServingsLabel"></span></button>
+      <span class="text-small-medium" style="color:var(--text-icon-secondary);">Nombre de repas</span>
+    </div>
     <div id="planSummary" class="plan-summary"></div>
     <div id="planningRecipeList"></div>
     <button id="resetPlanningBtn" style="display:block;margin:16px auto 32px;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;">Réinitialiser le planning</button>
@@ -992,6 +997,14 @@
   }
   function isPieceMode(r) { return r.serving_mode === 'piece'; }
   function getRecipeBase(r) { return isPieceMode(r) ? 1 : (r.servings || 4); }
+  // Portions (ou pièces) par repas pour cette recette : reprend la valeur
+  // mémorisée sur sa fiche, sinon le défaut du profil (1 pour une recette
+  // à la pièce, tant qu'elle n'a jamais été ajustée).
+  function getServingsPerOccurrence(r) {
+    const saved = loadRecipeServings()[r.id];
+    if (saved != null) return saved;
+    return isPieceMode(r) ? 1 : userDefaultServings;
+  }
 
   function setFormServingMode(mode) {
     formServingMode = mode;
@@ -1090,9 +1103,13 @@
   }
 
   function addCurrentRecipeToPlanning(recipeId) {
-    const selectedServings = currentServings[currentDetailIndex] || 1;
+    // "count" représente désormais un nombre de repas (occurrences), pas un
+    // total de portions : chaque ajout compte pour un repas de plus. Le
+    // nombre de portions par repas est déduit séparément (voir
+    // getServingsPerOccurrence), à partir de ce qui est mémorisé pour cette
+    // recette ou du défaut du profil.
     requestMealTypeForPlanning(recipeId, async (mealType) => {
-      const newVal = (mealPlan[recipeId]?.count || 0) + selectedServings;
+      const newVal = (mealPlan[recipeId]?.count || 0) + 1;
       await applyMealPlanChange(recipeId, newVal, mealType);
     });
   }
@@ -2422,6 +2439,8 @@
   }
 
   function renderPlanningRecipes() {
+    document.getElementById('planDefaultServingsLabel').textContent = `Pour ${userDefaultServings} personnes`;
+
     const counts = MEAL_TYPES.map(type => {
       let total = 0;
       recipes.forEach(r => {
@@ -2445,6 +2464,10 @@
     const listEl = document.getElementById('planningRecipeList');
     listEl.innerHTML = recipes.map((r, i) => {
       const count = mealPlan[r.id]?.count || 0;
+      const total = count * getServingsPerOccurrence(r);
+      const totalLabel = count > 0
+        ? (isPieceMode(r) ? `${total} pièce${total > 1 ? 's' : ''}` : `${total} portion${total > 1 ? 's' : ''}`)
+        : '';
       return `
         <div class="plan-recipe-row">
           <div style="display:flex;align-items:center;gap:12px;">
@@ -2453,11 +2476,14 @@
                 ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
                 : '<i class="bi bi-image" style="font-size:16px;color:var(--text-icon-secondary);"></i>'}
             </div>
-            <div class="plan-recipe-name">${escapeHtml(r.title)}</div>
+            <div>
+              <div class="plan-recipe-name">${escapeHtml(r.title)}</div>
+              ${totalLabel ? `<div class="text-small" style="color:var(--text-icon-secondary);">${totalLabel}</div>` : ''}
+            </div>
           </div>
           <div class="servings-stepper">
             <button class="servings-minus" type="button" data-plan-recipe="${r.id}" data-delta="-1"><i class="bi bi-dash"></i></button>
-            <span class="servings-value" data-plan-count="${r.id}">${isPieceMode(r) ? count + 'x' : count}</span>
+            <span class="servings-value" data-plan-count="${r.id}">${count}</span>
             <button class="servings-plus" type="button" data-plan-recipe="${r.id}" data-delta="1"><i class="bi bi-plus"></i></button>
           </div>
         </div>
@@ -2531,11 +2557,12 @@
       if (count === 0) return;
       hasAnySelection = true;
       const base = getRecipeBase(r);
+      const totalUnits = count * getServingsPerOccurrence(r);
       (r.ingredients || []).forEach(ing => {
         if (!ing.name || !ing.name.trim()) return;
         const nameKey = normalize(ing.name).replace(/s$/, '');
         const unitKey = normalize(ing.unit);
-        const scaledQty = ing.quantity != null ? (ing.quantity * count / base) : null;
+        const scaledQty = ing.quantity != null ? (ing.quantity * totalUnits / base) : null;
 
         if (!aggregated[nameKey]) {
           aggregated[nameKey] = { displayName: ing.name.trim(), rayon: categorizeIngredient(ing.name), units: {} };
