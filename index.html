@@ -91,7 +91,7 @@
   .card-v2-gradient {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.08) 20%, rgba(0,0,0,0.3) 100%);
+    background: linear-gradient(to left, rgba(0,0,0,0) 0%, rgba(0,0,0,0.08) 20%, rgba(0,0,0,0.3) 100%);
   }
   .card-v2-content {
     position: absolute;
@@ -1012,7 +1012,7 @@
       const stops = isLast
         ? `transparent ${prev}%, black ${curr}%, black 100%`
         : `transparent ${prev}%, black ${curr}%, transparent ${centers[i + 1]}%`;
-      const mask = `linear-gradient(to right, ${stops})`;
+      const mask = `linear-gradient(to left, ${stops})`;
       return `<div class="card-blur-layer" style="backdrop-filter:blur(${blur}px);-webkit-backdrop-filter:blur(${blur}px);mask-image:${mask};-webkit-mask-image:${mask};"></div>`;
     }).join('');
   }
