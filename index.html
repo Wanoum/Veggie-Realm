@@ -709,8 +709,16 @@
     <label class="field-label">Type de repas</label>
     <div id="f_mealTypes" class="tag-filters" style="margin-bottom:4px;"></div>
 
-    <label class="field-label">Portions de référence</label>
-    <input id="f_servings" class="field-input" type="number" value="4" />
+    <label class="field-label">Portionnement</label>
+    <div class="subtabs">
+      <button type="button" id="f_servingModePortion" class="subtab-btn active" onclick="setFormServingMode('portion')">Portions</button>
+      <button type="button" id="f_servingModePiece" class="subtab-btn" onclick="setFormServingMode('piece')">À la pièce</button>
+    </div>
+
+    <div id="f_servingsGroup">
+      <label class="field-label">Portions de référence</label>
+      <input id="f_servings" class="field-input" type="number" value="4" />
+    </div>
 
     <div style="display:flex; gap:10px;">
       <div style="flex:1;">
@@ -874,6 +882,7 @@
   let recipesLoaded = false;
   let currentServings = {};
   let userDefaultServings = 4;
+  let formServingMode = 'portion';
 
   async function loadRecipes() {
     const { data, error } = await sb.from('recipes').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
@@ -964,9 +973,11 @@
   let currentDetailIndex = null;
 
   // Certaines recettes (gâteaux, tartes, pains...) se préparent en une seule
-  // fois quelle que soit la taille du foyer : on retient donc le dernier
-  // nombre de portions choisi pour CHAQUE recette, plutôt que de toujours
-  // reproposer le nombre de portions par défaut du profil.
+  // fois quelle que soit la taille du foyer : leur champ serving_mode vaut
+  // 'piece' et leurs quantités ne se divisent jamais par un nombre de
+  // portions, elles se multiplient juste par le nombre d'exemplaires voulu.
+  // On retient aussi le dernier nombre choisi pour CHAQUE recette, plutôt
+  // que de toujours reproposer le nombre de portions par défaut du profil.
   const RECIPE_SERVINGS_KEY = 'veggieRealm.recipeServings';
   function loadRecipeServings() {
     try { return JSON.parse(localStorage.getItem(RECIPE_SERVINGS_KEY)) || {}; } catch { return {}; }
@@ -978,13 +989,23 @@
       localStorage.setItem(RECIPE_SERVINGS_KEY, JSON.stringify(state));
     } catch { /* ignoré */ }
   }
+  function isPieceMode(r) { return r.serving_mode === 'piece'; }
+  function getRecipeBase(r) { return isPieceMode(r) ? 1 : (r.servings || 4); }
+
+  function setFormServingMode(mode) {
+    formServingMode = mode;
+    document.getElementById('f_servingModePortion').classList.toggle('active', mode === 'portion');
+    document.getElementById('f_servingModePiece').classList.toggle('active', mode === 'piece');
+    document.getElementById('f_servingsGroup').style.display = mode === 'piece' ? 'none' : 'block';
+  }
 
   function showDetail(i) {
     window.scrollTo(0, 0);
     currentDetailIndex = i;
     const r = recipes[i];
     const savedServings = loadRecipeServings()[r.id];
-    currentServings[i] = savedServings != null ? savedServings : userDefaultServings;
+    const defaultServings = isPieceMode(r) ? 1 : userDefaultServings;
+    currentServings[i] = savedServings != null ? savedServings : defaultServings;
     document.getElementById('listView').style.display = 'none';
     document.getElementById('formView').style.display = 'none';
     document.getElementById('wizardFooter').style.display = 'none';
@@ -999,7 +1020,7 @@
 
   function renderDetail(i) {
     const r = recipes[i];
-    const base = r.servings || 4;
+    const base = getRecipeBase(r);
     const s = currentServings[i];
     const metaPills = [];
         if (r.cook_time_minutes) metaPills.push(`<span class="meta-pill"><i class="bi bi-fire" style="font-size:14px;color:var(--text-icon-primary);"></i> ${r.cook_time_minutes} min</span>`);
@@ -1043,7 +1064,7 @@
         <h1 style="margin-bottom:var(--space-section-gap);">${escapeHtml(r.title)}</h1>
 
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-section-gap);">
-          <span class="text-body">Portions</span>
+          <span class="text-body">${isPieceMode(r) ? 'Quantité' : 'Portions'}</span>
           <div class="servings-stepper">
             <button class="servings-minus" onclick="changeServings(${i}, -1)"><i class="bi bi-dash"></i></button>
             <span class="servings-value">${s}</span>
@@ -1160,7 +1181,9 @@
     cookingStepIndex = 0;
 
     document.getElementById('cookingRecipeTitle').textContent = r.title;
-    document.getElementById('cookingRecipeServings').textContent = `pour ${currentServings[i] || r.servings || 4} portions`;
+    document.getElementById('cookingRecipeServings').textContent = isPieceMode(r)
+      ? `pour ${currentServings[i] || 1} × la recette`
+      : `pour ${currentServings[i] || getRecipeBase(r)} portions`;
     document.getElementById('cookingModeView').style.display = 'flex';
     renderCookingSteps();
 
@@ -1171,7 +1194,7 @@
 
   function ingredientChipsForStep(stepText) {
     if (!cookingRecipe) return '';
-    const base = cookingRecipe.servings || 4;
+    const base = getRecipeBase(cookingRecipe);
     const target = currentServings[currentDetailIndex] || base;
     const normalizedStep = normalize(stepText);
     const matches = (cookingRecipe.ingredients || []).filter(ing => normalizedStep.includes(normalize(ing.name)));
@@ -1891,6 +1914,7 @@
     selectedMealTypes = [...(r.tags || [])].filter(t => MEAL_TYPES.includes(t));
     renderMealTypeToggles();
     document.getElementById('f_servings').value = r.servings || 4;
+    setFormServingMode(r.serving_mode === 'piece' ? 'piece' : 'portion');
     document.getElementById('f_cook').value = r.cook_time_minutes || '';
     document.getElementById('f_oven').value = r.oven_temp_celsius || '';
     document.getElementById('f_notes').value = r.notes || '';
@@ -2292,6 +2316,7 @@
     selectedMealTypes = [];
     renderMealTypeToggles();
     document.getElementById('f_servings').value = userDefaultServings;
+    setFormServingMode('portion');
     document.getElementById('f_cook').value = '';
     document.getElementById('f_oven').value = '';
     document.getElementById('f_notes').value = '';
@@ -2336,6 +2361,7 @@
       photo_url: document.getElementById('f_photo').value.trim() || null,
       tags,
       servings: Number(document.getElementById('f_servings').value) || 4,
+      serving_mode: formServingMode,
       cook_time_minutes: document.getElementById('f_cook').value ? Number(document.getElementById('f_cook').value) : null,
       oven_temp_celsius: document.getElementById('f_oven').value ? Number(document.getElementById('f_oven').value) : null,
       notes: document.getElementById('f_notes').value.trim() || null,
@@ -2501,7 +2527,7 @@
       const count = mealPlan[r.id]?.count || 0;
       if (count === 0) return;
       hasAnySelection = true;
-      const base = r.servings || 4;
+      const base = getRecipeBase(r);
       (r.ingredients || []).forEach(ing => {
         if (!ing.name || !ing.name.trim()) return;
         const nameKey = normalize(ing.name).replace(/s$/, '');
