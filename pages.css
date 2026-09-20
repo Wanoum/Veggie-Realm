@@ -26,7 +26,7 @@
 }
 .detail-sheet-handle {
   width: 36px; height: 4px;
-  background: var(--border-strong);
+  background: var(--border-default);
   border-radius: 4px;
   margin: 0 auto 20px;
 }
@@ -37,14 +37,14 @@
   padding: 11px 0;
   border-bottom: 1px solid var(--border-divider);
 }
-.ing-row-name { font-family: 'Inter', sans-serif; font-size: 18px; line-height: 120%; color: var(--text-icon-primary); margin: 0; }
+.ing-row-name { font-family: 'Inter', sans-serif; font-size: 18px; line-height: 120%; color: var(--text-icon-default); margin: 0; }
 .ing-row-note { color: var(--text-icon-secondary); font-family: 'Inter', sans-serif; font-size: 14px; line-height: 120%; }
 .ing-row-qty { font-family: 'IBM Plex Mono', monospace; font-size: 18px; line-height: 120%; color: var(--text-icon-secondary); white-space: nowrap; margin-left: 12px; }
 ol { padding-left: 20px; }
 ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif; font-size: 18px; }
 .notice {
   background: var(--surface-lowest);
-  color: var(--text-icon-primary);
+  color: var(--text-icon-default);
   padding: 12px 14px;
   border-radius: 12px;
   font-family: 'Inter', sans-serif;
@@ -52,7 +52,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   line-height: 120%;
   white-space: pre-wrap;
   word-break: break-word;
-  margin-top: var(--space-section-gap);
+  margin-top: var(--gap-vertical-section);
 }
 
 /* ---- Mode cuisine ---- */
@@ -108,7 +108,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   padding: 0;
   font-family: 'Inter', sans-serif;
   font-size: 18px;
-  color: var(--text-icon-primary);
+  color: var(--text-icon-default);
 }
 .row-item input:focus { outline: none; }
 .row-item input::placeholder { color: var(--text-icon-secondary); }
@@ -116,7 +116,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 .row-item .ing-display-qty, .row-item .ing-display-name {
   font-family: 'Inter', sans-serif;
   font-size: 18px;
-  color: var(--text-icon-primary);
+  color: var(--text-icon-default);
   cursor: pointer;
 }
 .row-item .ing-display-qty { flex: 0 0 90px; }
@@ -124,7 +124,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 .remove-row {
   background: none;
   border: none;
-  color: var(--status-error);
+  color: var(--text-icon-error);
   font-size: 18px;
   padding: 4px 8px;
   display: flex;
@@ -155,7 +155,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   flex-direction: column;
   overflow: hidden;
   background: var(--surface-low);
-  padding: calc(var(--space-page-edge) + env(safe-area-inset-top)) var(--space-page-edge) calc(80px + env(safe-area-inset-bottom));
+  padding: calc(var(--padding-horizontal-app) + env(safe-area-inset-top)) var(--padding-horizontal-app) calc(80px + env(safe-area-inset-bottom));
 }
 .wizard-source-tile {
   width: 100%;
@@ -166,10 +166,10 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   justify-content: center;
   gap: 20px;
   padding: 24px;
-  background: var(--interaction-primary-pale);
-  border: 2px dashed var(--border-strong);
+  background: var(--interaction-tertiary);
+  border: 2px dashed var(--border-default);
   border-radius: 16px;
-  color: var(--text-icon-primary);
+  color: var(--text-icon-default);
   font-family: 'Inter', sans-serif;
   font-size: 22px;
   font-weight: 500;
@@ -221,7 +221,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   font-family: 'Inter', sans-serif;
   font-size: 18px;
   line-height: 1.6;
-  color: var(--text-icon-primary);
+  color: var(--text-icon-default);
   cursor: pointer;
 }
 .step-row-edit-input {
@@ -229,10 +229,10 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   font-family: 'Inter', sans-serif;
   font-size: 18px;
   line-height: 1.6;
-  color: var(--text-icon-primary);
+  color: var(--text-icon-default);
   background: none;
   border: none;
-  border-bottom: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--border-default);
   padding: 0;
   resize: none;
   min-height: 1.6em;
@@ -240,7 +240,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 .step-row-remove {
   background: none;
   border: none;
-  color: var(--status-error);
+  color: var(--text-icon-error);
   font-size: 18px;
   width: 36px;
   height: 36px;
@@ -260,7 +260,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   line-height: 1.6;
   padding: 14px 0;
   margin-top: 4px;
-  color: var(--text-icon-primary);
+  color: var(--text-icon-default);
 }
 .steps-inline-input::placeholder { color: var(--text-icon-secondary); }
 .steps-inline-input:focus { outline: none; }
@@ -332,7 +332,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   text-align: center;
   cursor: pointer;
 }
-.meal-category-number { font-family: 'IBM Plex Mono', monospace; font-size: 40px; line-height: 100%; font-weight: 400; color: var(--text-icon-primary); margin: 0; }
+.meal-category-number { font-family: 'IBM Plex Mono', monospace; font-size: 40px; line-height: 100%; font-weight: 400; color: var(--text-icon-default); margin: 0; }
 .meal-category-label { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 120%; color: var(--text-icon-secondary); margin: 6px 0 0; }
 /* Sélectionné : même traitement que les onglets/chips actifs (.subtab-btn.active, .filter-chip.active). */
 .meal-category-card.active { background: var(--interaction-primary); }

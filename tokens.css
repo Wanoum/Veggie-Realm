@@ -25,7 +25,7 @@
   --green-700: #244d3b;
   --green-800: #293b2e;
   --grey-400: #aaa59b;
-  --grey-600: #77766f;
+  --grey-700: #6f6e66;
   --grey-900: #191a17;
   --light-100: #f7f5ed;
   --light-150: #f7f3eb;
@@ -34,30 +34,44 @@
   --light-400: #e8e3d6;
   --light-50: #fffdf8;
   --light-500: #ddd7cc;
+  --red-500: #a22205;
   --white: #ffffff;
 
   /* ---- Colors ---- */
+  --border-default: var(--green-300);
   --border-divider: var(--light-500);
-  --border-strong: var(--green-300);
   --status-error: #B3261E;
   --status-success: #3D5A34;
   --interaction-primary: var(--green-700);
-  --interaction-primary-pale: var(--green-100);
   --interaction-secondary: var(--green-200);
+  --interaction-tertiary: var(--green-100);
   --surface-high: var(--light-50);
   --surface-highest: var(--white);
   --surface-low: var(--light-200);
   --surface-lowest: var(--light-300);
   --text-icon-accent: var(--green-700);
   --text-icon-accent-strong: var(--green-800);
+  --text-icon-default: var(--grey-900);
   --text-icon-disabled: var(--grey-400);
+  --text-icon-error: var(--red-500);
   --text-icon-on-primary: var(--white);
-  --text-icon-primary: var(--grey-900);
-  --text-icon-secondary: var(--grey-600);
+  --text-icon-secondary: var(--grey-700);
 
-  /* ---- Spacing (usage cohérente dans toute l'app) ---- */
-  --space-page-edge: 16px;
-  --space-section-gap: 24px;
+  /* ---- Sizes ---- */
+  --corner-radius-default: 0.5rem;
+  --corner-radius-large: 1rem;
+  --corner-radius-xlarge: 2rem;
+  --corner-radius-round: 62.4375rem;
+  --gap-xsmall: 0.125rem;
+  --gap-default: 0.5rem;
+  --gap-large: 1rem;
+  --gap-vertical-section: 1.5rem;
+  --height-default: 3.25rem;
+  --padding-horizontal-contained: 0.75rem;
+  --padding-horizontal-app: 1rem;
+  --padding-horizontal-default: 1rem;
+  --padding-vertical-control: 0.8438rem;
+  --padding-vertical-large: 1rem;
 }
 
 /* ---- Text styles ----
@@ -92,13 +106,13 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 18px;
   background: var(--surface-low);
-  color: var(--text-icon-primary);
+  color: var(--text-icon-default);
   margin: 0;
   min-height: 100vh;
   min-height: 100dvh;
-  padding: calc(var(--space-page-edge) + env(safe-area-inset-top)) var(--space-page-edge) 100px;
+  padding: calc(var(--padding-horizontal-app) + env(safe-area-inset-top)) var(--padding-horizontal-app) 100px;
 }
 .serif { font-family: 'Krylon', Georgia, serif; }
-h1 { font-family: 'Krylon', Georgia, serif; font-size: 48px; line-height: 100%; font-weight: 400; margin: 0 0 var(--space-section-gap); color: var(--text-icon-primary); }
-h2 { font-family: 'Inter', sans-serif; font-size: 24px; line-height: 120%; font-weight: 600; margin: var(--space-section-gap) 0 12px; color: var(--text-icon-primary); }
+h1 { font-family: 'Krylon', Georgia, serif; font-size: 48px; line-height: 100%; font-weight: 400; margin: 0 0 var(--gap-vertical-section); color: var(--text-icon-default); }
+h2 { font-family: 'Inter', sans-serif; font-size: 24px; line-height: 120%; font-weight: 600; margin: var(--gap-vertical-section) 0 12px; color: var(--text-icon-default); }
 .count { font-size: 14px; color: var(--text-icon-secondary); margin-bottom: 14px; }
