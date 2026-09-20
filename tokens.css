@@ -2,16 +2,20 @@
    Veggie Realm — Design tokens
    ========================================================================== */
 
+/* Inter (Headline, Body, Body Medium, Small, Small Medium) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* IBM Plex Mono (Display Numeric, Quantity Mono) */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+/* @import doit précéder toute autre règle (sauf @charset) — @font-face
+   passe donc après, sans quoi les imports ci-dessus sont ignorés par les
+   navigateurs stricts (Safari/WebKit) et les polices retombent sur leur
+   fallback (monospace générique pour IBM Plex Mono par exemple). */
 @font-face {
   font-family: 'Krylon';
   src: url('Krylon.otf') format('opentype');
   font-display: swap;
 }
-
-/* Inter (Headline, Body, Body Medium, Small, Small Medium) */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-/* IBM Plex Mono (Display Numeric, Quantity Mono) */
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 :root {
   /* ---- Primitives ---- */
