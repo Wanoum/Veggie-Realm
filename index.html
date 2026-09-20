@@ -87,7 +87,9 @@
     inset: 0 50% 0 0;
     overflow: hidden;
   }
+  /* Flou d'arrière-plan progressif désactivé pour le moment (cf. progressiveBlurLayersHtml en JS) — gardé au cas où on le réactive plus tard.
   .card-blur-layer { position: absolute; inset: 0; }
+  */
   .card-v2-gradient {
     position: absolute;
     inset: 0;
@@ -127,6 +129,9 @@
     color: var(--text-icon-primary);
     padding: 3px 9px;
     border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
   .detail-photo {
     position: fixed;
@@ -996,11 +1001,9 @@
       });
   }
 
-  // Flou "progressif" (0 à gauche, 12px à droite) sur le fond de la carte
-  // recette : CSS n'a pas de flou à intensité variable, donc on superpose
-  // plusieurs couches backdrop-filter, chacune masquée sur une bande
-  // horizontale qui se fond dans ses voisines (dégradés de transparence qui
-  // se chevauchent), pour simuler une transition continue.
+  // Flou d'arrière-plan progressif désactivé pour le moment — gardé en
+  // commentaire au cas où on le réactive plus tard.
+  /*
   function progressiveBlurLayersHtml() {
     const steps = [0, 4, 8, 12];
     const n = steps.length;
@@ -1017,6 +1020,7 @@
       return `<div class="card-blur-layer" style="backdrop-filter:blur(${blur}px);-webkit-backdrop-filter:blur(${blur}px);mask-image:${mask};-webkit-mask-image:${mask};"></div>`;
     }).join('');
   }
+  */
 
   function renderList() {
     renderTagFilters();
@@ -1056,7 +1060,7 @@
             : '<div class="photo-empty" style="background:var(--grey-600);"><i class="bi bi-image" style="color:white;"></i></div>'}
         </div>
         <div class="card-v2-textwrap">
-          ${progressiveBlurLayersHtml()}
+          <!-- Flou d'arrière-plan progressif désactivé pour le moment (voir progressiveBlurLayersHtml, commentée plus haut) -->
           <div class="card-v2-gradient"></div>
         </div>
         <div class="card-v2-content">
@@ -1185,7 +1189,7 @@
         <div class="detail-sheet-handle"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--space-section-gap);">
           ${metaPills.join('')}
-          ${(r.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
+          ${mealTypeTagsHtml(r)}
         </div>
         <h1 style="margin-bottom:var(--space-section-gap);">${escapeHtml(r.title)}</h1>
 
@@ -2022,6 +2026,15 @@
     'Encas': 'bi-cup-straw'
   };
   let selectedMealTypes = [];
+
+  // Tags de type de repas d'une recette, toujours dans l'ordre canonique
+  // (Petit-déj, Déjeuner, Dîner, Encas), avec la même icône que partout
+  // ailleurs dans l'app, à la taille standard des tags.
+  function mealTypeTagsHtml(r) {
+    return MEAL_TYPES.filter(t => (r.tags || []).includes(t)).map(t => `
+      <span class="tag"><i class="bi ${MEAL_TYPE_ICONS[t]}" style="font-size:14px;"></i>${escapeHtml(t)}</span>
+    `).join('');
+  }
 
   function renderMealTypeToggles() {
     document.getElementById('f_mealTypes').innerHTML = MEAL_TYPES.map(t => `
@@ -3265,7 +3278,7 @@
         <div class="detail-sheet-handle"></div>
         ${banner}
         <h1>${escapeHtml(r.title)}</h1>
-        <div class="tags" style="margin-bottom:14px;">${(r.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>
+        <div class="tags" style="margin-bottom:14px;">${mealTypeTagsHtml(r)}</div>
         <h2>Ingrédients</h2>
         ${ingredientsHtml}
         ${r.notes ? `<div class="notice" style="margin-top:16px;">${escapeHtml(r.notes)}</div>` : ''}
