@@ -1534,7 +1534,7 @@
     if (field === 'display_name') {
       const name = document.getElementById('accountEdit_displayName').value.trim();
       if (!name) { errEl.textContent = "Le pseudo ne peut pas être vide."; return; }
-      const { error } = await sb.from('profiles').upsert({ id: currentUser.id, email: currentUser.email, display_name: name });
+      const { error } = await sb.from('profiles').update({ display_name: name }).eq('id', currentUser.id);
       if (error) { errEl.textContent = error.message; return; }
     } else if (field === 'password') {
       const newPassword = document.getElementById('accountEdit_password').value;
@@ -1544,7 +1544,7 @@
       if (error) { errEl.textContent = error.message; return; }
     } else if (field === 'default_servings') {
       const value = Number(document.getElementById('accountEdit_servingsValue').textContent);
-      const { error } = await sb.from('profiles').upsert({ id: currentUser.id, email: currentUser.email, default_servings: value });
+      const { error } = await sb.from('profiles').update({ default_servings: value }).eq('id', currentUser.id);
       if (error) { errEl.textContent = error.message; return; }
       userDefaultServings = value;
     }
