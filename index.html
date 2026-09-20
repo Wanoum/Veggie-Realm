@@ -967,7 +967,7 @@
     window.scrollTo(0, 0);
     currentDetailIndex = i;
     const r = recipes[i];
-    currentServings[i] = r.servings || 4;
+    currentServings[i] = userDefaultServings;
     document.getElementById('listView').style.display = 'none';
     document.getElementById('formView').style.display = 'none';
     document.getElementById('wizardFooter').style.display = 'none';
@@ -2747,9 +2747,8 @@
     else showHome();
 
     loadMealPlan();
-    await loadRecipes();
+    await Promise.all([loadRecipes(), loadUserDefaultServings()]);
     ensureProfile();
-    loadUserDefaultServings();
 
     if (lastView === 'detail' && lastDetailId) {
       const idx = recipes.findIndex(r => r.id === lastDetailId);
