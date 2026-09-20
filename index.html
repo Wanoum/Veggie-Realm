@@ -167,6 +167,27 @@
     font-size: 18px;
     display: flex; align-items: center; justify-content: center;
   }
+  .settings-list { margin-bottom: var(--space-section-gap); }
+  .settings-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-divider);
+    background: none;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    color: var(--text-icon-primary);
+    text-align: left;
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-row-value { margin-left: auto; color: var(--text-icon-secondary); font-size: 14px; }
+  .settings-row .bi-chevron-right { color: var(--text-icon-disabled); font-size: 14px; }
   .ing-row {
     display: flex;
     justify-content: space-between;
@@ -749,20 +770,39 @@
 <div id="accountView" style="display:none;">
   <h1>Compte</h1>
   <div style="max-width:340px;">
-    <label class="field-label">Email</label>
-    <input id="account_email" class="field-input" disabled style="opacity:0.7;" />
+    <div class="settings-list">
+      <div class="settings-row">
+        <span>Email</span>
+        <span class="settings-row-value" id="account_email_value"></span>
+      </div>
+      <button type="button" class="settings-row" onclick="openAccountEdit('display_name')">
+        <span>Pseudo</span>
+        <span class="settings-row-value" id="account_display_name_value"></span>
+        <i class="bi bi-chevron-right"></i>
+      </button>
+      <button type="button" class="settings-row" onclick="openAccountEdit('password')">
+        <span>Mot de passe</span>
+        <i class="bi bi-chevron-right"></i>
+      </button>
+      <button type="button" class="settings-row" onclick="openAccountEdit('default_servings')">
+        <span>Portions par défaut</span>
+        <span class="settings-row-value" id="account_default_servings_value"></span>
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+    <button type="button" id="logoutBtn" class="primary-btn" style="background:var(--status-error);margin-top:0;">Se déconnecter</button>
+  </div>
+</div>
 
-    <label class="field-label" style="margin-top:22px;">Pseudo</label>
-    <input id="account_display_name" class="field-input" placeholder="Ton pseudo" />
-    <button type="button" id="updateNameBtn" class="secondary-btn">Enregistrer le pseudo</button>
-
-    <label class="field-label" style="margin-top:22px;">Nouveau mot de passe</label>
-    <input id="account_new_password" class="field-input" type="password" placeholder="Laisser vide pour ne pas changer" autocomplete="new-password" />
-
-    <p id="accountError" style="color:var(--status-error);font-size:14px;margin-top:10px;"></p>
-
-    <button type="button" id="updatePasswordBtn" class="secondary-btn">Mettre à jour le mot de passe</button>
-    <button type="button" id="logoutBtn" class="primary-btn" style="background:var(--status-error);">Se déconnecter</button>
+<div id="accountEditView" style="display:none;">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--space-section-gap);">
+    <button type="button" class="icon-btn" onclick="closeAccountEdit()"><i class="bi bi-arrow-left icon"></i></button>
+    <h1 id="accountEditTitle" style="margin:0;font-size:30px;"></h1>
+  </div>
+  <div style="max-width:340px;">
+    <div id="accountEditContent"></div>
+    <p id="accountEditError" style="color:var(--status-error);font-size:14px;margin-top:10px;"></p>
+    <button type="button" id="accountEditSaveBtn" class="primary-btn">Enregistrer</button>
   </div>
 </div>
 
@@ -1224,6 +1264,7 @@
     document.getElementById('wizardFooter').style.display = 'none';
     document.getElementById('planningView').style.display = 'none';
     document.getElementById('accountView').style.display = 'none';
+    document.getElementById('accountEditView').style.display = 'none';
     document.getElementById('sharedRecipeView').style.display = 'none';
     document.getElementById('edgeSwipeScrim').style.display = 'none';
     document.getElementById('detailView').style.position = '';
@@ -1372,7 +1413,7 @@
       document.getElementById('f_title').value = data.title || '';
       document.getElementById('f_photo').value = data.photo_url || '';
       updatePhotoPreview(data.photo_url || null);
-      document.getElementById('f_servings').value = data.servings || 4;
+      document.getElementById('f_servings').value = data.servings || userDefaultServings;
       document.getElementById('f_cook').value = data.cook_time_minutes || '';
       document.getElementById('f_oven').value = data.oven_temp_celsius || '';
 
@@ -1420,6 +1461,8 @@
     sessionStorage.setItem('lastView', 'planning');
   }
 
+  let accountProfileCache = null;
+
   async function showAccount() {
     window.scrollTo(0, 0);
     hideAllViews();
@@ -1427,16 +1470,86 @@
     document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('navAccount').classList.add('active');
     updateNavIcons();
-    document.getElementById('account_email').value = currentUser ? currentUser.email : '';
-    document.getElementById('account_new_password').value = '';
-    document.getElementById('accountError').textContent = '';
     sessionStorage.setItem('lastView', 'account');
 
-    const { data: profile } = await sb.from('profiles').select('display_name').eq('id', currentUser.id).maybeSingle();
-    document.getElementById('account_display_name').value = profile ? (profile.display_name || '') : '';
+    document.getElementById('account_email_value').textContent = currentUser ? currentUser.email : '';
+
+    const { data: profile } = await sb.from('profiles').select('display_name, default_servings').eq('id', currentUser.id).maybeSingle();
+    accountProfileCache = profile || {};
+    document.getElementById('account_display_name_value').textContent = accountProfileCache.display_name || '—';
+    document.getElementById('account_default_servings_value').textContent = `${accountProfileCache.default_servings || 4} portions`;
   }
 
   document.getElementById('navAccount').onclick = showAccount;
+
+  // ---- Écran d'édition d'un réglage du compte (façon liste iOS) ----
+  function openAccountEdit(field) {
+    const titleEl = document.getElementById('accountEditTitle');
+    const contentEl = document.getElementById('accountEditContent');
+    const errEl = document.getElementById('accountEditError');
+    errEl.textContent = '';
+
+    if (field === 'display_name') {
+      titleEl.textContent = 'Pseudo';
+      contentEl.innerHTML = `<input id="accountEdit_displayName" class="field-input" placeholder="Ton pseudo" value="${escapeHtml(accountProfileCache.display_name || '')}" />`;
+    } else if (field === 'password') {
+      titleEl.textContent = 'Mot de passe';
+      contentEl.innerHTML = `<input id="accountEdit_password" class="field-input" type="password" placeholder="Nouveau mot de passe" autocomplete="new-password" />`;
+    } else if (field === 'default_servings') {
+      titleEl.textContent = 'Portions par défaut';
+      const current = accountProfileCache.default_servings || 4;
+      contentEl.innerHTML = `
+        <p class="text-body" style="color:var(--text-icon-secondary);margin:0 0 16px;">Utilisé pour préremplir le nombre de portions à la création d'une recette.</p>
+        <div class="servings-stepper">
+          <button type="button" id="accountEdit_servingsMinus"><i class="bi bi-dash"></i></button>
+          <span class="servings-value" id="accountEdit_servingsValue">${current}</span>
+          <button type="button" id="accountEdit_servingsPlus"><i class="bi bi-plus"></i></button>
+        </div>
+      `;
+      document.getElementById('accountEdit_servingsMinus').onclick = () => {
+        const el = document.getElementById('accountEdit_servingsValue');
+        el.textContent = Math.max(1, Number(el.textContent) - 1);
+      };
+      document.getElementById('accountEdit_servingsPlus').onclick = () => {
+        const el = document.getElementById('accountEdit_servingsValue');
+        el.textContent = Number(el.textContent) + 1;
+      };
+    }
+
+    document.getElementById('accountEditSaveBtn').onclick = () => saveAccountEdit(field);
+    document.getElementById('accountView').style.display = 'none';
+    document.getElementById('accountEditView').style.display = 'block';
+  }
+
+  function closeAccountEdit() {
+    document.getElementById('accountEditView').style.display = 'none';
+    showAccount();
+  }
+
+  async function saveAccountEdit(field) {
+    const errEl = document.getElementById('accountEditError');
+    errEl.textContent = '';
+
+    if (field === 'display_name') {
+      const name = document.getElementById('accountEdit_displayName').value.trim();
+      if (!name) { errEl.textContent = "Le pseudo ne peut pas être vide."; return; }
+      const { error } = await sb.from('profiles').upsert({ id: currentUser.id, email: currentUser.email, display_name: name });
+      if (error) { errEl.textContent = error.message; return; }
+    } else if (field === 'password') {
+      const newPassword = document.getElementById('accountEdit_password').value;
+      if (!newPassword) { errEl.textContent = "Entre un nouveau mot de passe."; return; }
+      if (newPassword.length < 6) { errEl.textContent = "Le mot de passe doit faire au moins 6 caractères."; return; }
+      const { error } = await sb.auth.updateUser({ password: newPassword });
+      if (error) { errEl.textContent = error.message; return; }
+    } else if (field === 'default_servings') {
+      const value = Number(document.getElementById('accountEdit_servingsValue').textContent);
+      const { error } = await sb.from('profiles').upsert({ id: currentUser.id, email: currentUser.email, default_servings: value });
+      if (error) { errEl.textContent = error.message; return; }
+      userDefaultServings = value;
+    }
+
+    closeAccountEdit();
+  }
 
   document.getElementById('navHome').onclick = showHome;
   document.getElementById('navAdd').onclick = showForm;
@@ -2159,7 +2272,7 @@
     document.getElementById('photoUploadStatus').textContent = '';
     selectedMealTypes = [];
     renderMealTypeToggles();
-    document.getElementById('f_servings').value = 4;
+    document.getElementById('f_servings').value = userDefaultServings;
     document.getElementById('f_cook').value = '';
     document.getElementById('f_oven').value = '';
     document.getElementById('f_notes').value = '';
@@ -2544,6 +2657,7 @@
 
   // ---- Authentification ----
   let currentUser = null;
+  let userDefaultServings = 4;
   let authMode = 'login'; // 'login' | 'signup'
 
   function showAuthView() {
@@ -2635,6 +2749,7 @@
     loadMealPlan();
     await loadRecipes();
     ensureProfile();
+    loadUserDefaultServings();
 
     if (lastView === 'detail' && lastDetailId) {
       const idx = recipes.findIndex(r => r.id === lastDetailId);
@@ -2656,6 +2771,11 @@
     if (existing) return;
     const displayName = currentUser.email.split('@')[0];
     await sb.from('profiles').insert({ id: currentUser.id, email: currentUser.email, display_name: displayName });
+  }
+
+  async function loadUserDefaultServings() {
+    const { data } = await sb.from('profiles').select('default_servings').eq('id', currentUser.id).maybeSingle();
+    userDefaultServings = data?.default_servings || 4;
   }
 
   function setAuthMode(mode) {
@@ -2704,51 +2824,6 @@
 
   document.getElementById('logoutBtn').onclick = async () => {
     await sb.auth.signOut();
-  };
-
-  document.getElementById('updateNameBtn').onclick = async () => {
-    const name = document.getElementById('account_display_name').value.trim();
-    const errEl = document.getElementById('accountError');
-    errEl.style.color = 'var(--status-error)';
-    errEl.textContent = '';
-
-    if (!name) {
-      errEl.textContent = "Le pseudo ne peut pas être vide.";
-      return;
-    }
-
-    const { error } = await sb.from('profiles').upsert({ id: currentUser.id, email: currentUser.email, display_name: name });
-    if (error) {
-      errEl.textContent = error.message;
-      return;
-    }
-    errEl.style.color = 'var(--interaction-primary)';
-    errEl.textContent = "Pseudo enregistré ✓";
-  };
-
-  document.getElementById('updatePasswordBtn').onclick = async () => {
-    const newPassword = document.getElementById('account_new_password').value;
-    const errEl = document.getElementById('accountError');
-    errEl.style.color = 'var(--status-error)';
-    errEl.textContent = '';
-
-    if (!newPassword) {
-      errEl.textContent = "Entre un nouveau mot de passe.";
-      return;
-    }
-    if (newPassword.length < 6) {
-      errEl.textContent = "Le mot de passe doit faire au moins 6 caractères.";
-      return;
-    }
-
-    const { error } = await sb.auth.updateUser({ password: newPassword });
-    if (error) {
-      errEl.textContent = error.message;
-      return;
-    }
-    errEl.style.color = 'var(--interaction-primary)';
-    errEl.textContent = "Mot de passe mis à jour ✓";
-    document.getElementById('account_new_password').value = '';
   };
 
   sb.auth.onAuthStateChange((event, session) => {
