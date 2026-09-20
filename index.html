@@ -902,7 +902,10 @@
     wizardStep = step;
     window.scrollTo(0, 0);
     for (let s = 1; s <= 4; s++) {
-      document.getElementById('wizardStep' + s).style.display = (s === step) ? 'block' : 'none';
+      // L'étape 1 est en flex (les deux gros encarts se partagent l'écran restant) ;
+      // les autres restent en block, réglées via .style.display et non le CSS
+      // externe puisque le style inline l'emporterait de toute façon.
+      document.getElementById('wizardStep' + s).style.display = (s !== step) ? 'none' : (s === 1 ? 'flex' : 'block');
     }
 
     // Barres de progression (une par vraie étape : Infos / Ingrédients / Étapes)
