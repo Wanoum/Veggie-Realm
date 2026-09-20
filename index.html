@@ -486,6 +486,20 @@
     font-size: 18px;
     line-height: 1.6;
     color: var(--text-icon-primary);
+    cursor: pointer;
+  }
+  .step-row-edit-input {
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--text-icon-primary);
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border-strong);
+    padding: 0;
+    resize: none;
+    min-height: 1.6em;
   }
   .step-row-remove {
     background: none;
@@ -2241,6 +2255,41 @@
     container.querySelectorAll('.step-drag-handle').forEach(handle => {
       handle.addEventListener('touchstart', onStepDragStart, { passive: false });
       handle.addEventListener('mousedown', onStepDragStart);
+    });
+
+    container.querySelectorAll('.step-row-text').forEach(span => {
+      span.onclick = () => startEditingStep(Number(span.closest('.step-row').dataset.idx));
+    });
+  }
+
+  function startEditingStep(idx) {
+    const row = document.querySelector(`.step-row[data-idx="${idx}"]`);
+    const textSpan = row?.querySelector('.step-row-text');
+    if (!textSpan) return;
+
+    const textarea = document.createElement('textarea');
+    textarea.className = 'step-row-edit-input';
+    textarea.rows = 1;
+    textarea.value = stepRows[idx];
+    textSpan.replaceWith(textarea);
+    textarea.focus();
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+    let committed = false;
+    const commit = () => {
+      if (committed) return;
+      committed = true;
+      const val = textarea.value.trim();
+      if (val) stepRows[idx] = val;
+      renderStepsList();
+      validateWizardStep();
+    };
+    textarea.addEventListener('blur', commit);
+    textarea.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        textarea.blur();
+      }
     });
   }
 
