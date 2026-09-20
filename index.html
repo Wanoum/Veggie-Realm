@@ -1636,17 +1636,13 @@
         indicator.style.height = '50px';
         icon.className = 'bi bi-arrow-repeat';
         icon.style.animation = 'spin 0.6s linear infinite';
-        await Promise.all([loadRecipes(), loadMealPlan()]);
-        if (document.getElementById('planningView').style.display !== 'none') {
-          if (document.getElementById('planningCoursesPanel').style.display !== 'none') {
-            renderCoursesList();
-          } else {
-            renderPlanningRecipes();
-          }
-        }
-        icon.style.animation = '';
-        icon.className = 'bi bi-arrow-clockwise';
-        indicator.style.height = '0';
+        // Un simple re-fetch des données ne suffit pas : la page continue de
+        // faire tourner le code JS déjà chargé en mémoire, donc un correctif
+        // publié entre-temps ne s'applique jamais tant qu'on ne recharge pas
+        // vraiment la page. On rejoue exactement ce qui se passe quand on
+        // quitte et rouvre l'app (ce qui, lui, fonctionne) : un vrai reload,
+        // qui restaure ensuite l'écran courant via startApp().
+        location.reload();
       } else {
         indicator.style.height = '0';
       }
