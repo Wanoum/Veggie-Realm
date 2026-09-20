@@ -1609,13 +1609,24 @@
     return null;
   }
 
-  // Retire les puces/numérotation markdown ("* ", "- ", "• ", "1. ", "1) ")
-  // qu'un copier-coller depuis un site ou une note amène souvent avec lui.
+  // Retire les puces/numérotation/cases à cocher qu'un copier-coller depuis
+  // un site ou une appli de notes amène souvent avec lui : puces markdown
+  // ("* ", "- ", "• "), numérotation ("1. ", "1) "), cases à cocher texte
+  // ("[ ] ", "[x] ", format des listes de tâches Notes/Rappels) et symboles
+  // de case à cocher unicode ("☐", "☑", "✓"). Appliqué en boucle pour gérer
+  // les combinaisons ("- [ ] farine").
   function stripMarkdownListMarker(line) {
-    return line
-      .replace(/^\s*[-*•+]\s+/, '')
-      .replace(/^\s*\d+[.)]\s+/, '')
-      .trim();
+    let t = line;
+    let prev;
+    do {
+      prev = t;
+      t = t
+        .replace(/^\s*[-*•◦‣▪▸►○●]\s*/, '')
+        .replace(/^\s*\[[ xX]?\]\s*/, '')
+        .replace(/^\s*[☐☑☒✓✔]\s*/, '')
+        .replace(/^\s*\d+[.)]\s+/, '');
+    } while (t !== prev);
+    return t.trim();
   }
 
   function parseIngredientLine(line) {
