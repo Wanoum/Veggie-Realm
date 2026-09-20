@@ -356,6 +356,13 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 .course-rayon-count { color: var(--text-icon-secondary); }
 
 /* ---- Planning ---- */
+/* Le bouton de tri est aligné à gauche ici (contrairement à la liste de
+   courses, où il est à droite) : le menu doit s'ancrer à gauche lui aussi,
+   sinon son ancrage par défaut à droite le fait déborder de l'écran. */
+#planSortMenu {
+  left: 0;
+  right: auto;
+}
 .plan-summary {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
