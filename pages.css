@@ -202,7 +202,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   align-items: center;
   justify-content: center;
   gap: var(--gap-large);
-  padding: var(--padding-vertical-large) var(--padding-horizontal-default);
+  padding: 40px var(--padding-horizontal-default) var(--padding-vertical-large);
   background: var(--interaction-tertiary);
   border-bottom: 2px dashed var(--border-accent);
   border-radius: 0;

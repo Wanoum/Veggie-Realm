@@ -173,7 +173,7 @@
         <span class="field-input-suffix">°C</span>
       </div>
 
-      <textarea id="f_notes" class="field-input" style="min-height:var(--height-default);padding:var(--padding-vertical-control) var(--padding-horizontal-default);resize:vertical;background:var(--light-300);border:none;" placeholder="Tapez ici vos remarques, par exemple : Attention aux mélange des œufs avec le chocolat chaud !"></textarea>
+      <textarea id="f_notes" class="field-input" style="min-height:var(--height-default);padding:var(--padding-vertical-control) var(--padding-horizontal-default);resize:none;overflow-y:hidden;background:var(--light-300);border:none;" placeholder="Tapez ici vos remarques, par exemple : Attention aux mélange des œufs avec le chocolat chaud !" oninput="autoResizeTextarea(this)"></textarea>
     </div>
   </div>
 
@@ -935,7 +935,13 @@
     document.getElementById('formError').textContent = '';
 
     if (step === 3) renderIngRows();
+    if (step === 2) autoResizeTextarea(document.getElementById('f_notes'));
     validateWizardStep();
+  }
+
+  function autoResizeTextarea(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
   }
 
   function validateWizardStep() {
