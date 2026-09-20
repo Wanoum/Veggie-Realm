@@ -2773,7 +2773,8 @@
   }
 
   async function loadUserDefaultServings() {
-    const { data } = await sb.from('profiles').select('default_servings').eq('id', currentUser.id).maybeSingle();
+    const { data, error } = await sb.from('profiles').select('default_servings').eq('id', currentUser.id).maybeSingle();
+    if (error) { console.error('loadUserDefaultServings a échoué (droit de lecture manquant ?)', error); return; }
     userDefaultServings = data?.default_servings || 4;
   }
 
