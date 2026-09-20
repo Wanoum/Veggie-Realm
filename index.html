@@ -1064,10 +1064,10 @@
         <h1 style="margin-bottom:var(--space-section-gap);">${escapeHtml(r.title)}</h1>
 
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-section-gap);">
-          <span class="text-body">${isPieceMode(r) ? 'Quantité' : 'Portions'}</span>
+          <span class="text-body">${isPieceMode(r) ? 'Pièce(s)' : 'Portions'}</span>
           <div class="servings-stepper">
             <button class="servings-minus" onclick="changeServings(${i}, -1)"><i class="bi bi-dash"></i></button>
-            <span class="servings-value">${s}</span>
+            <span class="servings-value">${isPieceMode(r) ? '×' + s : s}</span>
             <button class="servings-plus" onclick="changeServings(${i}, 1)"><i class="bi bi-plus"></i></button>
           </div>
         </div>
@@ -2454,7 +2454,7 @@
           </div>
           <div class="servings-stepper">
             <button class="servings-minus" type="button" data-plan-recipe="${r.id}" data-delta="-1"><i class="bi bi-dash"></i></button>
-            <span class="servings-value" data-plan-count="${r.id}">${count}</span>
+            <span class="servings-value" data-plan-count="${r.id}">${isPieceMode(r) ? '×' + count : count}</span>
             <button class="servings-plus" type="button" data-plan-recipe="${r.id}" data-delta="1"><i class="bi bi-plus"></i></button>
           </div>
         </div>
