@@ -96,12 +96,6 @@
 </div>
 
 <div id="formView" style="display:none;padding-bottom:110px;">
-  <div id="wizardProgressBars" style="display:none;gap:6px;margin-bottom:16px;">
-    <div class="wizard-bar" data-bar="1"></div>
-    <div class="wizard-bar" data-bar="2"></div>
-    <div class="wizard-bar" data-bar="3"></div>
-  </div>
-
   <h1 id="formTitle" style="margin-bottom:var(--gap-vertical-section);">Nouvelle recette</h1>
 
   <!-- Étape 1 : source -->
@@ -127,7 +121,7 @@
 
   <!-- Étape 2 : informations -->
   <div id="wizardStep2" class="wizard-step" style="display:none;">
-    <div id="photoDropZone" class="form-photo-hero" style="position:relative;overflow:hidden;">
+    <div id="photoDropZone" class="form-photo-hero" style="position:relative;">
       <img id="photoPreview" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />
       <div id="photoPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:var(--gap-large);pointer-events:none;">
         <img src="src/create-new-recipe.png" alt="" />
@@ -154,7 +148,7 @@
       <div id="f_mealTypes" class="tag-filters" style="margin:0;"></div>
 
       <div style="display:flex;gap:8px;">
-        <input id="f_servings" class="field-input" type="number" value="4" style="flex:1;text-align:center;" />
+        <input id="f_servings" class="field-input" type="number" style="flex:1;text-align:center;" />
         <div id="f_servingModeWrap" style="flex:2;position:relative;">
           <button type="button" id="f_servingModeBtn" class="field-input" style="width:100%;display:flex;align-items:center;justify-content:space-between;" onclick="toggleServingModeMenu()">
             <span id="f_servingModeLabel">Portions</span>
@@ -179,7 +173,7 @@
         <span class="field-input-suffix">°C</span>
       </div>
 
-      <textarea id="f_notes" class="field-input" style="min-height:90px;resize:vertical;background:var(--light-300);border:none;" placeholder="Tapez ici vos remarques, par exemple : Attention aux mélange des œufs avec le chocolat chaud !"></textarea>
+      <textarea id="f_notes" class="field-input" style="min-height:var(--height-default);padding:var(--padding-vertical-control) var(--padding-horizontal-default);resize:vertical;background:var(--light-300);border:none;" placeholder="Tapez ici vos remarques, par exemple : Attention aux mélange des œufs avec le chocolat chaud !"></textarea>
     </div>
   </div>
 
@@ -931,18 +925,7 @@
       document.getElementById('wizardStep' + s).style.display = (s !== step) ? 'none' : (s === 1 ? 'flex' : 'block');
     }
 
-    // Barres de progression (une par vraie étape : Infos / Ingrédients / Étapes)
-    const progressBars = document.getElementById('wizardProgressBars');
-    if (step === 1) {
-      progressBars.style.display = 'none';
-      document.getElementById('formTitle').style.display = 'block';
-    } else {
-      progressBars.style.display = 'flex';
-      document.querySelectorAll('.wizard-bar').forEach(bar => {
-        bar.classList.toggle('active', Number(bar.dataset.bar) === (step - 1));
-      });
-      document.getElementById('formTitle').style.display = (step === 2) ? 'block' : 'none';
-    }
+    document.getElementById('formTitle').style.display = (step === 1) ? 'block' : 'none';
 
     document.getElementById('bottomNav').style.display = (step === 1) ? 'flex' : 'none';
     document.getElementById('wizardFooter').style.display = (step === 1) ? 'none' : 'flex';
@@ -2095,7 +2078,7 @@
     document.getElementById('photoUploadStatus').textContent = '';
     selectedMealTypes = [];
     renderMealTypeToggles();
-    document.getElementById('f_servings').value = userDefaultServings;
+    document.getElementById('f_servings').value = '';
     setFormServingMode('portion');
     document.getElementById('f_cook').value = '';
     document.getElementById('f_oven').value = '';

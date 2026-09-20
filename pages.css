@@ -183,7 +183,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
    (encart plein écran sans marge en haut, contenu avec son propre padding
    en dessous) — la marge négative annule le padding horizontal du body. */
 #wizardStep2 {
-  margin: 0 calc(-1 * var(--padding-horizontal-app));
+  margin: calc(-1 * (var(--padding-horizontal-app) + env(safe-area-inset-top))) calc(-1 * var(--padding-horizontal-app)) 0;
 }
 .form-photo-hero {
   width: 100%;
@@ -203,7 +203,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   display: flex;
   flex-direction: column;
   gap: var(--gap-vertical-section);
-  padding: 42px var(--padding-horizontal-app) var(--padding-vertical-large);
+  padding: 0 var(--padding-horizontal-app) var(--padding-vertical-large);
 }
 #f_title {
   width: 100%;
@@ -306,14 +306,6 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 }
 .steps-inline-input::placeholder { color: var(--text-icon-secondary); }
 .steps-inline-input:focus { outline: none; }
-.wizard-bar {
-  flex: 1;
-  height: 4px;
-  border-radius: var(--corner-radius-round);
-  background: var(--surface-lowest);
-}
-.wizard-bar.active { background: var(--interaction-primary); }
-
 /* Ancien composant de planning par jour, non utilisé par l'écran Planning
    actuel (qui fonctionne par compteur de repas) — laissé au cas où. */
 .day-row {
