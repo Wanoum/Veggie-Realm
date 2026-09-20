@@ -873,6 +873,7 @@
   let recipes = [];
   let recipesLoaded = false;
   let currentServings = {};
+  let userDefaultServings = 4;
 
   async function loadRecipes() {
     const { data, error } = await sb.from('recipes').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
@@ -2657,7 +2658,6 @@
 
   // ---- Authentification ----
   let currentUser = null;
-  let userDefaultServings = 4;
   let authMode = 'login'; // 'login' | 'signup'
 
   function showAuthView() {
