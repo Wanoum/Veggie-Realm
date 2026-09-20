@@ -106,6 +106,7 @@
 
   <!-- Étape 1 : source -->
   <div id="wizardStep1" class="wizard-step">
+    <h1>Nouvelle recette</h1>
     <p class="text-body-medium" style="margin:0 0 12px;">Importer une recette depuis un site web</p>
     <div style="display:flex;gap:8px;">
       <input id="import_url" class="field-input" style="flex:1;min-width:0;" placeholder="https://www.marmiton.org" oninput="updateImportButtonState()" />
@@ -221,9 +222,9 @@
 <div id="accountView" style="display:none;">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);">
     <h1 style="margin:0;">Compte</h1>
-    <button type="button" id="logoutBtn" class="icon-btn" style="border:1px solid var(--text-icon-error);color:var(--text-icon-error);"><i class="bi bi-box-arrow-right"></i></button>
+    <button type="button" id="logoutBtn" class="icon-btn" style="border:none;background:none;color:var(--text-icon-error);"><i class="bi bi-box-arrow-right"></i></button>
   </div>
-  <div style="max-width:340px;">
+  <div>
     <div class="settings-list">
       <div class="settings-row">
         <span>Email</span>
