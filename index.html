@@ -961,6 +961,7 @@
   let recipesLoaded = false;
   let currentServings = {};
   let userDefaultServings = 4;
+  let cookCounts = {}; // recipe_id -> nombre de fois où le cook mode a été mené jusqu'au bout
   let formServingMode = 'portion';
 
   async function loadRecipes() {
@@ -1051,7 +1052,7 @@
     }
     cardsEl.innerHTML = filteredIndices.map(i => {
       const r = recipes[i];
-      const totalTime = r.cook_time_minutes || 0;
+      const cookCount = cookCounts[r.id] || 0;
       return `
       <div class="card-v2" onclick="openRecipeDetail(${i})">
         <div class="card-v2-photo">
@@ -1065,7 +1066,7 @@
         </div>
         <div class="card-v2-content">
           <h3>${escapeHtml(r.title)}</h3>
-          ${totalTime > 0 ? `<p class="card-v2-sub">${totalTime} min</p>` : ''}
+          ${cookCount > 0 ? `<p class="card-v2-sub">${cookCountLabel(cookCount)}</p>` : ''}
         </div>
       </div>
     `;
@@ -1110,12 +1111,29 @@
     document.getElementById('f_servingsGroup').style.display = mode === 'piece' ? 'none' : 'block';
   }
 
-  // Journal d'engagement par recette (pas encore affiché) : deux signaux
-  // enregistrés séparément — ouverture de la fiche et complétion du cook
-  // mode — pour pouvoir décider plus tard, avec de la vraie donnée, ce qui
-  // définit "cuisiné" plutôt que de figer une formule maintenant.
+  // Journal d'engagement par recette : deux signaux enregistrés séparément —
+  // ouverture de la fiche et complétion du cook mode. Seul le second sert
+  // pour l'instant à l'estimation "cuisiné" affichée sur l'accueil (signal
+  // fort et intentionnel) ; le premier reste en réserve pour plus tard.
   async function logRecipeEngagement(recipeId, eventType) {
-    try { await sb.from('recipe_engagement_events').insert({ recipe_id: recipeId, user_id: currentUser.id, event_type: eventType }); } catch (e) { /* best-effort, ne bloque jamais l'UI */ }
+    try {
+      await sb.from('recipe_engagement_events').insert({ recipe_id: recipeId, user_id: currentUser.id, event_type: eventType });
+      if (eventType === 'cook_mode_completed') cookCounts[recipeId] = (cookCounts[recipeId] || 0) + 1;
+    } catch (e) { /* best-effort, ne bloque jamais l'UI */ }
+  }
+
+  async function loadCookCounts() {
+    const { data, error } = await sb.from('recipe_engagement_events').select('recipe_id').eq('event_type', 'cook_mode_completed');
+    if (error) { console.error('loadCookCounts', error); return; }
+    cookCounts = {};
+    (data || []).forEach(row => { cookCounts[row.recipe_id] = (cookCounts[row.recipe_id] || 0) + 1; });
+  }
+
+  // "10+" plutôt que "10" : le signal ne capte que les recettes cuisinées
+  // via le cook mode jusqu'à la dernière étape, donc c'est un plancher, pas
+  // un compte exact.
+  function cookCountLabel(n) {
+    return n === 1 ? 'Cuisiné une fois' : `Cuisiné ${n}+ fois`;
   }
 
   // Point d'entrée pour une VRAIE navigation vers une fiche recette (clic
@@ -3123,7 +3141,8 @@
     else showHome();
 
     loadMealPlan();
-    await Promise.all([loadRecipes(), loadUserDefaultServings()]);
+    await Promise.all([loadRecipes(), loadUserDefaultServings(), loadCookCounts()]);
+    renderList();
     ensureProfile();
 
     if (lastView === 'detail' && lastDetailId) {
