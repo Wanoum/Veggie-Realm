@@ -971,6 +971,7 @@
   }
 
   let currentDetailIndex = null;
+  let detailReturnView = 'home'; // où revenir depuis la fiche recette : 'home' ou 'planning'
 
   // Certaines recettes (gâteaux, tartes, pains...) se préparent en une seule
   // fois quelle que soit la taille du foyer : leur champ serving_mode vaut
@@ -999,9 +1000,10 @@
     document.getElementById('f_servingsGroup').style.display = mode === 'piece' ? 'none' : 'block';
   }
 
-  function showDetail(i) {
+  function showDetail(i, returnView) {
     window.scrollTo(0, 0);
     currentDetailIndex = i;
+    detailReturnView = returnView || 'home';
     const r = recipes[i];
     const savedServings = loadRecipeServings()[r.id];
     const defaultServings = isPieceMode(r) ? 1 : userDefaultServings;
@@ -1161,10 +1163,15 @@
     detailEl.style.zIndex = '';
     document.getElementById('edgeSwipeScrim').style.display = 'none';
     document.getElementById('edgeSwipeScrim').style.opacity = '';
-    document.getElementById('listView').style.display = 'block';
-    document.getElementById('bottomNav').style.display = 'flex';
     document.body.style.background = '';
-    sessionStorage.setItem('lastView', 'home');
+    if (detailReturnView === 'planning') {
+      showPlanning();
+    } else {
+      document.getElementById('listView').style.display = 'block';
+      document.getElementById('bottomNav').style.display = 'flex';
+      sessionStorage.setItem('lastView', 'home');
+    }
+    detailReturnView = 'home';
   }
 
   // ---- Mode cuisine plein écran ----
@@ -2436,12 +2443,12 @@
 
     // Liste des recettes avec stepper
     const listEl = document.getElementById('planningRecipeList');
-    listEl.innerHTML = recipes.map(r => {
+    listEl.innerHTML = recipes.map((r, i) => {
       const count = mealPlan[r.id]?.count || 0;
       return `
         <div class="plan-recipe-row">
           <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:72px;height:72px;border-radius:12px;overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+            <div style="width:72px;height:72px;border-radius:12px;overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;" onclick="showDetail(${i}, 'planning')">
               ${safeUrl(r.photo_url)
                 ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
                 : '<i class="bi bi-image" style="font-size:16px;color:var(--text-icon-secondary);"></i>'}
@@ -2504,8 +2511,8 @@
 
   const COURSES_SORT_KEY = 'veggieRealm.coursesSortMode';
   const COURSES_CHECKED_KEY = 'veggieRealm.coursesChecked';
-  let coursesSortMode = 'alpha'; // 'alpha' | 'rayon' | 'qty'
-  try { coursesSortMode = localStorage.getItem(COURSES_SORT_KEY) || 'alpha'; } catch { /* ignoré */ }
+  let coursesSortMode = 'rayon'; // 'alpha' | 'rayon' | 'qty'
+  try { coursesSortMode = localStorage.getItem(COURSES_SORT_KEY) || 'rayon'; } catch { /* ignoré */ }
   let collapsedRayons = new Set();
 
   function loadCheckedCourses() {
