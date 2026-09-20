@@ -169,10 +169,13 @@
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
-  background: var(--surface-highest);
-  border: 1px solid var(--border-divider);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: var(--interaction-secondary);
   border-radius: var(--corner-radius-large);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: var(--padding-vertical-menu) var(--padding-horizontal-menu);
+  box-shadow: 0px 1px 3px 0px rgba(0,0,0,0.30), 0px 4px 8px 3px rgba(0,0,0,0.15);
   z-index: 200;
   min-width: 200px;
   overflow: hidden;

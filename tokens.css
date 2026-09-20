@@ -70,8 +70,10 @@
   --padding-horizontal-contained: 0.75rem;
   --padding-horizontal-app: 1rem;
   --padding-horizontal-default: 1rem;
+  --padding-horizontal-menu: 0.25rem;
   --padding-vertical-control: 0.8438rem;
   --padding-vertical-large: 1rem;
+  --padding-vertical-menu: 0.25rem;
 }
 
 /* ---- Text styles ----
