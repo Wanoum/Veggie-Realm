@@ -2091,16 +2091,16 @@
     `).join('');
 
     // Liste des recettes avec stepper
-    const planSortLabels = { alpha: 'Alphabétique', planned: 'Repas planifiés d\'abord' };
+    const planSortLabels = { alpha: 'Alphabétique', frequent: 'Fréquemment cuisiné' };
     document.getElementById('planSortLabel').textContent = planSortLabels[planSortMode];
 
     let sortedRecipes = planMealTypeFilter
       ? recipes.filter(r => (r.tags || []).includes(planMealTypeFilter))
       : [...recipes];
-    if (planSortMode === 'planned') {
+    if (planSortMode === 'frequent') {
       sortedRecipes.sort((a, b) => {
-        const countA = mealPlan[a.id]?.count || 0;
-        const countB = mealPlan[b.id]?.count || 0;
+        const countA = cookCounts[a.id] || 0;
+        const countB = cookCounts[b.id] || 0;
         if (countA !== countB) return countB - countA;
         return a.title.localeCompare(b.title, 'fr');
       });
@@ -2229,8 +2229,11 @@
   let collapsedRayons = new Set();
 
   const PLAN_SORT_KEY = 'veggieRealm.planSortMode';
-  let planSortMode = 'alpha'; // 'alpha' | 'planned'
-  try { planSortMode = localStorage.getItem(PLAN_SORT_KEY) || 'alpha'; } catch { /* ignoré */ }
+  let planSortMode = 'alpha'; // 'alpha' | 'frequent'
+  try {
+    const stored = localStorage.getItem(PLAN_SORT_KEY);
+    if (stored === 'alpha' || stored === 'frequent') planSortMode = stored;
+  } catch { /* ignoré */ }
 
   // Filtre par type de repas : cliquer sur un encart (Petit-déj/Déjeuner/...)
   // ne garde que les recettes qui portent ce tag ; recliquer dessus l'enlève.
