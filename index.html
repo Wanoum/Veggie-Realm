@@ -188,7 +188,7 @@
   <div id="wizardStep4" class="wizard-step" style="display:none;">
     <h1 style="margin-bottom:var(--space-section-gap);">Étapes</h1>
     <div id="stepsListContainer"></div>
-    <textarea id="stepEntryInput" class="steps-inline-input" rows="1" placeholder="Tape une étape, puis appuie sur Entrée..."></textarea>
+    <textarea id="stepEntryInput" class="steps-inline-input" rows="1" placeholder="Décrire l'étape à effectuer"></textarea>
   </div>
 
   <p id="formError" style="color:var(--status-error);font-size:14px;"></p>
@@ -1694,14 +1694,28 @@
     });
   }
 
+  // Seule la dernière ligne (pas encore validée) reste un vrai champ de
+  // saisie ; les lignes déjà remplies s'affichent en texte simple (comme sur
+  // la fiche recette), avec un clic pour repasser en édition — même logique
+  // que la liste d'étapes.
   function renderIngRows() {
-    document.getElementById('f_ingredients').innerHTML = ingRows.map((_, idx) => `
-      <div class="row-item" style="position:relative;">
-        <input class="qty-input" placeholder="Qté (ex: 200g)" data-idx="${idx}" data-field="qtyUnitText" value="${escapeHtml(ingRows[idx].qtyUnitText)}" />
-        <input class="ing-name-input" placeholder="Nom de l'ingrédient" autocomplete="off" data-idx="${idx}" data-field="name" value="${escapeHtml(ingRows[idx].name)}" />
-        <button type="button" class="remove-row" data-remove-ing="${idx}">✕</button>
-      </div>`
-    ).join('');
+    document.getElementById('f_ingredients').innerHTML = ingRows.map((row, idx) => {
+      const isLast = idx === ingRows.length - 1;
+      if (isLast) {
+        return `
+      <div class="row-item" data-idx="${idx}">
+        <input class="qty-input" placeholder="Quantité" data-idx="${idx}" data-field="qtyUnitText" value="${escapeHtml(row.qtyUnitText)}" />
+        <input class="ing-name-input" placeholder="Ingrédient" autocomplete="off" data-idx="${idx}" data-field="name" value="${escapeHtml(row.name)}" />
+      </div>`;
+      }
+      return `
+      <div class="row-item" data-idx="${idx}">
+        <span class="ing-display-qty" data-edit-ing="${idx}">${escapeHtml(row.qtyUnitText)}</span>
+        <span class="ing-display-name" data-edit-ing="${idx}">${escapeHtml(row.name)}</span>
+        <button type="button" class="remove-row" data-remove-ing="${idx}"><i class="bi bi-x-lg"></i></button>
+      </div>`;
+    }).join('');
+
     document.querySelectorAll('#f_ingredients input').forEach(inp => {
       const handler = (e) => {
         const idx = Number(e.target.dataset.idx), field = e.target.dataset.field;
@@ -1728,14 +1742,47 @@
       inp.addEventListener('focus', () => openAutocomplete(inp, Number(inp.dataset.idx)));
       inp.addEventListener('blur', () => setTimeout(closeAutocomplete, 150));
     });
+    document.querySelectorAll('[data-edit-ing]').forEach(el => {
+      el.onclick = () => startEditingIngredient(Number(el.dataset.editIng));
+    });
     document.querySelectorAll('[data-remove-ing]').forEach(btn => {
       btn.onclick = (e) => {
-        ingRows.splice(Number(e.target.dataset.removeIng), 1);
+        ingRows.splice(Number(e.currentTarget.dataset.removeIng), 1);
         if (ingRows.length === 0) ingRows = [{ qtyUnitText: '', name: '' }];
         renderIngRows();
         validateWizardStep();
       };
     });
+  }
+
+  function startEditingIngredient(idx) {
+    const row = document.querySelector(`#f_ingredients .row-item[data-idx="${idx}"]`);
+    if (!row || row.querySelector('input')) return; // déjà en édition (dernière ligne)
+
+    const current = ingRows[idx];
+    row.innerHTML = `
+      <input class="qty-input" placeholder="Quantité" value="${escapeHtml(current.qtyUnitText)}" />
+      <input class="ing-name-input" placeholder="Ingrédient" autocomplete="off" value="${escapeHtml(current.name)}" />
+    `;
+    const qtyInput = row.querySelector('.qty-input');
+    const nameInput = row.querySelector('.ing-name-input');
+
+    const commit = () => {
+      setTimeout(() => {
+        if (row.contains(document.activeElement)) return; // focus encore dans la ligne (tab entre les 2 champs)
+        ingRows[idx].qtyUnitText = qtyInput.value;
+        ingRows[idx].name = nameInput.value.trim() ? canonicalizeIngredientName(nameInput.value) : '';
+        if (!ingRows[idx].name && idx !== ingRows.length - 1) ingRows.splice(idx, 1);
+        renderIngRows();
+        validateWizardStep();
+      }, 150);
+    };
+    qtyInput.addEventListener('blur', commit);
+    nameInput.addEventListener('blur', commit);
+    nameInput.addEventListener('input', () => openAutocomplete(nameInput, idx));
+    nameInput.addEventListener('focus', () => openAutocomplete(nameInput, idx));
+    nameInput.focus();
+    nameInput.setSelectionRange(nameInput.value.length, nameInput.value.length);
   }
 
   // ---- Étapes : liste réorganisable + saisie intégrée ----
@@ -1750,7 +1797,7 @@
         <span class="step-drag-handle" data-drag-idx="${idx}"><i class="bi bi-grip-vertical"></i></span>
         <span class="step-row-number">${idx + 1}</span>
         <span class="step-row-text">${escapeHtml(text)}</span>
-        <button type="button" class="step-row-remove" data-remove-step="${idx}"><i class="bi bi-trash"></i></button>
+        <button type="button" class="step-row-remove" data-remove-step="${idx}"><i class="bi bi-x-lg"></i></button>
       </div>
     `).join('');
 

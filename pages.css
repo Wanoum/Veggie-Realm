@@ -95,26 +95,40 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 /* ---- Formulaire d'ajout / édition de recette ---- */
 .row-item {
   display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 8px;
+  align-items: baseline;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border-divider);
 }
-.row-item input, .row-item select {
-  padding: 10px 12px;
-  border: 1px solid var(--border-divider);
-  border-radius: 12px;
-  font-size: 14px;
-  background: var(--surface-highest);
+.row-item input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  color: var(--text-icon-primary);
 }
-.row-item input { flex: 2; min-width: 0; }
-.row-item .qty-input { flex: 1; }
-.row-item .unit-input { flex: 1.3; }
+.row-item input:focus { outline: none; }
+.row-item input::placeholder { color: var(--text-icon-secondary); }
+.row-item .qty-input { flex: 0 0 90px; }
+.row-item .ing-display-qty, .row-item .ing-display-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  color: var(--text-icon-primary);
+  cursor: pointer;
+}
+.row-item .ing-display-qty { flex: 0 0 90px; }
+.row-item .ing-display-name { flex: 1; min-width: 0; }
 .remove-row {
   background: none;
   border: none;
   color: var(--status-error);
   font-size: 18px;
   padding: 4px 8px;
+  display: flex;
+  align-items: center;
 }
 .step-item textarea {
   width: 100%;
@@ -226,7 +240,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 .step-row-remove {
   background: none;
   border: none;
-  color: var(--text-icon-secondary);
+  color: var(--status-error);
   font-size: 18px;
   width: 36px;
   height: 36px;
