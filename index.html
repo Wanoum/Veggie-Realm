@@ -111,7 +111,6 @@
     font-weight: 700;
     color: white;
   }
-  .card-v2-sub { margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: rgba(255,255,255,0.85); }
   .meta-pill {
     font-size: 14px;
     padding: 3px 9px;
@@ -1066,7 +1065,7 @@
         </div>
         <div class="card-v2-content">
           <h3>${escapeHtml(r.title)}</h3>
-          ${cookCount > 0 ? `<p class="card-v2-sub">${cookCountLabel(cookCount)}</p>` : ''}
+          ${cookCount > 0 ? `<span class="tag" style="font-family:'IBM Plex Mono', monospace;">${cookCountLabel(cookCount)}</span>` : ''}
         </div>
       </div>
     `;
