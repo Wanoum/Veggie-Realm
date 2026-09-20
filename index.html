@@ -219,12 +219,16 @@
 </nav>
 
 <div id="accountView" style="display:none;">
-  <h1>Compte</h1>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);">
+    <h1 style="margin:0;">Compte</h1>
+    <button type="button" id="logoutBtn" class="icon-btn" style="border:1px solid var(--text-icon-error);color:var(--text-icon-error);"><i class="bi bi-box-arrow-right"></i></button>
+  </div>
   <div style="max-width:340px;">
     <div class="settings-list">
       <div class="settings-row">
         <span>Email</span>
         <span class="settings-row-value" id="account_email_value"></span>
+        <i class="bi bi-chevron-right"></i>
       </div>
       <button type="button" class="settings-row" onclick="openAccountEdit('display_name')">
         <span>Pseudo</span>
@@ -241,7 +245,6 @@
         <i class="bi bi-chevron-right"></i>
       </button>
     </div>
-    <button type="button" id="logoutBtn" class="primary-btn" style="background:var(--status-error);margin-top:0;">Se déconnecter</button>
   </div>
 </div>
 

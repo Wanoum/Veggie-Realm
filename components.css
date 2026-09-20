@@ -248,7 +248,12 @@
 }
 
 /* ---- Liste "réglages" (façon iOS Settings) ---- */
-.settings-list { margin-bottom: var(--gap-vertical-section); }
+.settings-list {
+  margin-bottom: var(--gap-vertical-section);
+  background: var(--surface-high);
+  border-radius: var(--corner-radius-xlarge);
+  padding: 4px var(--padding-horizontal-default);
+}
 .settings-row {
   width: 100%;
   display: flex;
