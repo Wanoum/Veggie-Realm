@@ -202,6 +202,50 @@
   background: var(--surface-highest);
   color: var(--text-icon-primary);
 }
+/* Champ combiné icône + valeur + unité (ex: "🔥 Cuisson ... min"), même
+   boîte que .field-input mais en ligne avec une icône et un suffixe. */
+.field-input-icon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 56px;
+  padding: 0 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface-highest);
+  margin-bottom: 12px;
+}
+.field-input-icon i { font-size: 20px; color: var(--text-icon-secondary); flex-shrink: 0; }
+.field-input-icon input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  color: var(--text-icon-primary);
+  padding: 0;
+}
+.field-input-icon input:focus { outline: none; }
+.field-input-icon input::placeholder { color: var(--text-icon-secondary); }
+.field-input-icon .field-input-suffix { color: var(--text-icon-secondary); font-size: 16px; flex-shrink: 0; }
+/* Pastille ronde pour un type de repas (fiche d'ajout de recette) : hug,
+   pas d'icône, contrairement au filter-chip vertical utilisé ailleurs. */
+.meal-type-chip {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: none;
+  background: var(--interaction-primary-pale);
+  color: var(--text-icon-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+}
+.meal-type-chip.active {
+  background: var(--interaction-primary);
+  color: var(--text-icon-on-primary);
+  font-weight: 500;
+}
 
 /* ---- Liste "réglages" (façon iOS Settings) ---- */
 .settings-list { margin-bottom: var(--space-section-gap); }

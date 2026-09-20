@@ -126,50 +126,55 @@
 
   <!-- Étape 2 : informations -->
   <div id="wizardStep2" class="wizard-step" style="display:none;">
-    <label class="field-label">Titre</label>
-    <input id="f_title" class="field-input" placeholder="Ex: Gâteau au yaourt" oninput="validateWizardStep()" />
+    <div id="photoDropZone" class="wizard-source-tile" style="min-height:220px;flex:none;position:relative;overflow:hidden;">
+      <img id="photoPreview" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />
+      <div id="photoPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:16px;pointer-events:none;">
+        <i class="bi bi-journal-richtext" style="font-size:64px;"></i>
+        <span>Ajouter une photo</span>
+      </div>
+      <button type="button" id="removePhotoBtn" class="icon-btn" style="display:none;position:absolute;top:12px;left:12px;z-index:2;"><i class="bi bi-trash icon"></i></button>
+      <button type="button" class="icon-btn" style="position:absolute;top:12px;right:12px;background:white;border:none;z-index:2;" onclick="abandonRecipeForm(event)"><i class="bi bi-x-lg icon"></i></button>
 
-    <label class="field-label">Photo</label>
-    <div id="photoPreviewWrap" style="display:none;margin-bottom:8px;position:relative;">
-      <img id="photoPreview" style="width:100%;height:160px;object-fit:cover;border-radius:12px;" />
-      <button type="button" id="removePhotoBtn" class="icon-btn" style="position:absolute;top:8px;right:8px;"><i class="bi bi-trash icon"></i></button>
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:8px;">
-      <button type="button" id="choosePhotoBtn" class="secondary-btn" style="margin-top:0;flex:1;"><i class="bi bi-images"></i> Galerie</button>
-      <button type="button" id="takePhotoBtn" class="secondary-btn" style="margin-top:0;flex:1;"><i class="bi bi-camera"></i> Appareil photo</button>
+      <div id="photoMenu" class="course-sort-menu photo-menu" style="display:none;">
+        <button type="button" class="course-sort-menu-item text-body" data-photo-action="gallery">Photothèque</button>
+        <button type="button" class="course-sort-menu-item text-body" data-photo-action="camera">Prendre une photo</button>
+        <button type="button" class="course-sort-menu-item text-body" data-photo-action="file">Choisir le fichier</button>
+        <button type="button" class="course-sort-menu-item text-body" data-photo-action="paste">Coller depuis le presse-papiers</button>
+      </div>
     </div>
     <input type="file" id="photoFileInput" accept="image/*" style="display:none;" />
     <input type="file" id="photoCameraInput" accept="image/*" capture="environment" style="display:none;" />
-    <input id="f_photo" class="field-input" placeholder="ou colle un lien URL..." style="margin-bottom:4px;" />
-    <p id="photoUploadStatus" style="font-size:12px;color:var(--text-icon-secondary);margin:0;"></p>
+    <input id="f_photo" type="hidden" />
+    <p id="photoUploadStatus" style="font-size:12px;color:var(--text-icon-secondary);margin:8px 0 20px;min-height:1em;"></p>
 
-    <label class="field-label">Type de repas</label>
-    <div id="f_mealTypes" class="tag-filters" style="margin-bottom:4px;"></div>
+    <input id="f_title" class="serif" style="width:100%;border:none;background:none;padding:0;font-size:48px;line-height:100%;color:var(--text-icon-primary);margin-bottom:var(--space-section-gap);" placeholder="Titre de la recette" oninput="validateWizardStep()" />
 
-    <label class="field-label">Portionnement</label>
-    <div class="subtabs">
-      <button type="button" id="f_servingModePortion" class="subtab-btn active" onclick="setFormServingMode('portion')">Portions</button>
-      <button type="button" id="f_servingModePiece" class="subtab-btn" onclick="setFormServingMode('piece')">À la pièce</button>
-    </div>
+    <div id="f_mealTypes" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;"></div>
 
-    <div id="f_servingsGroup">
-      <label class="field-label">Portions de référence</label>
-      <input id="f_servings" class="field-input" type="number" value="4" />
-    </div>
-
-    <div style="display:flex; gap:10px;">
-      <div style="flex:1;">
-        <label class="field-label">Cuisson (min)</label>
-        <input id="f_cook" class="field-input" type="number" />
-      </div>
-      <div style="flex:1;">
-        <label class="field-label">Four (°C)</label>
-        <input id="f_oven" class="field-input" type="number" />
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <input id="f_servings" class="field-input" type="number" value="4" style="flex:1;text-align:center;" />
+      <div id="f_servingModeWrap" style="flex:2;position:relative;">
+        <select id="f_servingModeSelect" class="field-input" style="width:100%;appearance:none;-webkit-appearance:none;" onchange="setFormServingMode(this.value)">
+          <option value="portion">Portions</option>
+          <option value="piece">À la pièce</option>
+        </select>
+        <i class="bi bi-chevron-down" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-icon-primary);"></i>
       </div>
     </div>
 
-    <label class="field-label">Note (optionnel)</label>
-    <textarea id="f_notes" class="field-input" style="min-height:90px;resize:vertical;" placeholder="Ex: Attention aux oeufs avec le chocolat chaud !"></textarea>
+    <div class="field-input-icon">
+      <i class="bi bi-fire"></i>
+      <input id="f_cook" type="number" placeholder="Cuisson" />
+      <span class="field-input-suffix">min</span>
+    </div>
+
+    <div class="field-input-icon">
+      <i class="bi bi-thermometer-half"></i>
+      <input id="f_oven" type="number" placeholder="Température" />
+      <span class="field-input-suffix">°C</span>
+    </div>
+
+    <textarea id="f_notes" class="field-input" style="min-height:90px;resize:vertical;background:var(--light-300);border:none;margin-bottom:0;" placeholder="Tapez ici vos remarques, par exemple : Attention aux mélange des œufs avec le chocolat chaud !"></textarea>
   </div>
 
   <!-- Étape 3 : ingrédients -->
@@ -485,9 +490,9 @@
 
   function setFormServingMode(mode) {
     formServingMode = mode;
-    document.getElementById('f_servingModePortion').classList.toggle('active', mode === 'portion');
-    document.getElementById('f_servingModePiece').classList.toggle('active', mode === 'piece');
-    document.getElementById('f_servingsGroup').style.display = mode === 'piece' ? 'none' : 'block';
+    document.getElementById('f_servingModeSelect').value = mode;
+    document.getElementById('f_servings').style.display = mode === 'piece' ? 'none' : 'block';
+    document.getElementById('f_servingModeWrap').style.flex = mode === 'piece' ? '1' : '2';
   }
 
   // Journal d'engagement par recette : deux signaux enregistrés séparément —
@@ -1438,7 +1443,7 @@
 
   function renderMealTypeToggles() {
     document.getElementById('f_mealTypes').innerHTML = MEAL_TYPES.map(t => `
-      <button type="button" class="filter-chip filter-chip-vertical ${selectedMealTypes.includes(t) ? 'active' : ''}" data-meal-type="${t}"><i class="bi ${MEAL_TYPE_ICONS[t]}" style="font-size:24px;"></i>${t}</button>
+      <button type="button" class="meal-type-chip ${selectedMealTypes.includes(t) ? 'active' : ''}" data-meal-type="${t}">${escapeHtml(t === 'Petit-déj' ? "Petit-déj'" : t)}</button>
     `).join('');
     document.querySelectorAll('[data-meal-type]').forEach(btn => {
       btn.onclick = () => {
@@ -1864,13 +1869,19 @@
   }
 
   function updatePhotoPreview(url) {
-    const wrap = document.getElementById('photoPreviewWrap');
     const img = document.getElementById('photoPreview');
+    const placeholder = document.getElementById('photoPlaceholder');
+    const removeBtn = document.getElementById('removePhotoBtn');
     if (url) {
       img.src = url;
-      wrap.style.display = 'block';
+      img.style.display = 'block';
+      placeholder.style.display = 'none';
+      removeBtn.style.display = 'flex';
     } else {
-      wrap.style.display = 'none';
+      img.style.display = 'none';
+      img.src = '';
+      placeholder.style.display = 'flex';
+      removeBtn.style.display = 'none';
     }
   }
 
@@ -1935,16 +1946,60 @@
     statusEl.textContent = "Photo ajoutée ✓";
   }
 
-  document.getElementById('choosePhotoBtn').onclick = () => document.getElementById('photoFileInput').click();
-  document.getElementById('takePhotoBtn').onclick = () => document.getElementById('photoCameraInput').click();
+  // Menu "Ajouter une photo" : Photothèque et Choisir le fichier utilisent
+  // toutes deux un simple <input type=file> sans attribut capture — il n'y a
+  // pas de moyen fiable multi-navigateur de forcer l'un ou l'autre écran
+  // (iOS choisit lui-même quoi proposer), donc les deux options y mènent.
   document.getElementById('photoFileInput').onchange = (e) => handlePhotoFile(e.target.files[0]);
   document.getElementById('photoCameraInput').onchange = (e) => handlePhotoFile(e.target.files[0]);
-  document.getElementById('f_photo').addEventListener('input', (e) => {
-    document.getElementById('photoUploadStatus').textContent = '';
-    updatePhotoPreview(e.target.value.trim());
+
+  document.getElementById('photoDropZone').addEventListener('click', (e) => {
+    if (e.target.closest('#removePhotoBtn')) return;
+    const menu = document.getElementById('photoMenu');
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  });
+  document.querySelectorAll('[data-photo-action]').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      document.getElementById('photoMenu').style.display = 'none';
+      const action = btn.dataset.photoAction;
+      if (action === 'gallery' || action === 'file') document.getElementById('photoFileInput').click();
+      else if (action === 'camera') document.getElementById('photoCameraInput').click();
+      else if (action === 'paste') pastePhotoFromClipboard();
+    };
+  });
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('photoMenu');
+    if (menu && menu.style.display !== 'none' && !e.target.closest('#photoDropZone')) menu.style.display = 'none';
   });
 
-  document.getElementById('removePhotoBtn').onclick = async () => {
+  async function pastePhotoFromClipboard() {
+    const statusEl = document.getElementById('photoUploadStatus');
+    try {
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        const imageType = item.types.find(t => t.startsWith('image/'));
+        if (imageType) {
+          const blob = await item.getType(imageType);
+          await handlePhotoFile(new File([blob], 'presse-papiers.jpg', { type: imageType }));
+          return;
+        }
+      }
+      statusEl.textContent = "Aucune image trouvée dans le presse-papiers.";
+    } catch (e) {
+      statusEl.textContent = "Impossible de lire le presse-papiers (autorisation refusée ou indisponible sur ce navigateur).";
+    }
+  }
+
+  function abandonRecipeForm(e) {
+    e.stopPropagation();
+    discardAbandonedPhoto();
+    resetForm();
+    showHome();
+  }
+
+  document.getElementById('removePhotoBtn').onclick = async (e) => {
+    e.stopPropagation();
     if (currentSessionUploadPath) {
       // Photo uploadée cette session, jamais enregistrée : suppression immédiate sûre.
       await sb.storage.from('recipe-photos').remove([currentSessionUploadPath]);

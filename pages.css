@@ -155,6 +155,17 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 }
 .wizard-source-tile:last-child { margin-bottom: 0; }
 .wizard-source-tile i { font-size: 96px; }
+
+/* Menu "Ajouter une photo" (étape Informations) : variante du menu de tri
+   partagé, ancré sous l'encart photo plutôt qu'à droite d'un bouton. */
+.photo-menu {
+  left: 0;
+  right: 0;
+  top: calc(100% - 16px);
+  min-width: 0;
+  background: var(--interaction-secondary);
+  border: none;
+}
 .step-row {
   display: flex;
   align-items: center;
