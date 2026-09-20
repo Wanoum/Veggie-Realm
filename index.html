@@ -148,15 +148,15 @@
       <div id="f_mealTypes" class="tag-filters" style="margin:0;"></div>
 
       <div style="display:flex;gap:8px;">
-        <input id="f_servings" class="field-input" type="number" style="flex:1;text-align:center;" />
+        <input id="f_servings" class="field-input" type="number" placeholder="Quantité" style="flex:1;text-align:center;" />
         <div id="f_servingModeWrap" style="flex:2;position:relative;">
           <button type="button" id="f_servingModeBtn" class="field-input" style="width:100%;display:flex;align-items:center;justify-content:space-between;" onclick="toggleServingModeMenu()">
             <span id="f_servingModeLabel">Portions</span>
             <i class="bi bi-chevron-down"></i>
           </button>
           <div id="f_servingModeMenu" class="course-sort-menu serving-mode-menu" style="display:none;">
-            <button type="button" class="course-sort-menu-item text-body active" data-serving-mode="portion">Portions</button>
-            <button type="button" class="course-sort-menu-item text-body" data-serving-mode="piece">À la pièce</button>
+            <button type="button" class="course-sort-menu-item text-body active" data-serving-mode="portion"><span>Portions</span><i class="bi bi-check-lg course-sort-menu-check"></i></button>
+            <button type="button" class="course-sort-menu-item text-body" data-serving-mode="piece"><span>À la pièce</span><i class="bi bi-check-lg course-sort-menu-check"></i></button>
           </div>
         </div>
       </div>
@@ -2252,7 +2252,7 @@
     }).join('');
 
     document.getElementById('planSortMenu').innerHTML = Object.entries(planSortLabels).map(([mode, label]) => `
-      <button type="button" class="course-sort-menu-item text-body ${planSortMode === mode ? 'active' : ''}" data-plan-sort-mode="${mode}">${label}</button>
+      <button type="button" class="course-sort-menu-item text-body ${planSortMode === mode ? 'active' : ''}" data-plan-sort-mode="${mode}"><span>${label}</span><i class="bi bi-check-lg course-sort-menu-check"></i></button>
     `).join('');
 
     const planSortMenu = document.getElementById('planSortMenu');
@@ -2467,7 +2467,7 @@
         </button>
         <div class="course-sort-menu" id="courseSortMenu" style="display:none;">
           ${Object.entries(sortLabels).map(([mode, label]) => `
-            <button type="button" class="course-sort-menu-item text-body ${coursesSortMode === mode ? 'active' : ''}" data-sort-mode="${mode}">${label}</button>
+            <button type="button" class="course-sort-menu-item text-body ${coursesSortMode === mode ? 'active' : ''}" data-sort-mode="${mode}"><span>${label}</span><i class="bi bi-check-lg course-sort-menu-check"></i></button>
           `).join('')}
         </div>
       </div>

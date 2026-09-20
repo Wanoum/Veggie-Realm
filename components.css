@@ -182,17 +182,25 @@
 }
 .course-sort-menu-item {
   width: 100%;
+  min-height: 40px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
+  justify-content: space-between;
+  gap: var(--gap-default);
+  padding: var(--padding-vertical-list-item) var(--padding-horizontal-contained);
   background: none;
   border: none;
   color: var(--text-icon-default);
   text-align: left;
 }
+.course-sort-menu-item .course-sort-menu-check { display: none; color: var(--text-icon-default); }
 .course-sort-menu-item:hover { background: var(--surface-low); }
-.course-sort-menu-item.active { color: var(--text-icon-accent); font-weight: 600; }
+.course-sort-menu-item.active {
+  background: var(--surface-highest);
+  color: var(--text-icon-default);
+  font-weight: 600;
+}
+.course-sort-menu-item.active .course-sort-menu-check { display: inline-flex; }
 
 /* ---- Champs de formulaire ---- */
 .field-label { display:block; font-size:14px; color:var(--text-icon-secondary); margin:14px 0 4px; }

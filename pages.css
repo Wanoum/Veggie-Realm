@@ -204,7 +204,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   gap: var(--gap-large);
   padding: var(--padding-vertical-large) var(--padding-horizontal-default);
   background: var(--interaction-tertiary);
-  border: 2px dashed var(--border-accent);
+  border-bottom: 2px dashed var(--border-accent);
   border-radius: 0;
 }
 .form-photo-hero img { width: 80px; height: 80px; }
