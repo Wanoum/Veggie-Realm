@@ -127,14 +127,13 @@
 
   <!-- Étape 2 : informations -->
   <div id="wizardStep2" class="wizard-step" style="display:none;">
-    <div id="photoDropZone" class="wizard-source-tile" style="min-height:220px;flex:none;position:relative;overflow:hidden;">
+    <div id="photoDropZone" class="form-photo-hero" style="position:relative;overflow:hidden;">
       <img id="photoPreview" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />
-      <div id="photoPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:16px;pointer-events:none;">
-        <i class="bi bi-journal-richtext" style="font-size:64px;"></i>
-        <span>Ajouter une photo</span>
+      <div id="photoPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:var(--gap-large);pointer-events:none;">
+        <img src="src/create-new-recipe.png" alt="" />
+        <span class="text-body-medium" style="color:var(--text-icon-accent);">Ajouter une photo</span>
       </div>
       <button type="button" id="removePhotoBtn" class="icon-btn" style="display:none;position:absolute;top:12px;left:12px;z-index:2;"><i class="bi bi-trash icon"></i></button>
-      <button type="button" class="icon-btn" style="position:absolute;top:12px;right:12px;background:white;border:none;z-index:2;" onclick="abandonRecipeForm(event)"><i class="bi bi-x-lg icon"></i></button>
 
       <div id="photoMenu" class="course-sort-menu photo-menu" style="display:none;">
         <button type="button" class="course-sort-menu-item text-body" data-photo-action="gallery">Photothèque</button>
@@ -146,36 +145,42 @@
     <input type="file" id="photoFileInput" accept="image/*" style="display:none;" />
     <input type="file" id="photoCameraInput" accept="image/*" capture="environment" style="display:none;" />
     <input id="f_photo" type="hidden" />
-    <p id="photoUploadStatus" style="font-size:12px;color:var(--text-icon-secondary);margin:8px 0 20px;min-height:1em;"></p>
 
-    <input id="f_title" class="serif" style="width:100%;border:none;background:none;padding:0;font-size:48px;line-height:100%;color:var(--text-icon-default);margin-bottom:var(--gap-vertical-section);" placeholder="Titre de la recette" oninput="validateWizardStep()" />
+    <div class="wizard-form-content">
+      <p id="photoUploadStatus" style="font-size:12px;color:var(--text-icon-secondary);margin:0;min-height:1em;"></p>
 
-    <div id="f_mealTypes" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;"></div>
+      <input id="f_title" class="serif" placeholder="Titre de la recette" oninput="validateWizardStep()" />
 
-    <div style="display:flex;gap:8px;margin-bottom:12px;">
-      <input id="f_servings" class="field-input" type="number" value="4" style="flex:1;text-align:center;" />
-      <div id="f_servingModeWrap" style="flex:2;position:relative;">
-        <select id="f_servingModeSelect" class="field-input" style="width:100%;appearance:none;-webkit-appearance:none;" onchange="setFormServingMode(this.value)">
-          <option value="portion">Portions</option>
-          <option value="piece">À la pièce</option>
-        </select>
-        <i class="bi bi-chevron-down" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-icon-default);"></i>
+      <div id="f_mealTypes" class="tag-filters" style="margin:0;"></div>
+
+      <div style="display:flex;gap:8px;">
+        <input id="f_servings" class="field-input" type="number" value="4" style="flex:1;text-align:center;" />
+        <div id="f_servingModeWrap" style="flex:2;position:relative;">
+          <button type="button" id="f_servingModeBtn" class="field-input" style="width:100%;display:flex;align-items:center;justify-content:space-between;" onclick="toggleServingModeMenu()">
+            <span id="f_servingModeLabel">Portions</span>
+            <i class="bi bi-chevron-down"></i>
+          </button>
+          <div id="f_servingModeMenu" class="course-sort-menu serving-mode-menu" style="display:none;">
+            <button type="button" class="course-sort-menu-item text-body active" data-serving-mode="portion">Portions</button>
+            <button type="button" class="course-sort-menu-item text-body" data-serving-mode="piece">À la pièce</button>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div class="field-input-icon">
-      <i class="bi bi-fire"></i>
-      <input id="f_cook" type="number" placeholder="Cuisson" />
-      <span class="field-input-suffix">min</span>
-    </div>
+      <div class="field-input-icon">
+        <i class="bi bi-fire"></i>
+        <input id="f_cook" type="number" placeholder="Cuisson" />
+        <span class="field-input-suffix">min</span>
+      </div>
 
-    <div class="field-input-icon">
-      <i class="bi bi-thermometer-half"></i>
-      <input id="f_oven" type="number" placeholder="Température" />
-      <span class="field-input-suffix">°C</span>
-    </div>
+      <div class="field-input-icon">
+        <i class="bi bi-thermometer-half"></i>
+        <input id="f_oven" type="number" placeholder="Température" />
+        <span class="field-input-suffix">°C</span>
+      </div>
 
-    <textarea id="f_notes" class="field-input" style="min-height:90px;resize:vertical;background:var(--light-300);border:none;margin-bottom:0;" placeholder="Tapez ici vos remarques, par exemple : Attention aux mélange des œufs avec le chocolat chaud !"></textarea>
+      <textarea id="f_notes" class="field-input" style="min-height:90px;resize:vertical;background:var(--light-300);border:none;" placeholder="Tapez ici vos remarques, par exemple : Attention aux mélange des œufs avec le chocolat chaud !"></textarea>
+    </div>
   </div>
 
   <!-- Étape 3 : ingrédients -->
@@ -492,11 +497,20 @@
     return isPieceMode(r) ? 1 : userDefaultServings;
   }
 
+  const SERVING_MODE_LABELS = { portion: 'Portions', piece: 'À la pièce' };
   function setFormServingMode(mode) {
     formServingMode = mode;
-    document.getElementById('f_servingModeSelect').value = mode;
+    document.getElementById('f_servingModeLabel').textContent = SERVING_MODE_LABELS[mode];
+    document.querySelectorAll('#f_servingModeMenu [data-serving-mode]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.servingMode === mode);
+    });
+    document.getElementById('f_servingModeMenu').style.display = 'none';
     document.getElementById('f_servings').style.display = mode === 'piece' ? 'none' : 'block';
     document.getElementById('f_servingModeWrap').style.flex = mode === 'piece' ? '1' : '2';
+  }
+  function toggleServingModeMenu() {
+    const menu = document.getElementById('f_servingModeMenu');
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
   }
 
   // Journal d'engagement par recette : deux signaux enregistrés séparément —
@@ -1447,7 +1461,7 @@
 
   function renderMealTypeToggles() {
     document.getElementById('f_mealTypes').innerHTML = MEAL_TYPES.map(t => `
-      <button type="button" class="meal-type-chip ${selectedMealTypes.includes(t) ? 'active' : ''}" data-meal-type="${t}">${escapeHtml(t === 'Petit-déj' ? "Petit-déj'" : t)}</button>
+      <button type="button" class="filter-chip filter-chip-vertical ${selectedMealTypes.includes(t) ? 'active' : ''}" data-meal-type="${t}"><i class="bi ${MEAL_TYPE_ICONS[t]}" style="font-size:24px;"></i>${escapeHtml(t)}</button>
     `).join('');
     document.querySelectorAll('[data-meal-type]').forEach(btn => {
       btn.onclick = () => {
@@ -2019,9 +2033,17 @@
       else if (action === 'paste') pastePhotoFromClipboard();
     };
   });
+  document.querySelectorAll('#f_servingModeMenu [data-serving-mode]').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      setFormServingMode(btn.dataset.servingMode);
+    };
+  });
   document.addEventListener('click', (e) => {
     const menu = document.getElementById('photoMenu');
     if (menu && menu.style.display !== 'none' && !e.target.closest('#photoDropZone')) menu.style.display = 'none';
+    const servingMenu = document.getElementById('f_servingModeMenu');
+    if (servingMenu && servingMenu.style.display !== 'none' && !e.target.closest('#f_servingModeWrap')) servingMenu.style.display = 'none';
   });
 
   async function pastePhotoFromClipboard() {
@@ -2040,13 +2062,6 @@
     } catch (e) {
       statusEl.textContent = "Impossible de lire le presse-papiers (autorisation refusée ou indisponible sur ce navigateur).";
     }
-  }
-
-  function abandonRecipeForm(e) {
-    e.stopPropagation();
-    discardAbandonedPhoto();
-    resetForm();
-    showHome();
   }
 
   document.getElementById('removePhotoBtn').onclick = async (e) => {

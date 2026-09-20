@@ -38,6 +38,7 @@
   --white: #ffffff;
 
   /* ---- Colors ---- */
+  --border-accent: var(--green-700);
   --border-default: var(--green-300);
   --border-divider: var(--light-500);
   --status-error: #B3261E;
@@ -102,6 +103,7 @@
 
 /* ---- Base / reset ---- */
 * { box-sizing: border-box; touch-action: manipulation; }
+input, select, textarea, button { outline: none; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 html { height: 100%; }
 body {
