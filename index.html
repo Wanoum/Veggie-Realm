@@ -181,7 +181,6 @@
   <div id="wizardStep3" class="wizard-step" style="display:none;">
     <h1 style="margin-bottom:var(--gap-vertical-section);">Ingrédients</h1>
     <div id="f_ingredients" style="position:relative;"></div>
-    <button type="button" class="secondary-btn" onclick="openBatchIngredientsModal()"><i class="bi bi-clipboard-plus"></i> Coller une liste d'ingrédients</button>
   </div>
 
   <!-- Étape 4 : étapes -->
@@ -298,15 +297,6 @@
   </div>
 </div>
 
-<div id="batchIngredientsModal" style="display:none;position:fixed;inset:0;z-index:400;background:var(--surface-high);flex-direction:column;padding:calc(20px + env(safe-area-inset-top)) var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));">
-  <h2 style="margin-bottom:8px;">Coller une liste d'ingrédients</h2>
-  <p class="text-small" style="color:var(--text-icon-secondary);margin:0 0 12px;">Un ingrédient par ligne, par exemple "200g farine" ou "3 oeufs". Le résultat reste modifiable ensuite.</p>
-  <textarea id="batchIngredientsInput" style="flex:1;width:100%;resize:none;border:1px solid var(--border-divider);border-radius:var(--corner-radius-large);padding:14px;font-family:'Inter',sans-serif;font-size:16px;background:var(--surface-highest);color:var(--text-icon-default);" placeholder="200g farine&#10;3 oeufs&#10;1 pincée de sel&#10;..."></textarea>
-  <div style="display:flex;gap:10px;margin-top:12px;">
-    <button type="button" class="secondary-btn" style="flex:1;margin-top:0;" onclick="closeBatchIngredientsModal()">Annuler</button>
-    <button type="button" class="primary-btn" style="flex:1;margin-top:0;" onclick="applyBatchIngredients()">Ajouter</button>
-  </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -1619,8 +1609,17 @@
     return null;
   }
 
+  // Retire les puces/numérotation markdown ("* ", "- ", "• ", "1. ", "1) ")
+  // qu'un copier-coller depuis un site ou une note amène souvent avec lui.
+  function stripMarkdownListMarker(line) {
+    return line
+      .replace(/^\s*[-*•+]\s+/, '')
+      .replace(/^\s*\d+[.)]\s+/, '')
+      .trim();
+  }
+
   function parseIngredientLine(line) {
-    const t = line.trim();
+    const t = stripMarkdownListMarker(line);
     if (!t) return null;
     const match = t.match(/^([\d]+(?:[.,][\d]+)?)\s*(.*)$/);
     if (!match) return { qtyUnitText: '', name: t };
@@ -1636,15 +1635,11 @@
     return { qtyUnitText: quantity, name: rest };
   }
 
-  function openBatchIngredientsModal() {
-    document.getElementById('batchIngredientsInput').value = '';
-    document.getElementById('batchIngredientsModal').style.display = 'flex';
-  }
-  function closeBatchIngredientsModal() {
-    document.getElementById('batchIngredientsModal').style.display = 'none';
-  }
-  function applyBatchIngredients() {
-    const lines = document.getElementById('batchIngredientsInput').value.split('\n');
+  // Colle une liste entière (plusieurs lignes) directement dans un champ
+  // ingrédient : chaque ligne devient une ligne qté/nom, sans passer par une
+  // modale dédiée. Un collage d'une seule valeur suit le comportement natif.
+  function applyIngredientLines(text) {
+    const lines = text.split(/\r\n|\r|\n/);
     const parsed = lines
       .map(parseIngredientLine)
       .filter(row => row && (row.name || row.qtyUnitText))
@@ -1657,8 +1652,16 @@
       renderIngRows();
       validateWizardStep();
     }
-    closeBatchIngredientsModal();
   }
+
+  document.getElementById('f_ingredients').addEventListener('paste', (e) => {
+    if (!e.target.matches('.qty-input, .ing-name-input')) return;
+    const text = (e.clipboardData || window.clipboardData).getData('text');
+    const lineCount = text.split(/\r\n|\r|\n/).filter(l => l.trim()).length;
+    if (lineCount <= 1) return; // collage d'une seule valeur : comportement natif inchangé
+    e.preventDefault();
+    applyIngredientLines(text);
+  });
 
   let acBox = null;
 
