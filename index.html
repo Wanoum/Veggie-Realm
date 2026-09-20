@@ -1925,6 +1925,20 @@
   });
   document.getElementById('stepEntryInput').addEventListener('input', validateWizardStep);
 
+  // Coller une liste entière (plusieurs lignes) directement dans le champ
+  // étape : chaque ligne devient une étape, même logique que pour les
+  // ingrédients (puces/numérotation/cases à cocher retirées au passage).
+  document.getElementById('stepEntryInput').addEventListener('paste', (e) => {
+    const text = (e.clipboardData || window.clipboardData).getData('text');
+    const lines = text.split(/\r\n|\r|\n/).map(stripMarkdownListMarker).filter(Boolean);
+    if (lines.length <= 1) return; // collage d'une seule valeur : comportement natif inchangé
+    e.preventDefault();
+    stepRows.push(...lines);
+    e.target.value = '';
+    renderStepsList();
+    validateWizardStep();
+  });
+
   // ---- Upload de photo (galerie / appareil photo) ----
   let currentSessionUploadPath = null; // photo uploadée cette session, pas encore enregistrée en base
   let originalPhotoUrlForSession = null; // photo déjà enregistrée avant édition (null si ajout)
