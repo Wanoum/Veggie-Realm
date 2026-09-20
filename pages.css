@@ -179,6 +179,15 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 .wizard-source-tile i { font-size: 96px; }
 .wizard-source-tile img { width: 96px; height: 96px; }
 
+/* #formView a son propre padding-bottom (110px) calibré pour dégager
+   #wizardFooter, qui remplace #bottomNav pendant tout le wizard. La marge
+   négative annule le padding bas du body (calibré pour #bottomNav, caché
+   ici) qui s'ajoutait sinon en plus, créant un vide bien trop grand sous
+   les champs quand le contenu remplit l'écran. */
+#formView {
+  margin-bottom: calc(-1 * (var(--height-default) + 12px + env(safe-area-inset-bottom) + var(--padding-vertical-large)));
+}
+
 /* Étape 2 du wizard ("Informations") : même structure que la fiche recette
    (encart plein écran sans marge en haut, contenu avec son propre padding
    en dessous) — la marge négative annule le padding horizontal du body. */
