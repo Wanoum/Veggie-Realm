@@ -2084,7 +2084,7 @@
     });
 
     document.getElementById('planSummary').innerHTML = MEAL_TYPES.map((type, idx) => `
-      <div class="meal-category-card">
+      <div class="meal-category-card ${planMealTypeFilter === type ? 'active' : ''}" onclick="toggleMealTypeFilter('${type}')">
         <p class="meal-category-number">${counts[idx]}</p>
         <p class="meal-category-label">${type}</p>
       </div>
@@ -2094,7 +2094,9 @@
     const planSortLabels = { alpha: 'Alphabétique', planned: 'Repas planifiés d\'abord' };
     document.getElementById('planSortLabel').textContent = planSortLabels[planSortMode];
 
-    let sortedRecipes = [...recipes];
+    let sortedRecipes = planMealTypeFilter
+      ? recipes.filter(r => (r.tags || []).includes(planMealTypeFilter))
+      : [...recipes];
     if (planSortMode === 'planned') {
       sortedRecipes.sort((a, b) => {
         const countA = mealPlan[a.id]?.count || 0;
@@ -2229,6 +2231,14 @@
   const PLAN_SORT_KEY = 'veggieRealm.planSortMode';
   let planSortMode = 'alpha'; // 'alpha' | 'planned'
   try { planSortMode = localStorage.getItem(PLAN_SORT_KEY) || 'alpha'; } catch { /* ignoré */ }
+
+  // Filtre par type de repas : cliquer sur un encart (Petit-déj/Déjeuner/...)
+  // ne garde que les recettes qui portent ce tag ; recliquer dessus l'enlève.
+  let planMealTypeFilter = null;
+  function toggleMealTypeFilter(type) {
+    planMealTypeFilter = planMealTypeFilter === type ? null : type;
+    renderPlanningRecipes();
+  }
 
   function loadCheckedCourses() {
     try { return JSON.parse(localStorage.getItem(COURSES_CHECKED_KEY)) || {}; } catch { return {}; }
