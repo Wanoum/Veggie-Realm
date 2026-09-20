@@ -79,3 +79,22 @@
 .text-quantity-mono { font-family: 'IBM Plex Mono', monospace; font-size: 18px; line-height: 120%; font-weight: 400; }
 .text-small { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 120%; font-weight: 400; }
 .text-small-medium { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 120%; font-weight: 500; }
+
+/* ---- Base / reset ---- */
+* { box-sizing: border-box; touch-action: manipulation; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+html { height: 100%; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 18px;
+  background: var(--surface-low);
+  color: var(--text-icon-primary);
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: calc(var(--space-page-edge) + env(safe-area-inset-top)) var(--space-page-edge) 100px;
+}
+.serif { font-family: 'Krylon', Georgia, serif; }
+h1 { font-family: 'Krylon', Georgia, serif; font-size: 48px; line-height: 100%; font-weight: 400; margin: 0 0 var(--space-section-gap); color: var(--text-icon-primary); }
+h2 { font-family: 'Inter', sans-serif; font-size: 24px; line-height: 120%; font-weight: 600; margin: var(--space-section-gap) 0 12px; color: var(--text-icon-primary); }
+.count { font-size: 14px; color: var(--text-icon-secondary); margin-bottom: 14px; }
