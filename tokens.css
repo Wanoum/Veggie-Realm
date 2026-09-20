@@ -16,6 +16,7 @@
 :root {
   /* ---- Primitives ---- */
   --green-100: #dde5da;
+  --green-200: #eaf6ad;
   --green-300: #c0c6b2;
   --green-700: #244d3b;
   --green-800: #293b2e;
@@ -38,6 +39,7 @@
   --status-success: #3D5A34;
   --interaction-primary: var(--green-700);
   --interaction-primary-pale: var(--green-100);
+  --interaction-secondary: var(--green-200);
   --surface-high: var(--light-50);
   --surface-highest: var(--white);
   --surface-low: var(--light-200);
