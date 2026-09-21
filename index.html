@@ -890,23 +890,42 @@
   }
 
   function showForm() {
+    // Entrée explicite via le bouton "Ajouter" : toujours une nouvelle
+    // recette. Un brouillon d'édition en cours (laissé de côté avant de
+    // revenir ici) n'est jamais repris depuis ce point d'entrée précis —
+    // seul un brouillon de création abandonné en cours de route l'est.
+    const draft = loadWizardDraft();
+    if (draft && !draft.editingId) {
+      resumeFormFromDraft(draft);
+      return;
+    }
     window.scrollTo(0, 0);
     hideAllViews();
     document.getElementById('formView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('navAdd').classList.add('active');
     updateNavIcons();
-    // Une création de recette en cours (pas une édition) reprend exactement
-    // où elle en était plutôt que de repartir de zéro, que ce soit après un
-    // aller-retour sur un autre onglet ou un redémarrage de la page.
-    const draft = loadWizardDraft();
     resetForm();
-    if (draft) {
-      applyWizardDraft(draft);
-      goToWizardStep(draft.step && draft.step >= 2 ? draft.step : 2);
-    } else {
-      goToWizardStep(1);
-    }
+    goToWizardStep(1);
+    sessionStorage.setItem('lastView', 'form');
+  }
+
+  // Reprend le formulaire d'ajout OU d'édition exactement là où on l'avait
+  // laissé (même étape, mêmes champs), après un aller-retour sur un autre
+  // onglet ou un redémarrage de la page par iOS.
+  function resumeFormFromDraft(draft) {
+    window.scrollTo(0, 0);
+    hideAllViews();
+    document.getElementById('formView').style.display = 'block';
+    document.getElementById('bottomNav').style.display = 'flex';
+    updateNavIcons();
+    resetForm();
+    editingId = draft.editingId || null;
+    originalPhotoUrlForSession = draft.originalPhotoUrlForSession || null;
+    document.getElementById('formTitle').textContent = editingId ? "Modifier la recette" : "Nouvelle recette";
+    if (!editingId) document.getElementById('navAdd').classList.add('active');
+    applyWizardDraft(draft);
+    goToWizardStep(draft.step && draft.step >= 2 ? draft.step : (editingId ? 2 : 1));
     sessionStorage.setItem('lastView', 'form');
   }
 
@@ -966,6 +985,7 @@
       const idx = currentDetailIndex;
       discardAbandonedPhoto();
       resetForm();
+      clearWizardDraft();
       showDetail(idx);
       return;
     }
@@ -1508,6 +1528,9 @@
     document.getElementById('formView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
     goToWizardStep(2);
+    // Sans ça, un redémarrage de la page en cours d'édition restaurerait la
+    // fiche recette (dernière vue avant l'édition) plutôt que le formulaire.
+    sessionStorage.setItem('lastView', 'form');
   }
 
   async function shareCurrentRecipe(i) {
@@ -2146,15 +2169,16 @@
     renderIngRows();
   }
 
-  // ---- Brouillon de l'ajout de recette : conservé si on quitte l'écran ----
-  // (bascule sur un autre onglet, mise en arrière-plan, ou même redémarrage
-  // de la page par iOS) et restauré à la même étape au retour. On ne
-  // persiste jamais une session d'édition (editingId défini) : seule la
-  // création d'une nouvelle recette a besoin de survivre à une interruption.
+  // ---- Brouillon du formulaire (ajout ou édition) : conservé si on quitte
+  // l'écran (bascule sur un autre onglet, mise en arrière-plan, ou même
+  // redémarrage de la page par iOS) et restauré à l'identique, à la même
+  // étape, au retour — y compris pendant l'édition d'une recette existante.
   const WIZARD_DRAFT_KEY = 'wizardDraft';
 
   function getWizardDraftData() {
     return {
+      editingId,
+      originalPhotoUrlForSession,
       step: wizardStep,
       title: document.getElementById('f_title').value,
       photo: document.getElementById('f_photo').value,
@@ -2172,7 +2196,6 @@
   }
 
   function saveWizardDraft() {
-    if (editingId) return;
     try { sessionStorage.setItem(WIZARD_DRAFT_KEY, JSON.stringify(getWizardDraftData())); } catch { /* ignoré */ }
   }
 
@@ -2753,7 +2776,10 @@
         showDetail(0);
       } catch (e) { showHome(); }
     } else if (lastView === 'planning') showPlanning();
-    else if (lastView === 'form') showForm();
+    else if (lastView === 'form') {
+      const draft = loadWizardDraft();
+      if (draft) resumeFormFromDraft(draft); else showForm();
+    }
     else if (lastView === 'account') showAccount();
     else showHome();
 
@@ -2774,6 +2800,13 @@
         // La recette n'existe plus (supprimée) : retour à l'accueil.
         showHome();
       }
+    }
+
+    // La liste des recettes vient d'être (re)chargée : si on a repris une
+    // édition en cours, currentDetailIndex doit pointer vers le bon index
+    // dans ce nouveau tableau (l'ordre n'est pas garanti identique).
+    if (editingId && document.getElementById('formView').style.display !== 'none') {
+      currentDetailIndex = recipes.findIndex(r => r.id === editingId);
     }
   }
 
