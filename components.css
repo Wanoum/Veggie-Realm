@@ -263,12 +263,21 @@
   border-right: none;
   border-top: none;
   font-family: 'Inter', sans-serif;
-  font-size: 16px;
+  font-size: 18px;
+  line-height: 120%;
+  font-weight: 400;
   color: var(--text-icon-default);
   text-align: left;
 }
 .settings-row:last-child { border-bottom: none; }
-.settings-row-value { margin-left: auto; color: var(--text-icon-secondary); font-size: 14px; }
+.settings-row-value {
+  margin-left: auto;
+  color: var(--text-icon-secondary);
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  line-height: 120%;
+  font-weight: 400;
+}
 .settings-row .bi-chevron-right { color: var(--text-icon-disabled); font-size: 14px; }
 
 /* ---- Navigation basse ---- */
