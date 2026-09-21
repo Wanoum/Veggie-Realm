@@ -260,13 +260,6 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   cursor: grab;
   flex-shrink: 0;
 }
-.step-row-number {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 14px;
-  color: var(--text-icon-secondary);
-  flex-shrink: 0;
-  width: 18px;
-}
 .step-row-text {
   flex: 1;
   font-family: 'Inter', sans-serif;
@@ -286,6 +279,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   border-bottom: 1px solid var(--border-default);
   padding: 0;
   resize: none;
+  overflow-y: hidden;
   min-height: 1.6em;
 }
 .step-row-remove {

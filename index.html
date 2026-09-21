@@ -1860,7 +1860,6 @@
     container.innerHTML = stepRows.map((text, idx) => `
       <div class="step-row" data-idx="${idx}">
         <span class="step-drag-handle" data-drag-idx="${idx}"><i class="bi bi-grip-vertical"></i></span>
-        <span class="step-row-number">${idx + 1}</span>
         <span class="step-row-text">${escapeHtml(text)}</span>
         <button type="button" class="step-row-remove" data-remove-step="${idx}"><i class="bi bi-x-lg"></i></button>
       </div>
@@ -1894,6 +1893,8 @@
     textarea.rows = 1;
     textarea.value = stepRows[idx];
     textSpan.replaceWith(textarea);
+    autoResizeTextarea(textarea);
+    textarea.addEventListener('input', () => autoResizeTextarea(textarea));
     textarea.focus();
     textarea.setSelectionRange(textarea.value.length, textarea.value.length);
 
