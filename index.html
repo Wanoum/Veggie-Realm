@@ -751,7 +751,7 @@
     return matches.map(ing => {
       const q = ing.quantity != null ? (ing.quantity * target / base) : null;
       const qDisplay = q != null ? (Number.isInteger(q) ? q : q.toFixed(1).replace(/[.]0$/, '')) : '';
-      return `<span class="meta-pill" style="background:rgba(255,255,255,0.18);color:var(--text-icon-on-primary);font-size:14px;padding:8px 14px;"><i class="bi bi-stars"></i> ${qDisplay} ${escapeHtml(ing.unit)} ${escapeHtml(ing.name)}</span>`;
+      return `<span class="meta-pill meta-pill--on-dark"><i class="bi bi-stars"></i> ${qDisplay} ${escapeHtml(ing.unit)} ${escapeHtml(ing.name)}</span>`;
     }).join('');
   }
 

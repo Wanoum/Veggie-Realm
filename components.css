@@ -103,6 +103,11 @@
   align-items: center;
   gap: 4px;
 }
+.meta-pill--on-dark {
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--text-icon-on-primary);
+  padding: 8px 14px;
+}
 .tags { display: flex; gap: 5px; flex-wrap: wrap; }
 .tag {
   font-size: 14px;
