@@ -895,14 +895,12 @@
 
   function showForm() {
     // Entrée explicite via le bouton "Ajouter" : toujours une nouvelle
-    // recette. Un brouillon d'édition en cours (laissé de côté avant de
-    // revenir ici) n'est jamais repris depuis ce point d'entrée précis —
-    // seul un brouillon de création abandonné en cours de route l'est.
-    const draft = loadWizardDraft();
-    if (draft && !draft.editingId) {
-      resumeFormFromDraft(draft);
-      return;
-    }
+    // recette vierge, jamais la reprise d'un brouillon laissé de côté (que
+    // ce soit une édition ou une création précédente) — cette reprise
+    // automatique se produisait aussi silencieusement ici, ce qui faisait
+    // resurgir une session oubliée sans qu'on comprenne pourquoi. La reprise
+    // après un vrai redémarrage de l'app reste gérée séparément dans
+    // startApp(), qui appelle resumeFormFromDraft() directement.
     window.scrollTo(0, 0);
     hideAllViews();
     document.getElementById('formView').style.display = 'block';
@@ -910,6 +908,7 @@
     document.getElementById('navAdd').classList.add('active');
     updateNavIcons();
     resetForm();
+    clearWizardDraft();
     goToWizardStep(1);
     sessionStorage.setItem('lastView', 'form');
   }
@@ -1062,12 +1061,8 @@
       }
 
       applyImportedRecipeData(data, url);
-
-      statusEl.style.color = 'var(--status-success)';
-      statusEl.textContent = "Recette importée ! Vérifie et complète les informations ci-dessous.";
       btn.disabled = false;
-
-      setTimeout(() => goToWizardStep(2), 600);
+      goToWizardStep(2);
     } catch (err) {
       statusEl.style.color = 'var(--text-icon-error)';
       statusEl.textContent = "Erreur réseau : " + err.message;
@@ -1122,11 +1117,7 @@
       }
 
       applyImportedRecipeData(data, null);
-
-      statusEl.style.color = 'var(--status-success)';
-      statusEl.textContent = "Recette importée ! Vérifie et complète les informations ci-dessous.";
-
-      setTimeout(() => goToWizardStep(2), 600);
+      goToWizardStep(2);
     } catch (err) {
       const message = err.name === 'AbortError'
         ? "Le traitement du document a pris trop de temps. Réessaie."
