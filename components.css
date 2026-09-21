@@ -287,7 +287,7 @@
   line-height: 120%;
   font-weight: 400;
 }
-.settings-row .bi-chevron-right { color: var(--text-icon-disabled); font-size: 14px; }
+.settings-row .bi-chevron-right { color: var(--text-icon-default); font-size: 14px; }
 
 /* ---- Navigation basse ---- */
 #bottomNav {
