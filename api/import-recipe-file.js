@@ -73,7 +73,11 @@ function normalizeText(s) {
 }
 
 function normalizeHeading(s) {
-  return normalizeAccents(normalizeText(s).toLowerCase()).replace(/[:.\s]+$/, '');
+  const h = normalizeAccents(normalizeText(s).toLowerCase()).replace(/[:.\s]+$/, '');
+  // Beaucoup de documents "faits maison" écrivent les titres de section avec
+  // l'article ("Les ingrédients", "La préparation", "Le matériel") plutôt
+  // que le mot seul : on l'ignore pour la reconnaissance.
+  return h.replace(/^(les|la|le|l')\s+/, '');
 }
 
 const ING_HEADINGS = ['ingredients', 'ingredient'];
@@ -103,7 +107,7 @@ function stripListMarker(line) {
 }
 
 const KNOWN_UNITS = [
-  'g', 'kg', 'ml', 'l', 'cl',
+  'g', 'kg', 'ml', 'l', 'cl', 't',
   'sachet', 'sachets', 'piece', 'pieces',
   'tasse', 'tasses', 'pincee', 'pincees',
   'cas', 'cac', 'gousse', 'gousses',
@@ -112,6 +116,25 @@ const KNOWN_UNITS = [
   'paquet', 'paquets'
 ];
 
+// Fractions unicode ("½ T de sucre") : certains documents les utilisent au
+// lieu d'écrire "0,5". Converties en valeur décimale à la lecture.
+const FRACTION_VALUES = {
+  '½': 0.5, '¼': 0.25, '¾': 0.75,
+  '⅓': 1 / 3, '⅔': 2 / 3,
+  '⅕': 0.2, '⅖': 0.4, '⅗': 0.6, '⅘': 0.8,
+  '⅙': 1 / 6, '⅚': 5 / 6,
+  '⅛': 0.125, '⅜': 0.375, '⅝': 0.625, '⅞': 0.875
+};
+const FRACTION_CHARS = Object.keys(FRACTION_VALUES).join('');
+const LEADING_QUANTITY_RE = new RegExp(`^(\\d+(?:[.,]\\d+)?|[${FRACTION_CHARS}])\\s*(.*)$`);
+
+// Une ligne "commence par une quantité" si elle démarre par un chiffre ou
+// une fraction unicode — sinon elle a toutes les chances d'être un
+// sous-titre ou une phrase de préparation plutôt qu'un ingrédient.
+function startsWithQuantity(s) {
+  return new RegExp(`^[\\d${FRACTION_CHARS}]`).test(s);
+}
+
 function cleanIngredientName(name) {
   return name.replace(/^(de |d')/i, '').replace(/[.\s]+$/, '').trim();
 }
@@ -119,10 +142,10 @@ function cleanIngredientName(name) {
 function parseIngredientLine(line) {
   const t = stripListMarker(normalizeText(line));
   if (!t) return null;
-  const match = t.match(/^([\d]+(?:[.,][\d]+)?)\s*(.*)$/);
+  const match = t.match(LEADING_QUANTITY_RE);
   if (!match) return { quantity: null, unit: null, name: cleanIngredientName(t) };
 
-  const quantity = parseFloat(match[1].replace(',', '.'));
+  const quantity = FRACTION_VALUES[match[1]] != null ? FRACTION_VALUES[match[1]] : parseFloat(match[1].replace(',', '.'));
   const rest = match[2].trim();
   if (!rest) return { quantity: isNaN(quantity) ? null : quantity, unit: null, name: '' };
 
@@ -140,6 +163,47 @@ function wordCount(s) {
 }
 
 const SERVINGS_RE = /(\d+)\s*(personnes?|parts?|pi[eè]ces?|convives?)/i;
+
+function looksLikeListMarker(s) {
+  return /^\s*[-*•◦‣▪▸►○●]|^\s*\[[ xX]?\]|^\s*[☐☑☒✓✔]/.test(s);
+}
+
+// Un PDF renvoie le texte ligne par ligne selon la mise en page visuelle de
+// la page : une phrase ou un ingrédient peuvent se retrouver coupés sur
+// plusieurs lignes sans rapport avec les vraies frontières de paragraphe
+// (contrairement à un .docx, où chaque paragraphe est déjà une ligne). Cette
+// passe recolle les lignes qui continuent visiblement la précédente, pour
+// que le reste de l'analyse (une ligne = un ingrédient ou une étape)
+// fonctionne aussi bien que sur un texte Word.
+function dewrapPdfLines(rawText) {
+  const rawLines = rawText.split(/\r?\n/);
+  const out = [];
+  let buffer = '';
+  for (const raw of rawLines) {
+    const trimmed = normalizeText(raw);
+    if (!trimmed) {
+      if (buffer) { out.push(buffer); buffer = ''; }
+      continue;
+    }
+    if (!buffer) {
+      buffer = trimmed;
+      // Le tout premier titre reste toujours une ligne à part entière, même
+      // s'il n'est suivi d'aucune ponctuation de fin.
+      if (out.length === 0) { out.push(buffer); buffer = ''; }
+      continue;
+    }
+    const isNewEntry = startsWithQuantity(trimmed) || /^\d+\s*:/.test(trimmed) || looksLikeListMarker(trimmed);
+    const bufferEndsParagraph = /[.!?:]$/.test(buffer);
+    if (isNewEntry || bufferEndsParagraph) {
+      out.push(buffer);
+      buffer = trimmed;
+    } else {
+      buffer = buffer + ' ' + trimmed;
+    }
+  }
+  if (buffer) out.push(buffer);
+  return out.join('\n');
+}
 
 // Repère titre / portions / ingrédients / étapes à partir du texte brut
 // (une ligne par paragraphe). Sans en-tête reconnue pour les étapes (courant
@@ -172,24 +236,34 @@ function extractRecipeFromText(rawText) {
 
     if (mode === 'ingredients') {
       const stripped = stripListMarker(line);
-      if (/^\d/.test(stripped)) {
+      if (/^\d+\s*:/.test(stripped)) {
+        // sous-recette numérotée ("1 : Le Fond de Tarte pour...") : ignorée
+        continue;
+      } else if (startsWithQuantity(stripped)) {
         stripped.split(/\s*[;+]\s*/).forEach(part => {
           const ing = parseIngredientLine(part);
           if (ing && ing.name) ingredients.push(ing);
         });
-      } else if (wordCount(line) <= 8) {
-        // sous-titre de section ("Pour la pâte", "Matériel"...) : ignoré
-        continue;
-      } else {
-        // ligne longue sans quantité : on est passé à la préparation
+      } else if (wordCount(line) > 8 && /[.!?]$/.test(stripped)) {
+        // phrase complète (ponctuation finale) sans quantité en tête : on est
+        // passé à la préparation, même sans en-tête explicite pour l'annoncer
         mode = 'steps';
         steps.push(stripped);
+      } else {
+        // sous-titre de section ("Pour la pâte", "Matériel"...), ou fragment
+        // de phrase coupé par une mise en page en colonnes : ignoré
+        continue;
       }
       continue;
     }
 
     if (mode === 'steps') {
-      steps.push(stripListMarker(line));
+      // Ici on retire juste le préfixe ("1 : Le Fond de Tarte Placez les...")
+      // plutôt que d'ignorer toute la ligne comme côté ingrédients : une
+      // ligne recollée (PDF) peut faire suivre l'étiquette de sous-recette
+      // directement par la vraie étape, sur la même ligne.
+      const stripped = stripListMarker(line).replace(/^\d+\s*:\s*/, '');
+      if (stripped) steps.push(stripped);
       continue;
     }
 
@@ -200,7 +274,10 @@ function extractRecipeFromText(rawText) {
   if (ingredients.length === 0 && steps.length === 0 && unclassified.length > 0) {
     unclassified.forEach(line => {
       const stripped = stripListMarker(line);
-      if (/^\d/.test(stripped) && wordCount(line) <= 10) {
+      if (/^\d+\s*:/.test(stripped)) {
+        return;
+      }
+      if (startsWithQuantity(stripped) && wordCount(line) <= 10) {
         const ing = parseIngredientLine(stripped);
         if (ing && ing.name) ingredients.push(ing);
       } else {
@@ -239,7 +316,7 @@ export default async function handler(req, res) {
   try {
     if (contentType.includes('pdf')) {
       const data = await pdfParse(buffer);
-      text = data.text;
+      text = dewrapPdfLines(data.text);
     } else if (contentType.includes('word') || contentType.includes('officedocument') || contentType.includes('msword')) {
       const result = await mammoth.extractRawText({ buffer });
       text = result.value;

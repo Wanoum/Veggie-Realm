@@ -109,7 +109,7 @@
     <p id="importStatus" style="font-size:14px;color:var(--text-icon-secondary);margin:8px 0 0;"></p>
 
     <button type="button" id="fileImportTile" class="wizard-source-tile" style="margin-top:20px;" onclick="document.getElementById('recipeFileInput').click()">
-      <i class="bi bi-file-earmark-arrow-up" id="fileImportTileIcon"></i>
+      <img src="src/capture-recipe.png" alt="" />
       <span id="fileImportTileLabel">Importer un fichier (PDF, Word)</span>
     </button>
     <input type="file" id="recipeFileInput" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none;" onchange="performFileImport(this.files[0])" />
@@ -1082,14 +1082,12 @@
     if (!file) return;
     const statusEl = document.getElementById('fileImportStatus');
     const tile = document.getElementById('fileImportTile');
-    const tileIcon = document.getElementById('fileImportTileIcon');
     const tileLabel = document.getElementById('fileImportTileLabel');
 
     // Le traitement (extraction PDF/Word) peut prendre plusieurs secondes :
     // l'encart se désactive et change d'état pour que ce soit visible, plutôt
     // que de laisser croire que rien ne s'est passé pendant l'attente.
     tile.disabled = true;
-    tileIcon.className = 'bi bi-hourglass-split';
     tileLabel.textContent = 'Lecture du document...';
     statusEl.style.color = 'var(--text-icon-secondary)';
     statusEl.textContent = '';
@@ -1140,7 +1138,6 @@
       clearTimeout(timeout);
       document.getElementById('recipeFileInput').value = '';
       tile.disabled = false;
-      tileIcon.className = 'bi bi-file-earmark-arrow-up';
       tileLabel.textContent = 'Importer un fichier (PDF, Word)';
     }
   }
