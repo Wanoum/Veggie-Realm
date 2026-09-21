@@ -561,9 +561,7 @@
     const r = recipes[i];
     const base = getRecipeBase(r);
     const s = currentServings[i];
-    const metaPills = [];
-        if (r.cook_time_minutes) metaPills.push(`<span class="meta-pill"><i class="bi bi-fire" style="font-size:14px;color:var(--text-icon-default);"></i> ${r.cook_time_minutes} min</span>`);
-    if (r.oven_temp_celsius) metaPills.push(`<span class="meta-pill"><i class="bi bi-thermometer-half" style="font-size:14px;color:var(--text-icon-default);"></i> ${r.oven_temp_celsius}°</span>`);
+    const metaPills = buildMetaPills(r);
 
     const ingredientsHtml = orderIngredientsByAppearance(r).map(ing => {
       const q = ing.quantity != null ? (ing.quantity * s / base) : null;
@@ -1569,6 +1567,13 @@
     return MEAL_TYPES.filter(t => (r.tags || []).includes(t)).map(t => `
       <span class="tag"><i class="bi ${MEAL_TYPE_ICONS[t]}" style="font-size:14px;"></i>${escapeHtml(t)}</span>
     `).join('');
+  }
+
+  function buildMetaPills(r) {
+    const metaPills = [];
+    if (r.cook_time_minutes) metaPills.push(`<span class="meta-pill"><i class="bi bi-fire" style="font-size:14px;color:var(--text-icon-default);"></i> ${r.cook_time_minutes} min</span>`);
+    if (r.oven_temp_celsius) metaPills.push(`<span class="meta-pill"><i class="bi bi-thermometer-half" style="font-size:14px;color:var(--text-icon-default);"></i> ${r.oven_temp_celsius}°</span>`);
+    return metaPills;
   }
 
   function renderMealTypeToggles() {
@@ -3040,9 +3045,9 @@
 
     if (!currentUser) {
       banner = `
-        <div style="background:var(--text-icon-default);color:var(--text-icon-on-primary);border-radius:var(--corner-radius-large);padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="background:var(--surface-lowest);color:var(--text-icon-default);border-radius:var(--corner-radius-large);padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <span style="font-size:14px;">Recette partagée${authorName ? ' par ' + escapeHtml(authorName) : ' avec toi'} ✨</span>
-          <button type="button" onclick="location.href = location.pathname;" style="background:var(--surface-highest);color:var(--text-icon-default);border:none;border-radius:var(--corner-radius-default);padding:8px 12px;font-size:12px;font-weight:600;white-space:nowrap;">Créer mon compte</button>
+          <button type="button" onclick="location.href = location.pathname;" style="background:var(--interaction-primary);color:var(--text-icon-on-primary);border:none;border-radius:var(--corner-radius-default);padding:8px 12px;font-size:12px;font-weight:600;white-space:nowrap;">Créer mon compte</button>
         </div>`;
     } else if (!isOwnRecipe) {
       const { data: existing } = await sb.from('saved_recipes').select('id').eq('user_id', currentUser.id).eq('recipe_id', r.id).maybeSingle();
@@ -3054,18 +3059,23 @@
         </button>`;
     }
 
+    const metaPills = buildMetaPills(r);
+
     document.getElementById('sharedRecipeContent').innerHTML = `
-      <div style="height:400px;background:var(--surface-lowest);position:relative;">
+      <div class="detail-photo">
         ${safeUrl(r.photo_url)
-          ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
+          ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.querySelector('img').style.display='none'" />`
           : '<div class="photo-empty"><i class="bi bi-image" style="font-size:48px;"></i></div>'}
         ${currentUser ? `<button class="icon-btn icon-btn-lg" style="position:absolute;top:calc(18px + env(safe-area-inset-top));left:18px;" onclick="showHome()"><i class="bi bi-arrow-left icon"></i></button>` : ''}
       </div>
-      <div style="background:var(--surface-high);border-radius:var(--corner-radius-xlarge) var(--corner-radius-xlarge) 0 0;margin-top:-60px;position:relative;padding:24px 16px;">
+      <div class="detail-sheet">
         <div class="detail-sheet-handle"></div>
         ${banner}
-        <h1 style="margin-bottom:var(--gap-default);">${escapeHtml(r.title)}</h1>
-        <div class="tags" style="margin-bottom:14px;">${mealTypeTagsHtml(r)}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--gap-default);">
+          ${metaPills.join('')}
+          ${mealTypeTagsHtml(r)}
+        </div>
+        <h1 style="margin-bottom:var(--gap-vertical-section);">${escapeHtml(r.title)}</h1>
         <h2>Ingrédients</h2>
         ${ingredientsHtml}
         ${r.notes ? `<div class="notice" style="margin-top:16px;">${escapeHtml(r.notes)}</div>` : ''}
@@ -3074,6 +3084,7 @@
       </div>
     `;
     hideAllViewsForShared();
+    document.body.style.background = 'var(--surface-high)';
     document.getElementById('sharedRecipeView').style.display = 'block';
   }
 
