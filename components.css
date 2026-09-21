@@ -190,6 +190,7 @@
   padding: var(--padding-vertical-list-item) var(--padding-horizontal-contained);
   background: none;
   border: none;
+  border-radius: var(--corner-radius-default);
   color: var(--text-icon-default);
   text-align: left;
 }
