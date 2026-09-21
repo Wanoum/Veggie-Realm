@@ -440,7 +440,10 @@
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(24px + env(safe-area-inset-bottom));
+  /* Même dégagement de la nav fixe que le padding bas du body
+     (var(--height-default) + son padding vertical de 6px/6px), plus 8px
+     pour rester juste au-dessus du bouton plutôt que collé dessus. */
+  bottom: calc(var(--height-default) + 12px + env(safe-area-inset-bottom) + 8px);
   transform: translateX(-50%) translateY(12px);
   max-width: calc(100% - 32px);
   padding: var(--gap-default) var(--padding-horizontal-default);
