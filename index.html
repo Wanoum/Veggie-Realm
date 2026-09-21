@@ -2013,6 +2013,24 @@
         renderStepsList();
         validateWizardStep();
         startEditingStep(nextIdx);
+        return;
+      }
+
+      if (e.key === 'Backspace' && textarea.selectionStart === 0 && textarea.selectionEnd === 0 && idx > 0) {
+        // Curseur au tout début : fusionne avec l'étape précédente plutôt
+        // que de ne rien faire, comme un retour à la ligne supprimé dans un
+        // éditeur de texte classique.
+        e.preventDefault();
+        committed = true;
+        const prevText = stepRows[idx - 1];
+        const cursorPos = prevText.length;
+        stepRows[idx - 1] = prevText + textarea.value;
+        stepRows.splice(idx, 1);
+        renderStepsList();
+        validateWizardStep();
+        startEditingStep(idx - 1);
+        const mergedTextarea = document.querySelector(`.step-row[data-idx="${idx - 1}"] textarea`);
+        if (mergedTextarea) mergedTextarea.setSelectionRange(cursorPos, cursorPos);
       }
     });
   }
