@@ -21,7 +21,7 @@
   <h1 class="serif" style="font-size:30px;text-align:center;">Veggie Realm</h1>
   <p style="text-align:center;color:var(--text-icon-default);margin-bottom:24px;">Connecte-toi pour retrouver tes recettes</p>
 
-  <div style="max-width:340px;margin:0 auto;">
+  <div>
     <div class="subtabs">
       <button type="button" id="authTabLogin" class="subtab-btn active">Connexion</button>
       <button type="button" id="authTabSignup" class="subtab-btn">Inscription</button>
@@ -44,7 +44,7 @@
   <h1 class="serif" style="font-size:30px;text-align:center;">Nouveau mot de passe</h1>
   <p style="text-align:center;color:var(--text-icon-default);margin-bottom:24px;">Choisis un nouveau mot de passe pour ton compte</p>
 
-  <div style="max-width:340px;margin:0 auto;">
+  <div>
     <label class="field-label">Nouveau mot de passe</label>
     <input id="reset_password" class="field-input" type="password" placeholder="••••••••" autocomplete="new-password" />
 
@@ -81,13 +81,13 @@
   <div id="detailContent"></div>
 </div>
 
-<div id="cookingModeView" style="display:none;position:fixed;inset:0;overflow:hidden;background:var(--text-icon-accent-strong);color:white;z-index:300;flex-direction:column;">
+<div id="cookingModeView" style="display:none;position:fixed;inset:0;overflow:hidden;background:var(--text-icon-accent-strong);color:var(--text-icon-on-primary);z-index:300;flex-direction:column;">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:16px;padding-top:calc(16px + env(safe-area-inset-top));">
     <div>
       <p id="cookingRecipeTitle" style="font-family:'Inter',sans-serif;font-size:20px;line-height:120%;font-weight:600;margin:0 0 2px;"></p>
       <p id="cookingRecipeServings" style="font-family:'Inter',sans-serif;font-size:14px;line-height:120%;color:rgba(255,255,255,0.7);margin:0;"></p>
     </div>
-    <button class="icon-btn" style="background:var(--surface-high);border:none;" onclick="closeCookingMode()"><i class="bi bi-x-lg icon"></i></button>
+    <button class="icon-btn icon-btn-borderless" onclick="closeCookingMode()"><i class="bi bi-x-lg icon"></i></button>
   </div>
   <div id="cookingScroll" class="cooking-scroll" style="flex:1;">
     <p id="cookingStepText" class="cooking-step-text"></p>
@@ -194,7 +194,7 @@
   <p id="formError" style="color:var(--text-icon-error);font-size:14px;"></p>
 </div>
 
-<div id="wizardFooter" style="display:none;position:fixed;bottom:0;left:0;right:0;display:flex;gap:10px;padding:40px 16px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(to bottom, rgba(255, 253, 248, 0) 0px, rgba(255, 253, 248, 0.8) 40px, rgba(255, 253, 248, 0.8) 100%);z-index:50;">
+<div id="wizardFooter" class="fixed-action-footer" style="display:none;">
   <button type="button" id="wizardBackBtn" class="secondary-btn btn-square" style="margin-top:0;"><i class="bi bi-arrow-left" style="font-size:20px;"></i></button>
   <button type="button" id="wizardNextBtn" class="primary-btn" style="margin-top:0;flex:1;"><i class="bi bi-arrow-right"></i> Suivant</button>
 </div>
@@ -221,7 +221,7 @@
 <div id="accountView" style="display:none;">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);">
     <h1 style="margin:0;">Compte</h1>
-    <button type="button" id="logoutBtn" class="icon-btn" style="border:none;background:none;color:var(--text-icon-error);"><i class="bi bi-box-arrow-right" style="font-size:24px;"></i></button>
+    <button type="button" id="logoutBtn" class="icon-btn icon-btn-ghost" style="color:var(--text-icon-error);"><i class="bi bi-box-arrow-right" style="font-size:24px;"></i></button>
   </div>
   <div>
     <div class="settings-list">
@@ -248,16 +248,15 @@
   </div>
 </div>
 
-<div id="accountEditView" style="display:none;">
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--gap-vertical-section);">
-    <button type="button" class="icon-btn" onclick="closeAccountEdit()"><i class="bi bi-arrow-left icon"></i></button>
-    <h1 id="accountEditTitle" style="margin:0;font-size:30px;"></h1>
-  </div>
-  <div>
-    <div id="accountEditContent"></div>
-    <p id="accountEditError" style="color:var(--text-icon-error);font-size:14px;margin-top:10px;"></p>
-    <button type="button" id="accountEditSaveBtn" class="primary-btn">Enregistrer</button>
-  </div>
+<div id="accountEditView" style="display:none;padding-bottom:110px;">
+  <h1 id="accountEditTitle" style="font-size:30px;"></h1>
+  <div id="accountEditContent"></div>
+  <p id="accountEditError" style="color:var(--text-icon-error);font-size:14px;margin-top:10px;"></p>
+</div>
+
+<div id="accountEditFooter" class="fixed-action-footer" style="display:none;">
+  <button type="button" class="secondary-btn btn-square" style="margin-top:0;" onclick="closeAccountEdit()"><i class="bi bi-arrow-left" style="font-size:20px;"></i></button>
+  <button type="button" id="accountEditSaveBtn" class="primary-btn" style="margin-top:0;flex:1;">Enregistrer</button>
 </div>
 
 <div id="planningView" style="display:none;">
@@ -436,8 +435,8 @@
       <div class="card-v2" onclick="openRecipeDetail(${i})">
         <div class="card-v2-photo">
           ${safeUrl(r.photo_url)
-            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML='<div class=&quot;photo-empty&quot; style=&quot;background:var(--grey-700);&quot;><i class=&quot;bi bi-image&quot; style=&quot;color:white;&quot;></i></div>'" />`
-            : '<div class="photo-empty" style="background:var(--grey-700);"><i class="bi bi-image" style="color:white;"></i></div>'}
+            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML='<div class=&quot;photo-empty&quot; style=&quot;background:var(--grey-700);&quot;><i class=&quot;bi bi-image&quot; style=&quot;color:var(--text-icon-on-primary);&quot;></i></div>'" />`
+            : '<div class="photo-empty" style="background:var(--grey-700);"><i class="bi bi-image" style="color:var(--text-icon-on-primary);"></i></div>'}
         </div>
         <div class="card-v2-textwrap">
           <!-- Flou d'arrière-plan progressif désactivé pour le moment (voir progressiveBlurLayersHtml, commentée plus haut) -->
@@ -619,7 +618,7 @@
         <div style="height:90px;"></div>
       </div>
 
-      <div class="detail-footer">
+      <div class="detail-footer fixed-action-footer">
         <button type="button" class="secondary-btn btn-square" style="margin-top:0;" onclick="addCurrentRecipeToPlanning('${r.id}')"><i class="bi bi-calendar-plus" style="font-size:20px;"></i></button>
         ${hasSteps ? `<button type="button" class="primary-btn" style="margin-top:0;" onclick="openCookingMode(${i})">Cook mode</button>` : ''}
       </div>
@@ -752,7 +751,7 @@
     return matches.map(ing => {
       const q = ing.quantity != null ? (ing.quantity * target / base) : null;
       const qDisplay = q != null ? (Number.isInteger(q) ? q : q.toFixed(1).replace(/[.]0$/, '')) : '';
-      return `<span class="meta-pill" style="background:rgba(255,255,255,0.18);color:white;font-size:14px;padding:8px 14px;"><i class="bi bi-stars"></i> ${qDisplay} ${escapeHtml(ing.unit)} ${escapeHtml(ing.name)}</span>`;
+      return `<span class="meta-pill" style="background:rgba(255,255,255,0.18);color:var(--text-icon-on-primary);font-size:14px;padding:8px 14px;"><i class="bi bi-stars"></i> ${qDisplay} ${escapeHtml(ing.unit)} ${escapeHtml(ing.name)}</span>`;
     }).join('');
   }
 
@@ -1236,10 +1235,13 @@
     document.getElementById('accountEditSaveBtn').onclick = () => saveAccountEdit(field);
     document.getElementById('accountView').style.display = 'none';
     document.getElementById('accountEditView').style.display = 'block';
+    document.getElementById('accountEditFooter').style.display = 'flex';
+    document.getElementById('bottomNav').style.display = 'none';
   }
 
   function closeAccountEdit() {
     document.getElementById('accountEditView').style.display = 'none';
+    document.getElementById('accountEditFooter').style.display = 'none';
     showAccount();
   }
 
@@ -3033,7 +3035,7 @@
 
     if (!currentUser) {
       banner = `
-        <div style="background:var(--text-icon-default);color:white;border-radius:var(--corner-radius-large);padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="background:var(--text-icon-default);color:var(--text-icon-on-primary);border-radius:var(--corner-radius-large);padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <span style="font-size:14px;">Recette partagée${authorName ? ' par ' + escapeHtml(authorName) : ' avec toi'} ✨</span>
           <button type="button" onclick="location.href = location.pathname;" style="background:var(--surface-highest);color:var(--text-icon-default);border:none;border-radius:var(--corner-radius-default);padding:8px 12px;font-size:12px;font-weight:600;white-space:nowrap;">Créer mon compte</button>
         </div>`;

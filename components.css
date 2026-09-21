@@ -19,6 +19,14 @@
   flex-shrink: 0;
 }
 .icon-btn-lg { width: 48px; height: 48px; border: none; }
+/* Bouton icône seul, sans le cercle bordé de .icon-btn (ex: fermer le mode
+   cuisine sur un fond sombre — garde le disque de fond pour rester visible,
+   sans bordure). */
+.icon-btn-borderless { border: none; }
+/* Bouton icône seul totalement transparent, sans cercle ni fond (ex: se
+   déconnecter) : juste l'icône, dans le contexte d'une page classique où
+   un disque de fond n'est pas nécessaire pour la lisibilité. */
+.icon-btn-ghost { border: none; background: none; }
 .icon { font-size: 20px; line-height: 1; color: var(--text-icon-default); }
 
 .secondary-btn {
@@ -208,7 +216,7 @@
 .field-input {
   width: 100%;
   height: var(--height-default);
-  padding: 0 16px;
+  padding: 0 var(--padding-horizontal-default);
   border: 1px solid var(--border-default);
   border-radius: var(--corner-radius-default);
   font-family: 'Inter', sans-serif;
@@ -225,7 +233,7 @@
   align-items: center;
   gap: 10px;
   height: var(--height-default);
-  padding: 0 16px;
+  padding: 0 var(--padding-horizontal-default);
   border: 1px solid var(--border-default);
   border-radius: var(--corner-radius-default);
   background: var(--surface-highest);
@@ -257,7 +265,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 16px 0;
+  padding: var(--padding-vertical-large) 0;
   border-bottom: 1px solid var(--border-divider);
   background: none;
   border-left: none;
@@ -337,7 +345,7 @@
   border-radius: var(--corner-radius-default);
   animation: skeleton-pulse 1.4s ease-in-out infinite;
 }
-.skeleton-block { border-radius: var(--corner-radius-large); }
+.skeleton-block { border-radius: var(--corner-radius-default); }
 
 /* ---- Cards recette ---- */
 .card { cursor: pointer; }
@@ -347,7 +355,7 @@
 }
 .mini-card-photo {
   height: 90px;
-  border-radius: var(--corner-radius-large);
+  border-radius: var(--corner-radius-default);
   background: var(--surface-low);
   overflow: hidden;
   margin-bottom: 6px;
@@ -356,7 +364,7 @@
 .mini-card p { font-size: 12px; font-weight: 600; margin: 0; line-height: 1.3; color: var(--text-icon-default); }
 .card-photo {
   aspect-ratio: 3 / 4;
-  border-radius: var(--corner-radius-large);
+  border-radius: var(--corner-radius-default);
   background: var(--surface-low);
   margin-bottom: 8px;
   overflow: hidden;
@@ -415,7 +423,7 @@
   font-size: 24px;
   line-height: 1.15;
   font-weight: 700;
-  color: white;
+  color: var(--text-icon-on-primary);
 }
 
 /* ---- Autocomplete (suggestions d'ingrédients) ---- */
@@ -423,7 +431,7 @@
   position: absolute;
   background: var(--surface-highest);
   border: 1px solid var(--border-divider);
-  border-radius: var(--corner-radius-large);
+  border-radius: var(--corner-radius-default);
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   z-index: 200;
   max-height: 160px;
@@ -463,4 +471,20 @@
 .toast.visible {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+/* ---- Barre d'actions fixe en bas d'écran (wizard, fiche recette, édition
+   d'un réglage du compte) : dégradé partagé (correspond à --light-50) pour
+   fondre le contenu qui défile dessous, au lieu de le dupliquer partout. */
+.fixed-action-footer {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  display: flex;
+  gap: 10px;
+  padding: 40px 16px calc(16px + env(safe-area-inset-bottom));
+  background: linear-gradient(to bottom,
+    rgba(255, 253, 248, 0) 0px,
+    rgba(255, 253, 248, 0.8) 40px,
+    rgba(255, 253, 248, 0.8) 100%);
+  z-index: 50;
 }

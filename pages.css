@@ -46,7 +46,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   background: var(--surface-lowest);
   color: var(--text-icon-default);
   padding: 12px 14px;
-  border-radius: var(--corner-radius-large);
+  border-radius: var(--corner-radius-default);
   font-family: 'Inter', sans-serif;
   font-size: 14px;
   line-height: 120%;
@@ -69,7 +69,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   font-size: 36px;
   line-height: 1.3;
   margin: 0;
-  color: white;
+  color: var(--text-icon-on-primary);
   transition: opacity 0.25s ease;
 }
 .cooking-step-ingredients {
@@ -78,19 +78,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   gap: 8px;
   transition: opacity 0.25s ease;
 }
-.detail-footer {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  padding: 40px 16px calc(16px + env(safe-area-inset-bottom));
-  background: linear-gradient(to bottom,
-    rgba(255, 253, 248, 0) 0px,
-    rgba(255, 253, 248, 0.8) 40px,
-    rgba(255, 253, 248, 0.8) 100%);
-  z-index: 50;
-}
+.detail-footer { align-items: flex-end; }
 
 /* ---- Formulaire d'ajout / édition de recette ---- */
 .row-item {
@@ -133,7 +121,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--border-divider);
-  border-radius: var(--corner-radius-large);
+  border-radius: var(--corner-radius-default);
   font-size: 14px;
   resize: vertical;
   min-height: 44px;
@@ -167,7 +155,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   padding: 24px;
   background: var(--interaction-tertiary);
   border: 2px dashed var(--border-accent);
-  border-radius: var(--corner-radius-large);
+  border-radius: var(--corner-radius-default);
   color: var(--text-icon-default);
   font-family: 'Inter', sans-serif;
   font-size: 22px;
@@ -185,6 +173,13 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
    ici) qui s'ajoutait sinon en plus, créant un vide bien trop grand sous
    les champs quand le contenu remplit l'écran. */
 #formView {
+  margin-bottom: calc(-1 * (var(--height-default) + 12px + env(safe-area-inset-bottom) + var(--padding-vertical-large)));
+}
+
+/* Sous-page de réglage du compte : même bascule que #formView, puisque
+   #bottomNav est masqué au profit de #accountEditFooter (bouton retour +
+   enregistrer fixe). */
+#accountEditView {
   margin-bottom: calc(-1 * (var(--height-default) + 12px + env(safe-area-inset-bottom) + var(--padding-vertical-large)));
 }
 
@@ -311,19 +306,6 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 }
 .steps-inline-input::placeholder { color: var(--text-icon-secondary); }
 .steps-inline-input:focus { outline: none; }
-/* Ancien composant de planning par jour, non utilisé par l'écran Planning
-   actuel (qui fonctionne par compteur de repas) — laissé au cas où. */
-.day-row {
-  background: var(--surface-highest);
-  border: 1px solid var(--border-divider);
-  border-radius: var(--corner-radius-large);
-  padding: 12px 14px;
-  margin-bottom: 10px;
-}
-.day-row .day-name { font-size: 14px; color: var(--text-icon-secondary); margin-bottom: 6px; text-transform: capitalize; }
-.day-row select { width: 100%; padding: 9px 10px; border: 1px solid var(--border-divider); border-radius: var(--corner-radius-large); font-size: 14px; background: var(--surface-highest); margin-bottom: 6px; }
-.day-row .servings-mini { display: flex; align-items: center; gap: 10px; }
-.day-row .servings-mini button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border-divider); background: var(--surface-highest); font-size: 14px; }
 
 /* ---- Liste de courses ---- */
 .course-item {
@@ -369,7 +351,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 .meal-category-card {
   height: 86px;
   background: var(--surface-lowest);
-  border-radius: var(--corner-radius-large);
+  border-radius: var(--corner-radius-default);
   padding: 0;
   display: flex;
   flex-direction: column;
