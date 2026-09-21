@@ -541,9 +541,11 @@
     const savedServings = loadRecipeServings()[r.id];
     const defaultServings = isPieceMode(r) ? 1 : userDefaultServings;
     currentServings[i] = savedServings != null ? savedServings : defaultServings;
-    document.getElementById('listView').style.display = 'none';
-    document.getElementById('formView').style.display = 'none';
-    document.getElementById('wizardFooter').style.display = 'none';
+    // hideAllViews() cache tout, y compris planningView : sans ça, une
+    // fiche recette ouverte depuis le planning laissait le planning visible
+    // en dessous (repris tel quel plus loin dans le wizard d'édition, faute
+    // de hauteur pour le masquer).
+    hideAllViews();
     document.getElementById('detailView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'none';
     document.body.style.background = 'var(--surface-high)';
