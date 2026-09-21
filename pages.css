@@ -364,7 +364,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 .meal-category-number { font-family: 'IBM Plex Mono', monospace; font-size: 40px; line-height: 100%; font-weight: 400; color: var(--text-icon-default); margin: 0; }
 .meal-category-label { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 120%; font-weight: 400; color: var(--text-icon-secondary); margin: 6px 0 0; }
 /* Sélectionné : même traitement que les onglets/chips actifs (.subtab-btn.active, .filter-chip.active). */
-.meal-category-card.active { background: var(--interaction-primary); border-radius: var(--corner-radius-round); }
+.meal-category-card.active { background: var(--interaction-primary); border-radius: var(--corner-radius-xlarge); }
 .meal-category-card.active .meal-category-number,
 .meal-category-card.active .meal-category-label { color: var(--text-icon-on-primary); }
 .meal-category-card.active .meal-category-label { font-weight: 500; }
