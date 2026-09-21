@@ -60,7 +60,7 @@
 
 <div id="savedRecipesView" style="display:none;">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--gap-vertical-section);">
-    <button type="button" class="icon-btn icon-btn-ghost" onclick="showHome()"><i class="bi bi-arrow-left" style="font-size:20px;"></i></button>
+    <button type="button" class="secondary-btn btn-square" style="margin-top:0;" onclick="showHome()"><i class="bi bi-arrow-left" style="font-size:20px;"></i></button>
     <h1 class="text-headline" style="margin:0;">Recettes partagées</h1>
   </div>
   <div id="savedRecipesList"></div>
@@ -75,10 +75,7 @@
   <div id="tagFilters" class="tag-filters"></div>
 
   <div id="savedRecipesSection" style="display:none;margin-bottom:20px;">
-    <button type="button" class="settings-row" onclick="showSavedRecipes()">
-      Recettes partagées avec toi
-      <i class="bi bi-chevron-right"></i>
-    </button>
+    <button type="button" onclick="showSavedRecipes()" style="display:block;background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;">Recettes partagées avec toi</button>
   </div>
 
   <p class="count" id="count">Chargement...</p>
