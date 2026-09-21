@@ -166,7 +166,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   gap: 20px;
   padding: 24px;
   background: var(--interaction-tertiary);
-  border: 2px dashed var(--border-default);
+  border: 2px dashed var(--border-accent);
   border-radius: var(--corner-radius-large);
   color: var(--text-icon-default);
   font-family: 'Inter', sans-serif;
