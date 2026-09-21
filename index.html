@@ -225,11 +225,11 @@
   </div>
   <div>
     <div class="settings-list">
-      <div class="settings-row">
+      <button type="button" class="settings-row" onclick="openAccountEdit('email')">
         <span>Email</span>
         <span class="settings-row-value" id="account_email_value"></span>
         <i class="bi bi-chevron-right"></i>
-      </div>
+      </button>
       <button type="button" class="settings-row" onclick="openAccountEdit('display_name')">
         <span>Pseudo</span>
         <span class="settings-row-value" id="account_display_name_value"></span>
@@ -1205,7 +1205,10 @@
     const errEl = document.getElementById('accountEditError');
     errEl.textContent = '';
 
-    if (field === 'display_name') {
+    if (field === 'email') {
+      titleEl.textContent = 'Email';
+      contentEl.innerHTML = `<input class="field-input" value="${escapeHtml(currentUser.email)}" readonly />`;
+    } else if (field === 'display_name') {
       titleEl.textContent = 'Pseudo';
       contentEl.innerHTML = `<input id="accountEdit_displayName" class="field-input" placeholder="Ton pseudo" value="${escapeHtml(accountProfileCache.display_name || '')}" />`;
     } else if (field === 'password') {
@@ -1232,7 +1235,11 @@
       };
     }
 
-    document.getElementById('accountEditSaveBtn').onclick = () => saveAccountEdit(field);
+    const saveBtn = document.getElementById('accountEditSaveBtn');
+    saveBtn.classList.toggle('disabled-look', field === 'email');
+    saveBtn.onclick = field === 'email'
+      ? () => showToast("Cette fonctionnalité n'est pas encore disponible")
+      : () => saveAccountEdit(field);
     document.getElementById('accountView').style.display = 'none';
     document.getElementById('accountEditView').style.display = 'block';
     document.getElementById('accountEditFooter').style.display = 'flex';

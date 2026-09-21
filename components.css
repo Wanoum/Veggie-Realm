@@ -68,7 +68,7 @@
   box-shadow: none;
 }
 .btn-square { width: var(--height-default); flex: 0 0 var(--height-default); padding: 0; }
-.primary-btn:disabled, .secondary-btn:disabled {
+.primary-btn:disabled, .primary-btn.disabled-look, .secondary-btn:disabled {
   background: var(--surface-lowest);
   color: var(--text-icon-disabled);
   border-color: var(--surface-lowest);

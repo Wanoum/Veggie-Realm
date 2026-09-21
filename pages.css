@@ -156,9 +156,10 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   background: var(--interaction-tertiary);
   border: 2px dashed var(--border-accent);
   border-radius: var(--corner-radius-default);
-  color: var(--text-icon-default);
+  color: var(--text-icon-accent);
   font-family: 'Inter', sans-serif;
-  font-size: 22px;
+  font-size: 18px;
+  line-height: 120%;
   font-weight: 500;
   margin-bottom: 20px;
 }
