@@ -1266,6 +1266,7 @@
     }
 
     closeAccountEdit();
+    showToast('Modifications enregistrées');
   }
 
   document.getElementById('navHome').onclick = showHome;
@@ -1635,7 +1636,7 @@
       navigator.share({ title: r.title, text: `Regarde cette recette : ${r.title}`, url: shareUrl }).catch(() => {});
     } else if (navigator.clipboard) {
       await navigator.clipboard.writeText(shareUrl);
-      alert("Lien copié dans le presse-papier !");
+      showToast('Lien copié dans le presse-papier');
     } else {
       prompt("Copie ce lien :", shareUrl);
     }
@@ -1655,6 +1656,7 @@
     }
     await loadRecipes();
     showHome();
+    showToast('Recette supprimée');
   }
 
   // ---- Normalisation ingrédients / unités ----
@@ -1791,6 +1793,7 @@
       ingRows.push(...parsed, { qtyUnitText: '', name: '' });
       renderIngRows();
       validateWizardStep();
+      showToast(`${parsed.length} ingrédient${parsed.length > 1 ? 's' : ''} ajouté${parsed.length > 1 ? 's' : ''}`);
     }
   }
 
@@ -2104,6 +2107,7 @@
     e.target.value = '';
     renderStepsList();
     validateWizardStep();
+    showToast(`${lines.length} étape${lines.length > 1 ? 's' : ''} ajoutée${lines.length > 1 ? 's' : ''}`);
   });
 
   // ---- Upload de photo (galerie / appareil photo) ----
@@ -2778,6 +2782,7 @@
     mealPlan = {};
     try { localStorage.removeItem(COURSES_CHECKED_KEY); } catch { /* ignoré */ }
     renderPlanningRecipes();
+    showToast('Planning réinitialisé');
   };
 
   document.getElementById('subtabRecipes').onclick = () => {
@@ -3087,11 +3092,13 @@
       if (error) { alert("Erreur : " + error.message); btn.disabled = false; return; }
       btn.dataset.saved = 'false';
       icon.className = 'bi bi-bookmark';
+      showToast('Recette retirée');
     } else {
       const { error } = await sb.from('saved_recipes').insert({ user_id: currentUser.id, recipe_id: recipeId });
       if (error) { alert("Erreur : " + error.message); btn.disabled = false; return; }
       btn.dataset.saved = 'true';
       icon.className = 'bi bi-bookmark-fill';
+      showToast('Recette enregistrée');
     }
 
     btn.disabled = false;
