@@ -298,6 +298,7 @@
   </div>
 </div>
 
+<div id="toast" class="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -634,6 +635,7 @@
     requestMealTypeForPlanning(recipeId, async (mealType) => {
       const newVal = (mealPlan[recipeId]?.count || 0) + 1;
       await applyMealPlanChange(recipeId, newVal, mealType);
+      showToast('Ajouté au planning');
     });
   }
 
@@ -880,6 +882,16 @@
     document.getElementById('navAdd').classList.remove('active');
     document.getElementById('navPlanning').classList.remove('active');
     document.getElementById('navAccount').classList.remove('active');
+  }
+
+  // ---- Toast (confirmation courte, non bloquante) ----
+  let toastTimeout = null;
+  function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('visible');
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => toast.classList.remove('visible'), 2500);
   }
 
   function showHome() {
@@ -2396,9 +2408,10 @@
 
     if (wasEditing) {
       const idx = recipes.findIndex(r => r.id === wasEditing);
-      if (idx !== -1) { showDetail(idx); return; }
+      if (idx !== -1) { showDetail(idx); showToast('Recette modifiée'); return; }
     }
     showHome();
+    showToast('Recette enregistrée');
   }
 
   resetForm();
@@ -2504,10 +2517,12 @@
         const recipeId = e.currentTarget.dataset.planRecipe;
         const delta = Number(e.currentTarget.dataset.delta);
         if (delta < 0 && !mealPlan[recipeId]) return;
+        const wasPlanned = !!mealPlan[recipeId];
         requestMealTypeForPlanning(recipeId, async (mealType) => {
           const newVal = Math.max(0, (mealPlan[recipeId]?.count || 0) + delta);
           await applyMealPlanChange(recipeId, newVal, mealType);
           renderPlanningRecipes();
+          if (!wasPlanned && newVal > 0) showToast('Ajouté au planning');
         });
       };
     });

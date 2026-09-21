@@ -435,3 +435,29 @@
   cursor: pointer;
 }
 .autocomplete-item:hover, .autocomplete-item.highlighted { background: var(--surface-low); }
+
+/* ---- Toast (confirmation courte, ex: "Recette enregistrée") ---- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  transform: translateX(-50%) translateY(12px);
+  max-width: calc(100% - 32px);
+  padding: var(--gap-default) var(--padding-horizontal-default);
+  background: var(--interaction-primary);
+  color: var(--text-icon-on-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  border-radius: var(--corner-radius-round);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  z-index: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
