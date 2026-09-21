@@ -454,7 +454,8 @@
      pour rester juste au-dessus du bouton plutôt que collé dessus. */
   bottom: calc(var(--height-default) + 12px + env(safe-area-inset-bottom) + 8px);
   transform: translateX(-50%) translateY(12px);
-  max-width: calc(100% - 32px);
+  width: max-content;
+  max-width: calc(100% - (2 * var(--padding-horizontal-app)));
   padding: var(--gap-default) var(--padding-horizontal-default);
   background: var(--interaction-primary);
   color: var(--text-icon-on-primary);
