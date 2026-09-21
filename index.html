@@ -108,16 +108,12 @@
     </div>
     <p id="importStatus" style="font-size:14px;color:var(--text-icon-secondary);margin:8px 0 0;"></p>
 
-    <button type="button" class="secondary-btn" style="width:100%;margin-top:12px;" onclick="document.getElementById('recipeFileInput').click()">
-      <i class="bi bi-file-earmark-arrow-up"></i> Importer un fichier (PDF, Word)
+    <button type="button" class="wizard-source-tile" style="margin-top:20px;" onclick="document.getElementById('recipeFileInput').click()">
+      <i class="bi bi-file-earmark-arrow-up"></i>
+      <span>Importer un fichier (PDF, Word)</span>
     </button>
     <input type="file" id="recipeFileInput" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none;" onchange="performFileImport(this.files[0])" />
-    <p id="fileImportStatus" style="font-size:14px;color:var(--text-icon-secondary);margin:8px 0 0;"></p>
-
-    <button type="button" class="wizard-source-tile" style="margin-top:20px;" onclick="alert('Bientôt disponible !')">
-      <img src="src/capture-recipe.png" alt="" />
-      <span>Photographier une recette</span>
-    </button>
+    <p id="fileImportStatus" style="font-size:14px;color:var(--text-icon-secondary);margin:4px 0 0;"></p>
 
     <button type="button" class="wizard-source-tile" onclick="chooseNewRecipe()">
       <img src="src/create-new-recipe.png" alt="" />
