@@ -108,6 +108,12 @@
     </div>
     <p id="importStatus" style="font-size:14px;color:var(--text-icon-secondary);margin:8px 0 0;"></p>
 
+    <button type="button" class="secondary-btn" style="width:100%;margin-top:12px;" onclick="document.getElementById('recipeFileInput').click()">
+      <i class="bi bi-file-earmark-arrow-up"></i> Importer un fichier (PDF, Word)
+    </button>
+    <input type="file" id="recipeFileInput" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none;" onchange="performFileImport(this.files[0])" />
+    <p id="fileImportStatus" style="font-size:14px;color:var(--text-icon-secondary);margin:8px 0 0;"></p>
+
     <button type="button" class="wizard-source-tile" style="margin-top:20px;" onclick="alert('Bientôt disponible !')">
       <img src="src/capture-recipe.png" alt="" />
       <span>Photographier une recette</span>
@@ -1007,6 +1013,28 @@
     document.getElementById('importFetchBtn').disabled = !isValid;
   }
 
+  // Préremplit le formulaire avec les données renvoyées par l'un ou l'autre
+  // endpoint d'import (URL ou fichier), qui partagent la même forme de réponse.
+  function applyImportedRecipeData(data, sourceUrl) {
+    importedSourceUrl = data.source_url || sourceUrl || null;
+    document.getElementById('f_title').value = data.title || '';
+    document.getElementById('f_photo').value = data.photo_url || '';
+    updatePhotoPreview(data.photo_url || null);
+    document.getElementById('f_servings').value = data.servings || '';
+    document.getElementById('f_cook').value = data.cook_time_minutes || '';
+    document.getElementById('f_oven').value = data.oven_temp_celsius || '';
+
+    ingRows = (data.ingredients || []).map(ing => ({
+      qtyUnitText: [ing.quantity, ing.unit].filter(v => v != null && v !== '').join(' '),
+      name: ing.name || ''
+    }));
+    ingRows.push({ qtyUnitText: '', name: '' });
+    renderIngRows();
+
+    stepRows = [...(data.steps || [])];
+    renderStepsList();
+  }
+
   async function performImport() {
     const url = document.getElementById('import_url').value.trim();
     const statusEl = document.getElementById('importStatus');
@@ -1037,24 +1065,7 @@
         return;
       }
 
-      // Préremplit les champs avec les données importées
-      importedSourceUrl = data.source_url || url;
-      document.getElementById('f_title').value = data.title || '';
-      document.getElementById('f_photo').value = data.photo_url || '';
-      updatePhotoPreview(data.photo_url || null);
-      document.getElementById('f_servings').value = data.servings || userDefaultServings;
-      document.getElementById('f_cook').value = data.cook_time_minutes || '';
-      document.getElementById('f_oven').value = data.oven_temp_celsius || '';
-
-      ingRows = (data.ingredients || []).map(ing => ({
-        qtyUnitText: [ing.quantity, ing.unit].filter(v => v != null && v !== '').join(' '),
-        name: ing.name || ''
-      }));
-      ingRows.push({ qtyUnitText: '', name: '' });
-      renderIngRows();
-
-      stepRows = [...(data.steps || [])];
-      renderStepsList();
+      applyImportedRecipeData(data, url);
 
       statusEl.style.color = 'var(--status-success)';
       statusEl.textContent = "Recette importée ! Vérifie et complète les informations ci-dessous.";
@@ -1065,6 +1076,47 @@
       statusEl.style.color = 'var(--text-icon-error)';
       statusEl.textContent = "Erreur réseau : " + err.message;
       btn.disabled = false;
+    }
+  }
+
+  // Import depuis un fichier PDF ou Word : envoie les octets bruts du
+  // fichier (pas de multipart, le serveur lit le corps tel quel), avec son
+  // type MIME pour que l'API sache quel extracteur utiliser.
+  async function performFileImport(file) {
+    if (!file) return;
+    const statusEl = document.getElementById('fileImportStatus');
+    statusEl.style.color = 'var(--text-icon-secondary)';
+    statusEl.textContent = "Lecture du document...";
+
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const response = await fetch('/api/import-recipe-file', {
+        method: 'POST',
+        headers: {
+          'Content-Type': file.type || 'application/octet-stream',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
+        },
+        body: file
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        statusEl.style.color = 'var(--text-icon-error)';
+        statusEl.textContent = data.error || "Erreur lors de l'import.";
+        return;
+      }
+
+      applyImportedRecipeData(data, null);
+
+      statusEl.style.color = 'var(--status-success)';
+      statusEl.textContent = "Recette importée ! Vérifie et complète les informations ci-dessous.";
+
+      setTimeout(() => goToWizardStep(2), 600);
+    } catch (err) {
+      statusEl.style.color = 'var(--text-icon-error)';
+      statusEl.textContent = "Erreur réseau : " + err.message;
+    } finally {
+      document.getElementById('recipeFileInput').value = '';
     }
   }
 
