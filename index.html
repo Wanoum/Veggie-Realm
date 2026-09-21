@@ -1993,7 +1993,26 @@
     textarea.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        textarea.blur();
+        // Coupe le texte à la position du curseur plutôt que de tout garder
+        // dans la même étape : ce qui suit devient une nouvelle étape, tout
+        // de suite modifiable pour enchaîner sans clic supplémentaire.
+        committed = true;
+        const cursor = textarea.selectionStart;
+        const before = textarea.value.slice(0, cursor).trim();
+        const after = textarea.value.slice(cursor).trim();
+
+        let nextIdx;
+        if (before) {
+          stepRows[idx] = before;
+          stepRows.splice(idx + 1, 0, after);
+          nextIdx = idx + 1;
+        } else {
+          stepRows[idx] = after;
+          nextIdx = idx;
+        }
+        renderStepsList();
+        validateWizardStep();
+        startEditingStep(nextIdx);
       }
     });
   }
