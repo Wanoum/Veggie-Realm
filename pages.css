@@ -95,10 +95,9 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 /* ---- Formulaire d'ajout / édition de recette ---- */
 .row-item {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   gap: 12px;
   padding: 11px 0;
-  border-bottom: 1px solid var(--border-divider);
 }
 .row-item input {
   flex: 1;
@@ -196,7 +195,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 }
 .form-photo-hero {
   width: 100%;
-  min-height: 220px;
+  min-height: 400px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -215,6 +214,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   padding: 0 var(--padding-horizontal-app) var(--padding-vertical-large);
 }
 #f_title {
+  display: block;
   width: 100%;
   border: none;
   background: none;
@@ -222,6 +222,8 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   font-size: 48px;
   line-height: 100%;
   color: var(--text-icon-default);
+  resize: none;
+  overflow-y: hidden;
 }
 #f_title::placeholder { color: var(--text-icon-secondary); }
 
@@ -242,10 +244,9 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 }
 .step-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--border-divider);
 }
 .step-row.dragging { opacity: 0.4; }
 .step-drag-handle {

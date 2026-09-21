@@ -101,7 +101,7 @@
   <!-- Étape 1 : source -->
   <div id="wizardStep1" class="wizard-step">
     <h1>Nouvelle recette</h1>
-    <p class="text-body-medium" style="margin:0 0 12px;">Importer une recette depuis un site web</p>
+    <p class="text-small-medium" style="margin:0 0 12px;color:var(--text-icon-secondary);">Importer une recette depuis un site web</p>
     <div style="display:flex;gap:8px;">
       <input id="import_url" class="field-input" style="flex:1;min-width:0;" placeholder="https://www.marmiton.org" oninput="updateImportButtonState()" />
       <button type="button" id="importFetchBtn" class="secondary-btn" style="width:auto;margin-top:0;" onclick="performImport()" disabled>Go</button>
@@ -127,7 +127,6 @@
         <img src="src/create-new-recipe.png" alt="" />
         <span class="text-body-medium" style="color:var(--text-icon-accent);">Ajouter une photo</span>
       </div>
-      <button type="button" id="removePhotoBtn" class="icon-btn" style="display:none;position:absolute;top:12px;left:12px;z-index:2;"><i class="bi bi-trash icon"></i></button>
 
       <div id="photoMenu" class="course-sort-menu photo-menu" style="display:none;">
         <button type="button" class="course-sort-menu-item text-body" data-photo-action="gallery">Photothèque</button>
@@ -143,7 +142,7 @@
     <div class="wizard-form-content">
       <p id="photoUploadStatus" style="font-size:12px;color:var(--text-icon-secondary);margin:0;min-height:1em;"></p>
 
-      <input id="f_title" class="serif" placeholder="Titre de la recette" oninput="validateWizardStep()" />
+      <textarea id="f_title" class="serif" placeholder="Titre de la recette" rows="1" oninput="validateWizardStep(); autoResizeTextarea(this);" onkeydown="if (event.key === 'Enter') { event.preventDefault(); this.blur(); }"></textarea>
 
       <div id="f_mealTypes" class="tag-filters" style="margin:0;"></div>
 
@@ -195,7 +194,7 @@
 
 <div id="wizardFooter" style="display:none;position:fixed;bottom:0;left:0;right:0;display:flex;gap:10px;padding:40px 16px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(to bottom, rgba(255, 253, 248, 0) 0px, rgba(255, 253, 248, 0.8) 40px, rgba(255, 253, 248, 0.8) 100%);z-index:50;">
   <button type="button" id="wizardBackBtn" class="secondary-btn btn-square" style="margin-top:0;"><i class="bi bi-arrow-left" style="font-size:20px;"></i></button>
-  <button type="button" id="wizardNextBtn" class="primary-btn" style="margin-top:0;flex:1;">Suivant <i class="bi bi-arrow-right"></i></button>
+  <button type="button" id="wizardNextBtn" class="primary-btn" style="margin-top:0;flex:1;"><i class="bi bi-arrow-right"></i> Suivant</button>
 </div>
 
 <nav id="bottomNav" style="display:none;">
@@ -950,12 +949,15 @@
     document.getElementById('bottomNav').style.display = (step === 1) ? 'flex' : 'none';
     document.getElementById('wizardFooter').style.display = (step === 1) ? 'none' : 'flex';
     document.getElementById('wizardNextBtn').innerHTML = (step === 4)
-      ? 'Enregistrer la recette <i class="bi bi-check-lg"></i>'
-      : 'Suivant <i class="bi bi-arrow-right"></i>';
+      ? '<i class="bi bi-check-lg"></i> Enregistrer la recette'
+      : '<i class="bi bi-arrow-right"></i> Suivant';
     document.getElementById('formError').textContent = '';
 
     if (step === 3) renderIngRows();
-    if (step === 2) autoResizeTextarea(document.getElementById('f_notes'));
+    if (step === 2) {
+      autoResizeTextarea(document.getElementById('f_notes'));
+      autoResizeTextarea(document.getElementById('f_title'));
+    }
     validateWizardStep();
     saveWizardDraft();
   }
@@ -1594,10 +1596,13 @@
   function canonicalizeUnit(raw) {
     if (!raw) return null;
     let u = normalize(raw); // lowercase, trim, sans accents
-    if (UNIT_CANON[u]) return UNIT_CANON[u];
-    // essaie sans le "s" final (pluriel simple) si pas déjà reconnu
-    if (u.endsWith('s') && UNIT_CANON[u.slice(0, -1)]) return UNIT_CANON[u.slice(0, -1)];
-    return raw.trim();
+    let canon = UNIT_CANON[u]
+      || (u.endsWith('s') && UNIT_CANON[u.slice(0, -1)]) // pluriel simple si pas déjà reconnu
+      || raw.trim();
+    // "pièce(s)" est l'unité implicite d'un nombre sans unité précisée :
+    // inutile de l'afficher, un simple chiffre suffit.
+    if (normalize(canon) === 'piece') return null;
+    return canon;
   }
 
   function canonicalizeIngredientName(raw) {
@@ -2000,17 +2005,14 @@
   function updatePhotoPreview(url) {
     const img = document.getElementById('photoPreview');
     const placeholder = document.getElementById('photoPlaceholder');
-    const removeBtn = document.getElementById('removePhotoBtn');
     if (url) {
       img.src = url;
       img.style.display = 'block';
       placeholder.style.display = 'none';
-      removeBtn.style.display = 'flex';
     } else {
       img.style.display = 'none';
       img.src = '';
       placeholder.style.display = 'flex';
-      removeBtn.style.display = 'none';
     }
   }
 
@@ -2083,7 +2085,6 @@
   document.getElementById('photoCameraInput').onchange = (e) => handlePhotoFile(e.target.files[0]);
 
   document.getElementById('photoDropZone').addEventListener('click', (e) => {
-    if (e.target.closest('#removePhotoBtn')) return;
     const menu = document.getElementById('photoMenu');
     menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
   });
@@ -2127,22 +2128,6 @@
       statusEl.textContent = "Impossible de lire le presse-papiers (autorisation refusée ou indisponible sur ce navigateur).";
     }
   }
-
-  document.getElementById('removePhotoBtn').onclick = async (e) => {
-    e.stopPropagation();
-    if (currentSessionUploadPath) {
-      // Photo uploadée cette session, jamais enregistrée : suppression immédiate sûre.
-      await sb.storage.from('recipe-photos').remove([currentSessionUploadPath]);
-      currentSessionUploadPath = null;
-    }
-    // Si c'est la photo déjà enregistrée (originalPhotoUrlForSession), elle n'est retirée du storage
-    // qu'au moment de l'enregistrement effectif (voir saveBtn), pour ne pas casser la recette si on abandonne.
-    document.getElementById('f_photo').value = '';
-    document.getElementById('photoUploadStatus').textContent = '';
-    updatePhotoPreview(null);
-    document.getElementById('photoFileInput').value = '';
-    document.getElementById('photoCameraInput').value = '';
-  };
 
   function resetForm() {
     editingId = null;
