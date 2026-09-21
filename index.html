@@ -58,6 +58,14 @@
   <div id="sharedRecipeContent"></div>
 </div>
 
+<div id="savedRecipesView" style="display:none;">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--gap-vertical-section);">
+    <button type="button" class="icon-btn icon-btn-ghost" onclick="showHome()"><i class="bi bi-arrow-left" style="font-size:20px;"></i></button>
+    <h1 class="text-headline" style="margin:0;">Recettes partagées</h1>
+  </div>
+  <div id="savedRecipesList"></div>
+</div>
+
 <div id="pullIndicator" style="display:flex;justify-content:center;align-items:center;height:0;overflow:hidden;transition:height 0.15s;">
   <i class="bi bi-arrow-clockwise" id="pullIcon" style="font-size:20px;color:var(--text-icon-secondary);"></i>
 </div>
@@ -67,8 +75,10 @@
   <div id="tagFilters" class="tag-filters"></div>
 
   <div id="savedRecipesSection" style="display:none;margin-bottom:20px;">
-    <h2 style="margin:0 0 10px;font-size:14px;">Recettes partagées avec toi</h2>
-    <div id="savedRecipesStrip" style="display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;"></div>
+    <button type="button" class="settings-row" onclick="showSavedRecipes()">
+      Recettes partagées avec toi
+      <i class="bi bi-chevron-right"></i>
+    </button>
   </div>
 
   <p class="count" id="count">Chargement...</p>
@@ -618,7 +628,7 @@
 
       <div class="detail-footer fixed-action-footer">
         <button type="button" class="secondary-btn btn-square" style="margin-top:0;" onclick="addCurrentRecipeToPlanning('${r.id}')"><i class="bi bi-calendar-plus" style="font-size:20px;"></i></button>
-        ${hasSteps ? `<button type="button" class="primary-btn" style="margin-top:0;" onclick="openCookingMode(${i})">Cook mode</button>` : ''}
+        ${hasSteps ? `<button type="button" class="primary-btn" style="margin-top:0;" onclick="openCookingMode(recipes[${i}], ${s})">Cook mode</button>` : ''}
       </div>
     `;
   }
@@ -642,7 +652,7 @@
   function requestMealTypeForPlanning(recipeId, onResolved) {
     const existing = mealPlan[recipeId];
     if (existing) { onResolved(existing.mealType); return; }
-    const r = recipes.find(x => x.id === recipeId);
+    const r = allRecipesForPlanning().find(x => x.id === recipeId);
     const tags = (r?.tags || []).filter(t => MEAL_TYPES.includes(t));
     if (tags.length > 1) {
       openMealTypeChoiceModal(tags, onResolved);
@@ -717,12 +727,17 @@
   let cookingSteps = [];
   let cookingStepIndex = 0;
   let cookingRecipe = null;
+  let cookingServings = null;
   let wakeLock = null;
   let cookingCompletionLogged = false;
 
-  async function openCookingMode(i) {
-    const r = recipes[i];
+  // Prend la recette et le nombre de portions/pièces affiché directement
+  // (plutôt qu'un index dans `recipes`) pour fonctionner aussi bien depuis
+  // la fiche recette d'un propriétaire que depuis une recette partagée, qui
+  // n'est pas forcément dans ce tableau.
+  async function openCookingMode(r, servings) {
     cookingRecipe = r;
+    cookingServings = servings || getRecipeBase(r);
     cookingCompletionLogged = false;
     cookingSteps = r.steps || [];
     if (cookingSteps.length === 0) return;
@@ -730,8 +745,8 @@
 
     document.getElementById('cookingRecipeTitle').textContent = r.title;
     document.getElementById('cookingRecipeServings').textContent = isPieceMode(r)
-      ? `pour ${currentServings[i] || getRecipeBase(r)} pièce${(currentServings[i] || getRecipeBase(r)) > 1 ? 's' : ''}`
-      : `pour ${currentServings[i] || getRecipeBase(r)} portions`;
+      ? `pour ${cookingServings} pièce${cookingServings > 1 ? 's' : ''}`
+      : `pour ${cookingServings} portions`;
     document.getElementById('cookingModeView').style.display = 'flex';
     renderCookingSteps();
 
@@ -743,7 +758,7 @@
   function ingredientChipsForStep(stepText) {
     if (!cookingRecipe) return '';
     const base = getRecipeBase(cookingRecipe);
-    const target = currentServings[currentDetailIndex] || base;
+    const target = cookingServings || base;
     const normalizedStep = normalize(stepText);
     const matches = (cookingRecipe.ingredients || []).filter(ing => normalizedStep.includes(normalize(ing.name)));
     return matches.map(ing => {
@@ -865,6 +880,7 @@
     document.getElementById('accountView').style.display = 'none';
     document.getElementById('accountEditView').style.display = 'none';
     document.getElementById('sharedRecipeView').style.display = 'none';
+    document.getElementById('savedRecipesView').style.display = 'none';
     document.getElementById('edgeSwipeScrim').style.display = 'none';
     document.getElementById('detailView').style.position = '';
     document.getElementById('detailView').style.inset = '';
@@ -1189,6 +1205,39 @@
     updateNavIcons();
     renderPlanningRecipes();
     sessionStorage.setItem('lastView', 'planning');
+  }
+
+  function showSavedRecipes() {
+    window.scrollTo(0, 0);
+    hideAllViews();
+    document.getElementById('savedRecipesView').style.display = 'block';
+    document.getElementById('bottomNav').style.display = 'none';
+    sessionStorage.setItem('lastView', 'saved');
+    renderSavedRecipesList();
+  }
+
+  function renderSavedRecipesList() {
+    const list = document.getElementById('savedRecipesList');
+    if (!list) return;
+    if (savedRecipes.length === 0) {
+      list.innerHTML = '<div class="empty">Aucune recette partagée pour le moment.</div>';
+      return;
+    }
+    list.innerHTML = savedRecipes.map(row => {
+      const r = row.recipe;
+      return `
+        <div class="plan-recipe-row" style="cursor:pointer;" onclick="loadSharedRecipe('${r.share_token}', 'saved')">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:72px;height:72px;border-radius:var(--corner-radius-large);overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+              ${safeUrl(r.photo_url)
+                ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
+                : '<i class="bi bi-image" style="font-size:16px;color:var(--text-icon-secondary);"></i>'}
+            </div>
+            <div class="plan-recipe-name">${escapeHtml(r.title)}</div>
+          </div>
+          <i class="bi bi-chevron-right" style="color:var(--text-icon-default);"></i>
+        </div>`;
+    }).join('');
   }
 
   let accountProfileCache = null;
@@ -2481,12 +2530,24 @@
     (data || []).forEach(row => { mealPlan[row.recipe_id] = { count: row.count, mealType: row.meal_type }; });
   }
 
+  // Recettes partagées (enregistrées via un lien de partage, pas possédées) :
+  // elles peuvent être planifiées comme les recettes possédées, mais ne sont
+  // "parcourables" dans la liste de planning que tant qu'elles y sont
+  // effectivement placées (voir sortedRecipes plus bas).
+  function foreignPlanningRecipes() {
+    return savedRecipes.map(row => row.recipe);
+  }
+
+  function allRecipesForPlanning() {
+    return recipes.concat(foreignPlanningRecipes());
+  }
+
   function renderPlanningRecipes() {
     document.getElementById('planDefaultServingsLabel').textContent = `Pour ${userDefaultServings} personnes`;
 
     const counts = MEAL_TYPES.map(type => {
       let total = 0;
-      recipes.forEach(r => {
+      allRecipesForPlanning().forEach(r => {
         const entry = mealPlan[r.id];
         if (!entry || !entry.count) return;
         // Repli sur le premier tag repas pour les entrées créées avant l'ajout de meal_type.
@@ -2507,9 +2568,15 @@
     const planSortLabels = { alpha: 'Alphabétique', frequent: 'Fréquemment cuisiné' };
     document.getElementById('planSortLabel').textContent = planSortLabels[planSortMode];
 
+    // Une recette partagée n'apparaît dans cette liste que tant qu'elle est
+    // effectivement planifiée : contrairement aux recettes possédées, on ne
+    // peut pas parcourir ici celles des autres.
+    const plannedForeign = foreignPlanningRecipes().filter(r => (mealPlan[r.id]?.count || 0) > 0);
+    const candidateRecipes = recipes.concat(plannedForeign);
+
     let sortedRecipes = planMealTypeFilter
-      ? recipes.filter(r => (r.tags || []).includes(planMealTypeFilter))
-      : [...recipes];
+      ? candidateRecipes.filter(r => (r.tags || []).includes(planMealTypeFilter))
+      : candidateRecipes;
     if (planSortMode === 'frequent') {
       sortedRecipes.sort((a, b) => {
         const countA = cookCounts[a.id] || 0;
@@ -2529,10 +2596,13 @@
         ? (isPieceMode(r) ? `${total} pièce${total > 1 ? 's' : ''}` : `${total} portion${total > 1 ? 's' : ''}`)
         : '';
       const detailIdx = recipes.findIndex(x => x.id === r.id);
+      const thumbOnclick = detailIdx === -1
+        ? `loadSharedRecipe('${r.share_token}', 'planning')`
+        : `openRecipeDetail(${detailIdx}, 'planning')`;
       return `
         <div class="plan-recipe-row">
           <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:72px;height:72px;border-radius:var(--corner-radius-large);overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;" onclick="openRecipeDetail(${detailIdx}, 'planning')">
+            <div style="width:72px;height:72px;border-radius:var(--corner-radius-large);overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;" onclick="${thumbOnclick}">
               ${safeUrl(r.photo_url)
                 ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
                 : '<i class="bi bi-image" style="font-size:16px;color:var(--text-icon-secondary);"></i>'}
@@ -2667,7 +2737,7 @@
     const aggregated = {}; // key: normalized name -> { displayName, rayon, units: { unitKey: { label, quantity } } }
     let hasAnySelection = false;
 
-    recipes.forEach(r => {
+    allRecipesForPlanning().forEach(r => {
       const count = mealPlan[r.id]?.count || 0;
       if (count === 0) return;
       hasAnySelection = true;
@@ -2941,6 +3011,7 @@
       if (draft) resumeFormFromDraft(draft); else showForm();
     }
     else if (lastView === 'account') showAccount();
+    else if (lastView === 'saved') showSavedRecipes();
     else showHome();
 
     loadMealPlan();
@@ -3046,8 +3117,16 @@
 
   // ---- Recette partagée publique (accessible sans compte) ----
   let currentSharedRecipe = null;
+  let sharedRecipeReturnView = 'home'; // où revenir depuis la recette partagée : 'home', 'saved' ou 'planning'
 
-  async function loadSharedRecipe(token) {
+  function goBackFromSharedRecipe() {
+    if (sharedRecipeReturnView === 'saved') showSavedRecipes();
+    else if (sharedRecipeReturnView === 'planning') showPlanning();
+    else showHome();
+  }
+
+  async function loadSharedRecipe(token, returnView) {
+    sharedRecipeReturnView = returnView || 'home';
     // Passe par une fonction serveur (get_shared_recipe) plutôt qu'un select
     // direct sur recipes : elle ne renvoie la recette que si le token exact
     // correspond, indépendamment des policies RLS de la table (voir
@@ -3089,21 +3168,28 @@
     } else if (!isOwnRecipe) {
       const { data: existing } = await sb.from('saved_recipes').select('id').eq('user_id', currentUser.id).eq('recipe_id', r.id).maybeSingle();
       isSaved = !!existing;
-      banner = `
-        ${authorName ? `<p style="font-size:14px;color:var(--text-icon-default);margin:0 0 12px;"><i class="bi bi-person-circle"></i> Partagée par ${escapeHtml(authorName)}</p>` : ''}
-        <button type="button" class="primary-btn" style="margin-top:0;margin-bottom:18px;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="toggleSavedRecipe('${r.id}')" id="saveSharedBtn" data-saved="${isSaved}">
-          <i class="bi ${isSaved ? 'bi-bookmark-fill' : 'bi-bookmark'}" id="saveSharedIcon"></i> Enregistrer cette recette
-        </button>`;
+      banner = authorName ? `<p style="font-size:14px;color:var(--text-icon-default);margin:0 0 12px;"><i class="bi bi-person-circle"></i> Partagée par ${escapeHtml(authorName)}</p>` : '';
     }
 
     const metaPills = buildMetaPills(r);
+    const hasSteps = r.steps && r.steps.length > 0;
+    const showPlanningBtn = !!currentUser;
+    const footer = (showPlanningBtn || hasSteps) ? `
+      <div class="detail-footer fixed-action-footer">
+        ${showPlanningBtn ? `<button type="button" class="secondary-btn btn-square" style="margin-top:0;" onclick="addSharedRecipeToPlanning()"><i class="bi bi-calendar-plus" style="font-size:20px;"></i></button>` : ''}
+        ${hasSteps ? `<button type="button" class="primary-btn" style="margin-top:0;" onclick="openCookingMode(currentSharedRecipe, ${getRecipeBase(r)})">Cook mode</button>` : ''}
+      </div>` : '';
 
     document.getElementById('sharedRecipeContent').innerHTML = `
       <div class="detail-photo">
         ${safeUrl(r.photo_url)
           ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.querySelector('img').style.display='none'" />`
           : '<div class="photo-empty"><i class="bi bi-image" style="font-size:48px;"></i></div>'}
-        ${currentUser ? `<button class="icon-btn icon-btn-lg" style="position:absolute;top:calc(18px + env(safe-area-inset-top));left:18px;" onclick="showHome()"><i class="bi bi-arrow-left icon"></i></button>` : ''}
+        ${currentUser ? `<button class="icon-btn icon-btn-lg" style="position:absolute;top:calc(18px + env(safe-area-inset-top));left:18px;" onclick="goBackFromSharedRecipe()"><i class="bi bi-arrow-left icon"></i></button>` : ''}
+        ${(currentUser && !isOwnRecipe) ? `
+          <button class="icon-btn icon-btn-lg" style="position:absolute;top:calc(18px + env(safe-area-inset-top));right:18px;" onclick="toggleSavedRecipe('${r.id}')" id="saveSharedBtn" data-saved="${isSaved}">
+            <i class="bi ${isSaved ? 'bi-bookmark-fill' : 'bi-bookmark'} icon" id="saveSharedIcon"></i>
+          </button>` : ''}
       </div>
       <div class="detail-sheet">
         <div class="detail-sheet-handle"></div>
@@ -3118,7 +3204,9 @@
         ${r.notes ? `<div class="notice" style="margin-top:16px;">${escapeHtml(r.notes)}</div>` : ''}
         ${stepsHtml}
         ${safeUrl(r.source_url) ? `<p style="margin-top:var(--gap-vertical-section);"><a href="${escapeHtml(safeUrl(r.source_url))}" target="_blank" rel="noopener" style="color:var(--text-icon-accent);font-size:14px;">Source : ${escapeHtml(sourceLinkLabel(r.source_url))}</a></p>` : ''}
+        ${footer ? '<div style="height:90px;"></div>' : ''}
       </div>
+      ${footer}
     `;
     hideAllViewsForShared();
     document.body.style.background = 'var(--surface-high)';
@@ -3133,6 +3221,7 @@
     document.getElementById('planningView').style.display = 'none';
     document.getElementById('accountView').style.display = 'none';
     document.getElementById('authView').style.display = 'none';
+    document.getElementById('savedRecipesView').style.display = 'none';
     document.getElementById('bottomNav').style.display = 'none';
   }
 
@@ -3146,13 +3235,13 @@
       const { error } = await sb.from('saved_recipes').delete().eq('user_id', currentUser.id).eq('recipe_id', recipeId);
       if (error) { alert("Erreur : " + error.message); btn.disabled = false; return; }
       btn.dataset.saved = 'false';
-      icon.className = 'bi bi-bookmark';
+      icon.className = 'bi bi-bookmark icon';
       showToast('Recette retirée');
     } else {
       const { error } = await sb.from('saved_recipes').insert({ user_id: currentUser.id, recipe_id: recipeId });
       if (error) { alert("Erreur : " + error.message); btn.disabled = false; return; }
       btn.dataset.saved = 'true';
-      icon.className = 'bi bi-bookmark-fill';
+      icon.className = 'bi bi-bookmark-fill icon';
       showToast('Recette enregistrée');
     }
 
@@ -3160,37 +3249,47 @@
     loadSavedRecipes();
   }
 
+  // Ajoute une recette partagée au planning : contrairement à une recette
+  // possédée, elle doit d'abord être enregistrée (sinon elle resterait
+  // invisible dans le planning, qui ne parcourt que les recettes possédées
+  // et enregistrées, voir allRecipesForPlanning).
+  async function addSharedRecipeToPlanning() {
+    if (!currentSharedRecipe || !currentUser) return;
+    const r = currentSharedRecipe;
+    const isOwnRecipe = currentUser.id === r.user_id;
+    if (!isOwnRecipe) {
+      const btn = document.getElementById('saveSharedBtn');
+      const alreadySaved = btn?.dataset.saved === 'true';
+      if (!alreadySaved) {
+        const { error } = await sb.from('saved_recipes').insert({ user_id: currentUser.id, recipe_id: r.id });
+        if (error && error.code !== '23505') { alert("Erreur : " + error.message); return; }
+        if (btn) { btn.dataset.saved = 'true'; document.getElementById('saveSharedIcon').className = 'bi bi-bookmark-fill icon'; }
+        await loadSavedRecipes();
+      }
+    }
+    addCurrentRecipeToPlanning(r.id);
+  }
+
   // ---- Recettes enregistrées depuis un partage ----
   let savedRecipes = [];
 
   async function loadSavedRecipes() {
+    // Récupère la recette complète (pas juste l'aperçu) : ces recettes
+    // partagées et enregistrées doivent pouvoir être planifiées comme les
+    // recettes possédées (voir allRecipesForPlanning).
     const { data, error } = await sb
       .from('saved_recipes')
-      .select('id, recipe:recipes(id, title, photo_url, share_token)')
+      .select('id, recipe:recipes(*)')
       .order('saved_at', { ascending: false });
     if (error) { console.error(error); return; }
     savedRecipes = (data || []).filter(row => row.recipe);
-    renderSavedRecipesStrip();
+    renderSavedRecipesSection();
+    renderSavedRecipesList();
+    renderPlanningRecipes();
   }
 
-  function renderSavedRecipesStrip() {
-    const section = document.getElementById('savedRecipesSection');
-    const strip = document.getElementById('savedRecipesStrip');
-    if (savedRecipes.length === 0) {
-      section.style.display = 'none';
-      return;
-    }
-    section.style.display = 'block';
-    strip.innerHTML = savedRecipes.map(row => {
-      const r = row.recipe;
-      return `
-        <div class="mini-card" onclick="loadSharedRecipe('${r.share_token}')">
-          <div class="mini-card-photo">${safeUrl(r.photo_url)
-            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML='<div class=&quot;photo-empty&quot;><i class=&quot;bi bi-image&quot;></i></div>'" />`
-            : '<div class="photo-empty"><i class="bi bi-image"></i></div>'}</div>
-          <p>${escapeHtml(r.title)}</p>
-        </div>`;
-    }).join('');
+  function renderSavedRecipesSection() {
+    document.getElementById('savedRecipesSection').style.display = savedRecipes.length === 0 ? 'none' : 'block';
   }
 
   // ---- Point d'entrée ----
