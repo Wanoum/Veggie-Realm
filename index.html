@@ -1220,9 +1220,9 @@
       contentEl.innerHTML = `
         <p class="text-body" style="color:var(--text-icon-secondary);margin:0 0 16px;">Utilisé pour préremplir le nombre de portions à la création d'une recette.</p>
         <div class="servings-stepper">
-          <button type="button" id="accountEdit_servingsMinus"><i class="bi bi-dash"></i></button>
+          <button type="button" class="servings-minus" id="accountEdit_servingsMinus"><i class="bi bi-dash"></i></button>
           <span class="servings-value" id="accountEdit_servingsValue">${current}</span>
-          <button type="button" id="accountEdit_servingsPlus"><i class="bi bi-plus"></i></button>
+          <button type="button" class="servings-plus" id="accountEdit_servingsPlus"><i class="bi bi-plus"></i></button>
         </div>
       `;
       document.getElementById('accountEdit_servingsMinus').onclick = () => {
@@ -2530,12 +2530,10 @@
         const recipeId = e.currentTarget.dataset.planRecipe;
         const delta = Number(e.currentTarget.dataset.delta);
         if (delta < 0 && !mealPlan[recipeId]) return;
-        const wasPlanned = !!mealPlan[recipeId];
         requestMealTypeForPlanning(recipeId, async (mealType) => {
           const newVal = Math.max(0, (mealPlan[recipeId]?.count || 0) + delta);
           await applyMealPlanChange(recipeId, newVal, mealType);
           renderPlanningRecipes();
-          if (!wasPlanned && newVal > 0) showToast('Ajouté au planning');
         });
       };
     });
