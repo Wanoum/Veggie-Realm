@@ -470,7 +470,10 @@
     } catch { /* ignoré */ }
   }
   function isPieceMode(r) { return r.serving_mode === 'piece'; }
-  function getRecipeBase(r) { return isPieceMode(r) ? 1 : (r.servings || 4); }
+  // Base de la recette telle qu'écrite (ex: 500g de mascarpone = 2 tiramisus) :
+  // "servings" porte ce nombre de pièces produites en mode "à la pièce",
+  // exactement comme il porte le nombre de portions en mode "portions".
+  function getRecipeBase(r) { return r.servings || (isPieceMode(r) ? 1 : 4); }
   // Portions (ou pièces) par repas pour cette recette : reprend la valeur
   // mémorisée sur sa fiche, sinon le défaut du profil (1 pour une recette
   // à la pièce, tant qu'elle n'a jamais été ajustée).
@@ -488,8 +491,6 @@
       btn.classList.toggle('active', btn.dataset.servingMode === mode);
     });
     document.getElementById('f_servingModeMenu').style.display = 'none';
-    document.getElementById('f_servings').style.display = mode === 'piece' ? 'none' : 'block';
-    document.getElementById('f_servingModeWrap').style.flex = mode === 'piece' ? '1' : '2';
   }
   function toggleServingModeMenu() {
     const menu = document.getElementById('f_servingModeMenu');
@@ -602,7 +603,7 @@
           <span class="text-body">${isPieceMode(r) ? 'Pièce(s)' : 'Portions'}</span>
           <div class="servings-stepper">
             <button class="servings-minus" onclick="changeServings(${i}, -1)"><i class="bi bi-dash"></i></button>
-            <span class="servings-value">${isPieceMode(r) ? s + 'x' : s}</span>
+            <span class="servings-value">${s}</span>
             <button class="servings-plus" onclick="changeServings(${i}, 1)"><i class="bi bi-plus"></i></button>
           </div>
         </div>
@@ -728,7 +729,7 @@
 
     document.getElementById('cookingRecipeTitle').textContent = r.title;
     document.getElementById('cookingRecipeServings').textContent = isPieceMode(r)
-      ? `pour ${currentServings[i] || 1} × la recette`
+      ? `pour ${currentServings[i] || getRecipeBase(r)} pièce${(currentServings[i] || getRecipeBase(r)) > 1 ? 's' : ''}`
       : `pour ${currentServings[i] || getRecipeBase(r)} portions`;
     document.getElementById('cookingModeView').style.display = 'flex';
     renderCookingSteps();
@@ -2251,7 +2252,7 @@
       user_id: currentUser.id,
       photo_url: document.getElementById('f_photo').value.trim() || null,
       tags,
-      servings: Number(document.getElementById('f_servings').value) || 4,
+      servings: Number(document.getElementById('f_servings').value) || (formServingMode === 'piece' ? 1 : 4),
       serving_mode: formServingMode,
       cook_time_minutes: document.getElementById('f_cook').value ? Number(document.getElementById('f_cook').value) : null,
       oven_temp_celsius: document.getElementById('f_oven').value ? Number(document.getElementById('f_oven').value) : null,
