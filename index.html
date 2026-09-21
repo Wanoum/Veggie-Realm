@@ -54,7 +54,7 @@
   </div>
 </div>
 
-<div id="sharedRecipeView" style="display:none;">
+<div id="sharedRecipeView" style="display:none;margin:calc(-1 * (var(--padding-horizontal-app) + env(safe-area-inset-top))) calc(-1 * var(--padding-horizontal-app)) 0;">
   <div id="sharedRecipeContent"></div>
 </div>
 
@@ -3054,7 +3054,7 @@
     // migration SQL associée).
     const { data, error } = await sb.rpc('get_shared_recipe', { p_token: token }).single();
     if (error || !data) {
-      document.getElementById('sharedRecipeContent').innerHTML = '<div class="empty" style="padding-top:60px;">Cette recette n\'est plus disponible.</div>';
+      document.getElementById('sharedRecipeContent').innerHTML = '<div class="empty" style="padding-top:60px;padding-left:var(--padding-horizontal-app);padding-right:var(--padding-horizontal-app);">Cette recette n\'est plus disponible.</div>';
       document.getElementById('sharedRecipeView').style.display = 'block';
       return;
     }
