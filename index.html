@@ -612,7 +612,7 @@
         ${ingredientsHtml}
         ${r.notes ? `<div class="notice">${escapeHtml(r.notes)}</div>` : ''}
         ${stepsHtml}
-        ${safeUrl(r.source_url) ? `<p style="margin-top:var(--gap-vertical-section);"><a href="${escapeHtml(safeUrl(r.source_url))}" target="_blank" rel="noopener" style="color:var(--text-icon-accent);font-size:14px;">Source : ${escapeHtml(new URL(r.source_url).hostname.replace('www.', ''))}</a></p>` : ''}
+        ${safeUrl(r.source_url) ? `<p style="margin-top:var(--gap-vertical-section);"><a href="${escapeHtml(safeUrl(r.source_url))}" target="_blank" rel="noopener" style="color:var(--text-icon-accent);font-size:14px;">Source : ${escapeHtml(sourceLinkLabel(r.source_url))}</a></p>` : ''}
         <div style="height:90px;"></div>
       </div>
 
@@ -855,7 +855,7 @@
   }
 
   function hideAllViews() {
-    discardAbandonedPhoto();
+    discardAbandonedUploads();
     document.body.style.background = '';
     document.getElementById('listView').style.display = 'none';
     document.getElementById('detailView').style.display = 'none';
@@ -998,7 +998,7 @@
     // import), qui n'a pas de sens en contexte d'édition.
     if (editingId && wizardStep === 2) {
       const idx = currentDetailIndex;
-      discardAbandonedPhoto();
+      discardAbandonedUploads();
       resetForm();
       clearWizardDraft();
       showDetail(idx);
@@ -1125,7 +1125,23 @@
         return;
       }
 
-      applyImportedRecipeData(data, null);
+      // Conserve le document d'origine pour pouvoir le rouvrir depuis la
+      // recette ("Source"), sur le même stockage que les photos. Un échec
+      // d'upload ne doit pas bloquer l'import : la recette reste utilisable,
+      // simplement sans lien source.
+      let sourceUrl = null;
+      if (currentSessionSourceUploadPath) {
+        sb.storage.from('recipe-photos').remove([currentSessionSourceUploadPath]);
+        currentSessionSourceUploadPath = null;
+      }
+      const sourcePath = `${currentUser.id}/sources/${Date.now()}-${sanitizeFileName(file.name)}`;
+      const { error: uploadError } = await sb.storage.from('recipe-photos').upload(sourcePath, file, { contentType: file.type || 'application/octet-stream' });
+      if (!uploadError) {
+        currentSessionSourceUploadPath = sourcePath;
+        sourceUrl = sb.storage.from('recipe-photos').getPublicUrl(sourcePath).data.publicUrl;
+      }
+
+      applyImportedRecipeData(data, sourceUrl);
       goToWizardStep(2);
     } catch (err) {
       const message = err.name === 'AbortError'
@@ -1601,6 +1617,7 @@
     editingId = r.id;
     currentSessionUploadPath = null;
     originalPhotoUrlForSession = r.photo_url || null;
+    currentSessionSourceUploadPath = null;
     importedSourceUrl = r.source_url || null;
     document.getElementById('formTitle').textContent = "Modifier la recette";
     document.getElementById('f_title').value = r.title || '';
@@ -2127,11 +2144,16 @@
   // ---- Upload de photo (galerie / appareil photo) ----
   let currentSessionUploadPath = null; // photo uploadée cette session, pas encore enregistrée en base
   let originalPhotoUrlForSession = null; // photo déjà enregistrée avant édition (null si ajout)
+  let currentSessionSourceUploadPath = null; // document source (PDF/Word) uploadé cette session, pas encore enregistré en base
 
-  function discardAbandonedPhoto() {
+  function discardAbandonedUploads() {
     if (currentSessionUploadPath) {
       sb.storage.from('recipe-photos').remove([currentSessionUploadPath]);
       currentSessionUploadPath = null;
+    }
+    if (currentSessionSourceUploadPath) {
+      sb.storage.from('recipe-photos').remove([currentSessionSourceUploadPath]);
+      currentSessionSourceUploadPath = null;
     }
   }
 
@@ -2176,6 +2198,19 @@
     const marker = '/recipe-photos/';
     const idx = url.indexOf(marker);
     return idx === -1 ? null : url.slice(idx + marker.length);
+  }
+
+  function sanitizeFileName(name) {
+    return name.replace(/[^\w.\-]+/g, '_');
+  }
+
+  // Libellé du lien "Source" : le nom du fichier d'origine pour un document
+  // importé (PDF/Word, conservé sur notre stockage), le nom d'hôte pour un
+  // lien web importé.
+  function sourceLinkLabel(url) {
+    const path = extractStoragePath(url);
+    if (path) return decodeURIComponent(path.split('/').pop().replace(/^\d+-/, ''));
+    try { return new URL(url).hostname.replace('www.', ''); } catch { return url; }
   }
 
   async function handlePhotoFile(file) {
@@ -2266,6 +2301,7 @@
     editingId = null;
     currentSessionUploadPath = null;
     originalPhotoUrlForSession = null;
+    currentSessionSourceUploadPath = null;
     importedSourceUrl = null;
     document.getElementById('import_url').value = '';
     document.getElementById('importStatus').textContent = '';
@@ -2411,8 +2447,9 @@
       return;
     }
 
-    // La sauvegarde a réussi : la nouvelle photo (si upload cette session) est désormais "officielle".
+    // La sauvegarde a réussi : la nouvelle photo et le document source (si upload cette session) sont désormais "officiels".
     currentSessionUploadPath = null;
+    currentSessionSourceUploadPath = null;
     // Si l'ancienne photo (avant édition) a été remplacée ou retirée, elle est maintenant orpheline : on la supprime.
     if (originalPhotoUrlForSession && originalPhotoUrlForSession !== payload.photo_url) {
       const oldPath = extractStoragePath(originalPhotoUrlForSession);
@@ -3080,7 +3117,7 @@
         ${ingredientsHtml}
         ${r.notes ? `<div class="notice" style="margin-top:16px;">${escapeHtml(r.notes)}</div>` : ''}
         ${stepsHtml}
-        ${safeUrl(r.source_url) ? `<p style="margin-top:var(--gap-vertical-section);"><a href="${escapeHtml(safeUrl(r.source_url))}" target="_blank" rel="noopener" style="color:var(--text-icon-accent);font-size:14px;">Source : ${escapeHtml(new URL(r.source_url).hostname.replace('www.', ''))}</a></p>` : ''}
+        ${safeUrl(r.source_url) ? `<p style="margin-top:var(--gap-vertical-section);"><a href="${escapeHtml(safeUrl(r.source_url))}" target="_blank" rel="noopener" style="color:var(--text-icon-accent);font-size:14px;">Source : ${escapeHtml(sourceLinkLabel(r.source_url))}</a></p>` : ''}
       </div>
     `;
     hideAllViewsForShared();
