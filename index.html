@@ -108,9 +108,9 @@
     </div>
     <p id="importStatus" style="font-size:14px;color:var(--text-icon-secondary);margin:8px 0 0;"></p>
 
-    <button type="button" class="wizard-source-tile" style="margin-top:20px;" onclick="document.getElementById('recipeFileInput').click()">
-      <i class="bi bi-file-earmark-arrow-up"></i>
-      <span>Importer un fichier (PDF, Word)</span>
+    <button type="button" id="fileImportTile" class="wizard-source-tile" style="margin-top:20px;" onclick="document.getElementById('recipeFileInput').click()">
+      <i class="bi bi-file-earmark-arrow-up" id="fileImportTileIcon"></i>
+      <span id="fileImportTileLabel">Importer un fichier (PDF, Word)</span>
     </button>
     <input type="file" id="recipeFileInput" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none;" onchange="performFileImport(this.files[0])" />
     <p id="fileImportStatus" style="font-size:14px;color:var(--text-icon-secondary);margin:4px 0 0;"></p>
@@ -1081,24 +1081,45 @@
   async function performFileImport(file) {
     if (!file) return;
     const statusEl = document.getElementById('fileImportStatus');
+    const tile = document.getElementById('fileImportTile');
+    const tileIcon = document.getElementById('fileImportTileIcon');
+    const tileLabel = document.getElementById('fileImportTileLabel');
+
+    // Le traitement (extraction PDF/Word) peut prendre plusieurs secondes :
+    // l'encart se désactive et change d'état pour que ce soit visible, plutôt
+    // que de laisser croire que rien ne s'est passé pendant l'attente.
+    tile.disabled = true;
+    tileIcon.className = 'bi bi-hourglass-split';
+    tileLabel.textContent = 'Lecture du document...';
     statusEl.style.color = 'var(--text-icon-secondary)';
-    statusEl.textContent = "Lecture du document...";
+    statusEl.textContent = '';
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45000);
 
     try {
       const { data: { session } } = await sb.auth.getSession();
       const response = await fetch('/api/import-recipe-file', {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'Content-Type': file.type || 'application/octet-stream',
           ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
         },
         body: file
       });
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error("Réponse invalide du serveur.");
+      }
 
       if (!response.ok) {
+        const message = data.error || "Erreur lors de l'import.";
         statusEl.style.color = 'var(--text-icon-error)';
-        statusEl.textContent = data.error || "Erreur lors de l'import.";
+        statusEl.textContent = message;
+        alert(message);
         return;
       }
 
@@ -1109,10 +1130,18 @@
 
       setTimeout(() => goToWizardStep(2), 600);
     } catch (err) {
+      const message = err.name === 'AbortError'
+        ? "Le traitement du document a pris trop de temps. Réessaie."
+        : "Erreur réseau : " + err.message;
       statusEl.style.color = 'var(--text-icon-error)';
-      statusEl.textContent = "Erreur réseau : " + err.message;
+      statusEl.textContent = message;
+      alert(message);
     } finally {
+      clearTimeout(timeout);
       document.getElementById('recipeFileInput').value = '';
+      tile.disabled = false;
+      tileIcon.className = 'bi bi-file-earmark-arrow-up';
+      tileLabel.textContent = 'Importer un fichier (PDF, Word)';
     }
   }
 

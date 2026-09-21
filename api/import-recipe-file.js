@@ -16,6 +16,10 @@ import mammoth from 'mammoth';
 export const config = {
   api: { bodyParser: false }
 };
+// L'extraction PDF/Word peut dépasser la durée par défaut sur les plans qui
+// autorisent plus de temps ; sans effet (plafonné) sur les plans qui n'en
+// donnent pas plus.
+export const maxDuration = 45;
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 Mo
 

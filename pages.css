@@ -177,6 +177,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 .wizard-source-tile:last-child { margin-bottom: 0; }
 .wizard-source-tile i { font-size: 96px; }
 .wizard-source-tile img { width: 96px; height: 96px; }
+.wizard-source-tile:disabled { opacity: 0.5; }
 
 /* #formView a son propre padding-bottom (110px) calibré pour dégager
    #wizardFooter, qui remplace #bottomNav pendant tout le wizard. La marge
