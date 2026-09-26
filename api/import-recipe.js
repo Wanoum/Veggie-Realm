@@ -5,9 +5,14 @@
 import dns from 'node:dns/promises';
 import net from 'node:net';
 
-const FETCH_TIMEOUT_MS = 10000;
+// Certains sites (Instagram notamment) peuvent être nettement plus lents à
+// charger qu'un simple blog de recettes ; le budget doit rester inférieur à
+// maxDuration pour laisser le temps au reste du traitement (DNS, analyse).
+const FETCH_TIMEOUT_MS = 20000;
 const MAX_RESPONSE_BYTES = 3 * 1024 * 1024; // 3 Mo, largement suffisant pour une page de recette
 const MAX_REDIRECTS = 5;
+
+export const maxDuration = 45;
 
 function parseIsoDuration(iso) {
   if (!iso || typeof iso !== 'string') return null;
@@ -377,64 +382,78 @@ function httpError(status, message) {
 
 // Suit les redirections manuellement (en revalidant chaque destination) et
 // borne la taille de la réponse lue pour éviter l'épuisement mémoire.
+//
+// Un seul chrono pour toute l'opération (connexion + redirections + lecture
+// du corps), pas un par étape : le découpage précédent réarmait un nouveau
+// délai à chaque étape et l'annulait dès la réception des en-têtes, avant
+// même de lire le corps de la réponse — un site qui répond vite puis traîne
+// à envoyer le corps (volontairement ou non, Instagram y compris) pouvait
+// ainsi bloquer la lecture indéfiniment, sans jamais déclencher d'erreur.
 async function fetchHtmlSafely(startUrl) {
-  let current = startUrl;
-  for (let i = 0; i <= MAX_REDIRECTS; i++) {
-    if (current.protocol !== 'http:' && current.protocol !== 'https:') {
-      throw httpError(400, 'Seules les URLs http/https sont autorisées.');
-    }
-    await assertPublicHost(current.hostname);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    let current = startUrl;
+    for (let i = 0; i <= MAX_REDIRECTS; i++) {
+      if (current.protocol !== 'http:' && current.protocol !== 'https:') {
+        throw httpError(400, 'Seules les URLs http/https sont autorisées.');
+      }
+      await assertPublicHost(current.hostname);
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-    let response;
-    try {
-      response = await fetch(current.toString(), {
-        redirect: 'manual',
-        signal: controller.signal,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8'
-        }
-      });
-    } catch (err) {
-      if (err.name === 'AbortError') throw httpError(504, "Le site met trop de temps à répondre.");
-      throw httpError(502, "Impossible de contacter ce site.");
-    } finally {
-      clearTimeout(timeout);
-    }
+      let response;
+      try {
+        response = await fetch(current.toString(), {
+          redirect: 'manual',
+          signal: controller.signal,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8'
+          }
+        });
+      } catch (err) {
+        if (err.name === 'AbortError') throw httpError(504, "Le site met trop de temps à répondre.");
+        throw httpError(502, "Impossible de contacter ce site.");
+      }
 
-    if ([301, 302, 303, 307, 308].includes(response.status)) {
-      const location = response.headers.get('location');
-      if (!location) throw httpError(502, 'Redirection sans destination.');
-      current = new URL(location, current);
-      continue;
-    }
+      if ([301, 302, 303, 307, 308].includes(response.status)) {
+        const location = response.headers.get('location');
+        if (!location) throw httpError(502, 'Redirection sans destination.');
+        current = new URL(location, current);
+        continue;
+      }
 
-    if (!response.ok) {
-      throw httpError(502, `Le site a répondu avec une erreur (${response.status}).`);
-    }
+      if (!response.ok) {
+        throw httpError(502, `Le site a répondu avec une erreur (${response.status}).`);
+      }
 
-    const contentLength = response.headers.get('content-length');
-    if (contentLength && Number(contentLength) > MAX_RESPONSE_BYTES) {
-      throw httpError(413, 'La page est trop volumineuse.');
-    }
-
-    const reader = response.body.getReader();
-    const chunks = [];
-    let received = 0;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      received += value.length;
-      if (received > MAX_RESPONSE_BYTES) {
-        reader.cancel();
+      const contentLength = response.headers.get('content-length');
+      if (contentLength && Number(contentLength) > MAX_RESPONSE_BYTES) {
         throw httpError(413, 'La page est trop volumineuse.');
       }
-      chunks.push(value);
+
+      const reader = response.body.getReader();
+      const chunks = [];
+      let received = 0;
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          received += value.length;
+          if (received > MAX_RESPONSE_BYTES) {
+            reader.cancel();
+            throw httpError(413, 'La page est trop volumineuse.');
+          }
+          chunks.push(value);
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') throw httpError(504, "Le site met trop de temps à répondre.");
+        throw err;
+      }
+      return Buffer.concat(chunks.map(c => Buffer.from(c))).toString('utf-8');
     }
-    return Buffer.concat(chunks.map(c => Buffer.from(c))).toString('utf-8');
+  } finally {
+    clearTimeout(timeout);
   }
   throw httpError(400, 'Trop de redirections.');
 }

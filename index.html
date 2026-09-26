@@ -1079,12 +1079,21 @@
     btn.disabled = true;
     statusEl.textContent = "Récupération de la recette...";
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 50000);
+
     try {
       const { data: { session } } = await sb.auth.getSession();
       const response = await fetch(`/api/import-recipe?url=${encodeURIComponent(url)}`, {
+        signal: controller.signal,
         headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
       });
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error("Réponse invalide du serveur.");
+      }
 
       if (!response.ok) {
         statusEl.style.color = 'var(--text-icon-error)';
@@ -1098,8 +1107,12 @@
       goToWizardStep(2);
     } catch (err) {
       statusEl.style.color = 'var(--text-icon-error)';
-      statusEl.textContent = "Erreur réseau : " + err.message;
+      statusEl.textContent = err.name === 'AbortError'
+        ? "La récupération a pris trop de temps. Réessaie."
+        : "Erreur réseau : " + err.message;
       btn.disabled = false;
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
