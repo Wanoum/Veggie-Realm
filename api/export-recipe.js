@@ -3,8 +3,17 @@
 // forcément accès puisqu'il l'affiche) et renvoie un PDF ou un fichier Word
 // généré à la volée. Aucun accès à Supabase ici : c'est une simple mise en
 // forme, pas une lecture de données protégées.
+import { fileURLToPath } from 'node:url';
 import PDFDocument from 'pdfkit';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
+
+// pdfkit charge ses polices standard (Helvetica, etc.) via un subpath import
+// du package ("#standard-fonts/..."), que le bundler serverless de Vercel ne
+// trace pas correctement (fichier manquant au déploiement -> plantage muet
+// de la fonction). On embarque à la place la police déjà utilisée par
+// l'app elle-même (Krylon.otf, à la racine du repo), un simple fichier du
+// projet que Vercel inclut sans ambiguïté.
+const FONT_PATH = fileURLToPath(new URL('../Krylon.otf', import.meta.url));
 
 function httpError(status, message) {
   const err = new Error(message);
@@ -68,19 +77,25 @@ function generatePdf(r) {
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    doc.font('Helvetica-Bold').fontSize(22).text(r.title);
+    // Une seule police embarquée (pas de variante gras/italique disponible) :
+    // la hiérarchie visuelle passe par la taille et la couleur plutôt que
+    // par le poids de la police.
+    doc.registerFont('Krylon', FONT_PATH);
+    doc.font('Krylon');
+
+    doc.fontSize(22).text(r.title);
     doc.moveDown(0.5);
 
     const meta = formatMeta(r);
     if (meta.length) {
-      doc.font('Helvetica').fontSize(11).fillColor('#555').text(meta.join('   •   '));
+      doc.fontSize(11).fillColor('#555').text(meta.join('   •   '));
       doc.fillColor('#000');
     }
     doc.moveDown(1);
 
-    doc.font('Helvetica-Bold').fontSize(14).text('Ingrédients');
+    doc.fontSize(14).text('Ingrédients');
     doc.moveDown(0.3);
-    doc.font('Helvetica').fontSize(11);
+    doc.fontSize(11);
     (r.ingredients || []).forEach(ing => {
       const qty = formatQty(ing);
       const line = qty ? `${qty} — ${ing.name}` : ing.name;
@@ -89,9 +104,9 @@ function generatePdf(r) {
     doc.moveDown(1);
 
     if (r.steps && r.steps.length) {
-      doc.font('Helvetica-Bold').fontSize(14).text('Étapes');
+      doc.fontSize(14).text('Étapes');
       doc.moveDown(0.3);
-      doc.font('Helvetica').fontSize(11);
+      doc.fontSize(11);
       r.steps.forEach((s, i) => {
         doc.text(`${i + 1}. ${s}`);
         doc.moveDown(0.2);
@@ -100,13 +115,13 @@ function generatePdf(r) {
 
     if (r.notes) {
       doc.moveDown(1);
-      doc.font('Helvetica-Oblique').fontSize(10).fillColor('#555').text(r.notes);
+      doc.fontSize(10).fillColor('#555').text(r.notes);
       doc.fillColor('#000');
     }
 
     if (r.source_url) {
       doc.moveDown(1);
-      doc.font('Helvetica').fontSize(9).fillColor('#888').text(`Source : ${r.source_url}`);
+      doc.fontSize(9).fillColor('#888').text(`Source : ${r.source_url}`);
     }
 
     doc.end();

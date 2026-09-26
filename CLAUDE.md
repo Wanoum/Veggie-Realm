@@ -24,3 +24,6 @@ Toujours utiliser les tokens CSS existants plutôt que des valeurs codées en du
 ## Backlog / idées pour plus tard
 
 - **Variantes de recettes** (ex : une variante "sans gluten" d'une recette existante). Piste envisagée : lien léger plutôt qu'un vrai système de diff — chaque variante reste une recette normale et complète (même table), avec une référence optionnelle vers la recette d'origine (`variant_of`) + un petit libellé ("Sans gluten"). Avantage : tout le reste de l'app (fiche, cook mode, planning, édition) fonctionne sans modification, on ajoute juste un badge/groupement sur la fiche recette et un raccourci "dupliquer comme variante" dans le wizard. Inconvénient : pas de mise à jour automatique des variantes si la recette d'origine change (pas de contenu réellement partagé).
+- **Audit visuel** : parcourir l'app et unifier avec les tokens CSS existants (repérer les valeurs codées en dur restantes).
+- **Cook mode** : retravailler le mode cuisine et la reconnaissance des ingrédients par étape (`ingredientChipsForStep`) — ne fonctionne pas toujours correctement.
+- **Toast** : redesign du composant toast + ajout d'un bouton "Annuler" sur les actions concernées.
