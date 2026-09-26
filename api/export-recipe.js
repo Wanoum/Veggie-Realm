@@ -3,17 +3,16 @@
 // forcément accès puisqu'il l'affiche) et renvoie un PDF ou un fichier Word
 // généré à la volée. Aucun accès à Supabase ici : c'est une simple mise en
 // forme, pas une lecture de données protégées.
-import { fileURLToPath } from 'node:url';
-import PDFDocument from 'pdfkit';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
-
-// pdfkit charge ses polices standard (Helvetica, etc.) via un subpath import
-// du package ("#standard-fonts/..."), que le bundler serverless de Vercel ne
-// trace pas correctement (fichier manquant au déploiement -> plantage muet
-// de la fonction). On embarque à la place la police déjà utilisée par
-// l'app elle-même (Krylon.otf, à la racine du repo), un simple fichier du
-// projet que Vercel inclut sans ambiguïté.
-const FONT_PATH = fileURLToPath(new URL('../Krylon.otf', import.meta.url));
+//
+// Important : pdfkit/docx et le chemin de la police (Krylon.otf) ne sont
+// importés/résolus qu'À L'INTÉRIEUR du try/catch du handler (via import()
+// dynamique), jamais en haut du fichier. Un import statique qui échoue au
+// chargement du module (dépendance manquante, police introuvable...) plante
+// toute la fonction avant même que le handler ne s'exécute
+// (FUNCTION_INVOCATION_FAILED côté Vercel, sans aucun JSON exploitable) —
+// ce qui nous est arrivé en prod alors que tout passait en local, faute de
+// pouvoir observer les logs serveur. En dynamique, la même erreur devient
+// une simple exception attrapée, avec un vrai message renvoyé au client.
 
 function httpError(status, message) {
   const err = new Error(message);
@@ -69,7 +68,15 @@ function formatMeta(r) {
   return meta;
 }
 
-function generatePdf(r) {
+async function generatePdf(r) {
+  const { default: PDFDocument } = await import('pdfkit');
+  const { fileURLToPath } = await import('node:url');
+  // pdfkit charge ses polices standard (Helvetica, etc.) via un subpath
+  // import du package ("#standard-fonts/...") que le traçage de fichiers de
+  // Vercel ne suit pas de façon fiable. On embarque à la place la police
+  // déjà utilisée par l'app elle-même (Krylon.otf, à la racine du repo).
+  const fontPath = fileURLToPath(new URL('../Krylon.otf', import.meta.url));
+
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50 });
     const chunks = [];
@@ -77,58 +84,64 @@ function generatePdf(r) {
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    // Une seule police embarquée (pas de variante gras/italique disponible) :
-    // la hiérarchie visuelle passe par la taille et la couleur plutôt que
-    // par le poids de la police.
-    doc.registerFont('Krylon', FONT_PATH);
-    doc.font('Krylon');
+    try {
+      // Une seule police embarquée (pas de variante gras/italique) : la
+      // hiérarchie visuelle passe par la taille et la couleur plutôt que
+      // par le poids de la police.
+      doc.registerFont('Krylon', fontPath);
+      doc.font('Krylon');
 
-    doc.fontSize(22).text(r.title);
-    doc.moveDown(0.5);
+      doc.fontSize(22).text(r.title);
+      doc.moveDown(0.5);
 
-    const meta = formatMeta(r);
-    if (meta.length) {
-      doc.fontSize(11).fillColor('#555').text(meta.join('   •   '));
-      doc.fillColor('#000');
-    }
-    doc.moveDown(1);
+      const meta = formatMeta(r);
+      if (meta.length) {
+        doc.fontSize(11).fillColor('#555').text(meta.join('   •   '));
+        doc.fillColor('#000');
+      }
+      doc.moveDown(1);
 
-    doc.fontSize(14).text('Ingrédients');
-    doc.moveDown(0.3);
-    doc.fontSize(11);
-    (r.ingredients || []).forEach(ing => {
-      const qty = formatQty(ing);
-      const line = qty ? `${qty} — ${ing.name}` : ing.name;
-      doc.text(`•  ${line}${ing.note ? ` (${ing.note})` : ''}`);
-    });
-    doc.moveDown(1);
-
-    if (r.steps && r.steps.length) {
-      doc.fontSize(14).text('Étapes');
+      doc.fontSize(14).text('Ingrédients');
       doc.moveDown(0.3);
       doc.fontSize(11);
-      r.steps.forEach((s, i) => {
-        doc.text(`${i + 1}. ${s}`);
-        doc.moveDown(0.2);
+      (r.ingredients || []).forEach(ing => {
+        const qty = formatQty(ing);
+        const line = qty ? `${qty} — ${ing.name}` : ing.name;
+        doc.text(`•  ${line}${ing.note ? ` (${ing.note})` : ''}`);
       });
-    }
-
-    if (r.notes) {
       doc.moveDown(1);
-      doc.fontSize(10).fillColor('#555').text(r.notes);
-      doc.fillColor('#000');
-    }
 
-    if (r.source_url) {
-      doc.moveDown(1);
-      doc.fontSize(9).fillColor('#888').text(`Source : ${r.source_url}`);
-    }
+      if (r.steps && r.steps.length) {
+        doc.fontSize(14).text('Étapes');
+        doc.moveDown(0.3);
+        doc.fontSize(11);
+        r.steps.forEach((s, i) => {
+          doc.text(`${i + 1}. ${s}`);
+          doc.moveDown(0.2);
+        });
+      }
 
-    doc.end();
+      if (r.notes) {
+        doc.moveDown(1);
+        doc.fontSize(10).fillColor('#555').text(r.notes);
+        doc.fillColor('#000');
+      }
+
+      if (r.source_url) {
+        doc.moveDown(1);
+        doc.fontSize(9).fillColor('#888').text(`Source : ${r.source_url}`);
+      }
+
+      doc.end();
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
 async function generateDocx(r) {
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel } = await import('docx');
+
   const children = [new Paragraph({ text: r.title, heading: HeadingLevel.HEADING_1 })];
 
   const meta = formatMeta(r);
@@ -160,27 +173,27 @@ async function generateDocx(r) {
 }
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Méthode non autorisée.' });
-  }
-
   try {
-    await assertAuthenticated(req);
-  } catch (err) {
-    return res.status(err.status || 400).json({ error: err.message });
-  }
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Méthode non autorisée.' });
+    }
 
-  const { format, recipe } = req.body || {};
-  if (format !== 'pdf' && format !== 'docx') {
-    return res.status(400).json({ error: 'Format non supporté.' });
-  }
-  if (!recipe || !recipe.title) {
-    return res.status(400).json({ error: 'Recette invalide.' });
-  }
+    try {
+      await assertAuthenticated(req);
+    } catch (err) {
+      return res.status(err.status || 400).json({ error: err.message });
+    }
 
-  const filename = `${sanitizeFileName(recipe.title)}.${format}`;
+    const { format, recipe } = req.body || {};
+    if (format !== 'pdf' && format !== 'docx') {
+      return res.status(400).json({ error: 'Format non supporté.' });
+    }
+    if (!recipe || !recipe.title) {
+      return res.status(400).json({ error: 'Recette invalide.' });
+    }
 
-  try {
+    const filename = `${sanitizeFileName(recipe.title)}.${format}`;
+
     if (format === 'pdf') {
       const buffer = await generatePdf(recipe);
       res.setHeader('Content-Type', 'application/pdf');
@@ -193,6 +206,6 @@ export default async function handler(req, res) {
       return res.status(200).send(buffer);
     }
   } catch (err) {
-    return res.status(500).json({ error: "Erreur lors de la génération du fichier : " + err.message });
+    return res.status(500).json({ error: "Erreur lors de la génération du fichier : " + (err && err.stack ? err.stack : String(err)) });
   }
 }
