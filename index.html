@@ -72,6 +72,10 @@
 
 <div id="listView" style="display:none;">
   <h1>Veggie Realm</h1>
+  <div class="field-input-icon" style="margin-bottom:12px;">
+    <i class="bi bi-search"></i>
+    <input id="recipeSearchInput" placeholder="Titre ou ingrédient..." oninput="handleRecipeSearchInput()" />
+  </div>
   <div id="tagFilters" class="tag-filters"></div>
 
   <div id="savedRecipesSection" style="display:none;margin-bottom:20px;">
@@ -373,6 +377,12 @@
     loadSavedRecipes();
   }
 
+  let searchQuery = '';
+  function handleRecipeSearchInput() {
+    searchQuery = normalize(document.getElementById('recipeSearchInput').value);
+    renderList();
+  }
+
   let activeTagFilter = null;
   function renderTagFilters() {
     const container = document.getElementById('tagFilters');
@@ -388,13 +398,19 @@
     });
   }
 
+  function matchesSearch(r) {
+    if (!searchQuery) return true;
+    if (normalize(r.title).includes(searchQuery)) return true;
+    return (r.ingredients || []).some(ing => normalize(ing.name).includes(searchQuery));
+  }
+
   function getFilteredIndices() {
     return recipes
       .map((r, i) => i)
       .filter(i => {
         const r = recipes[i];
         const matchesTag = !activeTagFilter || (r.tags || []).includes(activeTagFilter);
-        return matchesTag;
+        return matchesTag && matchesSearch(r);
       });
   }
 

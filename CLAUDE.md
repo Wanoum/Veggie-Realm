@@ -32,3 +32,4 @@ Toujours utiliser les tokens CSS existants plutôt que des valeurs codées en du
   - API officielle Meta : ne résout pas le cas d'usage (accès seulement aux comptes ayant autorisé l'app via OAuth, pas à un post random d'un tiers).
   - Extension de partage native iOS ("Partager → Veggie Realm" depuis l'app Instagram, qui fournirait le texte elle-même) : la piste la plus propre, mais impossible en PWA pure — demanderait de passer à une vraie app native (Capacitor ou équivalent), un chantier bien plus lourd qu'une fonctionnalité.
   À reconsidérer seulement si l'app change de nature (budget scraping, ou passage en app native).
+- **Liste de courses : "déjà à la maison"** — réfléchir à un moyen de marquer qu'on a déjà tel ou tel ingrédient chez soi, pour qu'il n'apparaisse pas (ou soit exclu) dans la liste de courses générée depuis le planning. Pas encore de piste technique choisie.
