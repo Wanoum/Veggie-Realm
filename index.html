@@ -1759,8 +1759,16 @@
         body: JSON.stringify({ format, recipe: r })
       });
       if (!response.ok) {
-        let message = "Erreur lors de la génération du fichier.";
-        try { message = (await response.json()).error || message; } catch { /* ignoré */ }
+        // Diagnostic temporaire : affiche le statut HTTP et le corps brut de
+        // la réponse (Vercel renvoie parfois une page d'erreur non-JSON en
+        // cas de crash de la fonction, ce que l'ancien message générique
+        // masquait complètement).
+        let message = `Erreur ${response.status}`;
+        try {
+          const text = await response.text();
+          try { message = JSON.parse(text).error || message; }
+          catch { message += ' : ' + text.slice(0, 300); }
+        } catch { /* ignoré */ }
         alert(message);
         return;
       }
