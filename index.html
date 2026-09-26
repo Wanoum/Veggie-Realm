@@ -304,6 +304,17 @@
   </div>
 </div>
 
+<div id="shareMenuModal" style="display:none;position:fixed;inset:0;z-index:400;align-items:flex-end;">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.4);" onclick="closeShareMenu()"></div>
+  <div style="position:relative;width:100%;background:var(--surface-high);border-radius:var(--corner-radius-xlarge) var(--corner-radius-xlarge) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));">
+    <div class="detail-sheet-handle"></div>
+    <button type="button" class="settings-row" onclick="shareRecipeLink()"><i class="bi bi-share" style="margin-right:10px;"></i> Partager le lien</button>
+    <button type="button" class="settings-row" onclick="exportRecipeAs('pdf')"><i class="bi bi-file-earmark-pdf" style="margin-right:10px;"></i> Exporter en PDF</button>
+    <button type="button" class="settings-row" onclick="exportRecipeAs('docx')"><i class="bi bi-file-earmark-word" style="margin-right:10px;"></i> Exporter en Word</button>
+    <button type="button" class="secondary-btn" style="width:100%;margin-top:16px;" onclick="closeShareMenu()">Annuler</button>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1693,8 +1704,21 @@
     sessionStorage.setItem('lastView', 'form');
   }
 
-  async function shareCurrentRecipe(i) {
-    const r = recipes[i];
+  let shareMenuRecipeIndex = null;
+
+  function shareCurrentRecipe(i) {
+    shareMenuRecipeIndex = i;
+    document.getElementById('shareMenuModal').style.display = 'flex';
+  }
+
+  function closeShareMenu() {
+    document.getElementById('shareMenuModal').style.display = 'none';
+    shareMenuRecipeIndex = null;
+  }
+
+  async function shareRecipeLink() {
+    const r = recipes[shareMenuRecipeIndex];
+    closeShareMenu();
     let token = r.share_token;
 
     if (!token) {
@@ -1716,6 +1740,41 @@
       showToast('Lien copié dans le presse-papier');
     } else {
       prompt("Copie ce lien :", shareUrl);
+    }
+  }
+
+  async function exportRecipeAs(format) {
+    const r = recipes[shareMenuRecipeIndex];
+    closeShareMenu();
+    showToast(`Génération du ${format === 'pdf' ? 'PDF' : 'Word'}...`);
+
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const response = await fetch('/api/export-recipe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
+        },
+        body: JSON.stringify({ format, recipe: r })
+      });
+      if (!response.ok) {
+        let message = "Erreur lors de la génération du fichier.";
+        try { message = (await response.json()).error || message; } catch { /* ignoré */ }
+        alert(message);
+        return;
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${r.title}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("Erreur réseau : " + err.message);
     }
   }
 
