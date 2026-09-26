@@ -70,12 +70,16 @@ function formatMeta(r) {
 
 async function generatePdf(r) {
   const { default: PDFDocument } = await import('pdfkit');
-  const { fileURLToPath } = await import('node:url');
+  const path = await import('node:path');
   // pdfkit charge ses polices standard (Helvetica, etc.) via un subpath
   // import du package ("#standard-fonts/...") que le traçage de fichiers de
   // Vercel ne suit pas de façon fiable. On embarque à la place la police
-  // déjà utilisée par l'app elle-même (Krylon.otf, à la racine du repo).
-  const fontPath = fileURLToPath(new URL('../Krylon.otf', import.meta.url));
+  // déjà utilisée par l'app elle-même (Krylon.otf, à la racine du repo,
+  // incluse explicitement dans le bundle de cette fonction via vercel.json).
+  // process.cwd() (racine du projet sur Vercel) plutôt que import.meta.url :
+  // ce fichier est compilé d'ESM vers CommonJS au build (voir les logs de
+  // déploiement), où import.meta n'a pas de sens et casse au runtime.
+  const fontPath = path.join(process.cwd(), 'Krylon.otf');
 
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50 });

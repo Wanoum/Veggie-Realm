@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/export-recipe.js": {
+      "includeFiles": "Krylon.otf"
+    }
+  }
+}
