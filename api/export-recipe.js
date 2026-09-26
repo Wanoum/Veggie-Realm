@@ -89,13 +89,12 @@ async function generatePdf(r) {
     doc.on('error', reject);
 
     try {
-      // Une seule police embarquée (pas de variante gras/italique) : la
-      // hiérarchie visuelle passe par la taille et la couleur plutôt que
-      // par le poids de la police.
+      // Krylon (embarquée dans le PDF) seulement pour le titre, comme dans
+      // l'app ; le reste utilise la police par défaut de pdfkit (Helvetica)
+      // pour rester lisible même sans cette police.
       doc.registerFont('Krylon', fontPath);
-      doc.font('Krylon');
-
-      doc.fontSize(22).text(r.title);
+      doc.font('Krylon').fontSize(22).text(r.title);
+      doc.font('Helvetica');
       doc.moveDown(0.5);
 
       const meta = formatMeta(r);
@@ -105,9 +104,9 @@ async function generatePdf(r) {
       }
       doc.moveDown(1);
 
-      doc.fontSize(14).text('Ingrédients');
+      doc.font('Helvetica-Bold').fontSize(14).text('Ingrédients');
       doc.moveDown(0.3);
-      doc.fontSize(11);
+      doc.font('Helvetica').fontSize(11);
       (r.ingredients || []).forEach(ing => {
         const qty = formatQty(ing);
         const line = qty ? `${qty} — ${ing.name}` : ing.name;
@@ -116,9 +115,9 @@ async function generatePdf(r) {
       doc.moveDown(1);
 
       if (r.steps && r.steps.length) {
-        doc.fontSize(14).text('Étapes');
+        doc.font('Helvetica-Bold').fontSize(14).text('Étapes');
         doc.moveDown(0.3);
-        doc.fontSize(11);
+        doc.font('Helvetica').fontSize(11);
         r.steps.forEach((s, i) => {
           doc.text(`${i + 1}. ${s}`);
           doc.moveDown(0.2);
@@ -127,13 +126,13 @@ async function generatePdf(r) {
 
       if (r.notes) {
         doc.moveDown(1);
-        doc.fontSize(10).fillColor('#555').text(r.notes);
+        doc.font('Helvetica-Oblique').fontSize(10).fillColor('#555').text(r.notes);
         doc.fillColor('#000');
       }
 
       if (r.source_url) {
         doc.moveDown(1);
-        doc.fontSize(9).fillColor('#888').text(`Source : ${r.source_url}`);
+        doc.font('Helvetica').fontSize(9).fillColor('#888').text(`Source : ${r.source_url}`);
       }
 
       doc.end();
