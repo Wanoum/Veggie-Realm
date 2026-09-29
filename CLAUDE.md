@@ -33,3 +33,16 @@ Toujours utiliser les tokens CSS existants plutôt que des valeurs codées en du
   - Extension de partage native iOS ("Partager → Veggie Realm" depuis l'app Instagram, qui fournirait le texte elle-même) : la piste la plus propre, mais impossible en PWA pure — demanderait de passer à une vraie app native (Capacitor ou équivalent), un chantier bien plus lourd qu'une fonctionnalité.
   À reconsidérer seulement si l'app change de nature (budget scraping, ou passage en app native).
 - **Liste de courses : "déjà à la maison"** — réfléchir à un moyen de marquer qu'on a déjà tel ou tel ingrédient chez soi, pour qu'il n'apparaisse pas (ou soit exclu) dans la liste de courses générée depuis le planning. Pas encore de piste technique choisie.
+
+### Retours utilisateur (feedback, pas encore traités — design volontairement pas touché, l'utilisateur fait ses propres écrans)
+
+- **Partage/édition pas évidents** (cité 2 fois) — les icônes seules (partage/crayon/poubelle) sur la fiche recette n'ont aucun libellé. Probablement le point le plus gênant à l'usage.
+- **Tabs pas évidents qu'on peut cliquer** — à l'ajout de recette et dans le planning (sous-onglets Recettes/Liste de courses, ou tuiles de type de repas — pas confirmé lequel précisément). Seul indice actuel : changement de fond/couleur à la sélection.
+- **Recherche : pourquoi cette recette ressort-elle ?** — `matchesSearch()` filtre sur titre + ingrédients mais n'indique jamais lequel a matché. Idée : afficher le nom de l'ingrédient matché sous le titre dans les résultats, quand ce n'est pas le titre qui a matché.
+- **Rayon mal catégorisé, pouvoir déplacer** — au-delà des bugs de catégorisation déjà corrigés, il y aura toujours des cas mal classés. Idée : mémoriser un override manuel par nom d'ingrédient normalisé (localStorage, comme le tri des courses), prioritaire sur `categorizeIngredient()`, quand l'utilisateur déplace un article vers un autre rayon.
+- **Planning perçu comme "une histoire de date"** alors qu'il n'y a aucune notion de date actuellement (juste un nombre de repas par type) — à trancher : simplifier la présentation pour que Planning soit perçu comme un simple constructeur de liste de courses (sans toucher à la logique), ou au contraire ajouter une vraie notion de date/calendrier. Deux chantiers très différents, pas encore choisi.
+- **Recherche dans le planning** — ajouter un champ de recherche similaire à celui de l'accueil, sur l'écran Planning.
+- **Variante à lire depuis la recette** — lien avec l'idée "Variantes de recettes" ci-dessus, mais formulation à clarifier avec l'utilisateur (afficher une variante existante directement sur la fiche recette ?).
+- **Export de la liste de courses vers Rappels (iOS)** — aucune API web ne permet à une PWA iOS d'écrire directement dans l'app Reminders. Le plus réalisable : partager la liste formatée via la feuille de partage native (Reminders peut créer un seul rappel avec le texte), pas un import article par article. À confirmer que ça convient avant d'investir dessus.
+- **Importer une liste de courses** — cas d'usage pas clair (texte collé ? photo ? export d'une autre app ?), besoin d'un exemple concret avant de concevoir quoi que ce soit.
+- **"Liste de courses bug"** — signalé sans détail ; besoin d'un exemple précis (écran, action, résultat inattendu) avant de pouvoir agir.

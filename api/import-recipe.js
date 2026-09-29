@@ -24,6 +24,29 @@ function parseIsoDuration(iso) {
   return total > 0 ? total : null;
 }
 
+// schema.org/Recipe n'a pas de champ pour la température du four, et
+// cookTime est parfois absent : on complète en repérant ces informations
+// dans le texte des étapes, comme pour un document importé (voir
+// import-recipe-file.js). Heuristique volontairement simple, reste
+// modifiable ensuite comme le reste d'un import.
+const COOK_CONTEXT_RE = /cuiss?on|cuire|cuit|enfourn|four/i;
+
+function extractCookingInfoFromSteps(steps) {
+  const fullText = steps.join(' \n ');
+
+  let cookTimeMinutes = null;
+  const timeMatches = [...fullText.matchAll(/(\d+)\s*(?:min(?:ute)?s?)\b/gi)];
+  const contextual = timeMatches.find(m => COOK_CONTEXT_RE.test(fullText.slice(Math.max(0, m.index - 30), m.index)));
+  const chosenTimeMatch = contextual || timeMatches[0];
+  if (chosenTimeMatch) cookTimeMinutes = parseInt(chosenTimeMatch[1], 10);
+
+  let ovenTemp = null;
+  const tempMatch = fullText.match(/(\d{2,3})\s*°\s*c?\b/i);
+  if (tempMatch) ovenTemp = parseInt(tempMatch[1], 10);
+
+  return { cookTimeMinutes, ovenTemp };
+}
+
 function extractText(x) {
   if (typeof x === 'string') return x;
   if (x && typeof x.text === 'string') return x.text;
@@ -334,12 +357,14 @@ export default async function handler(req, res) {
       if (yieldMatch) servings = parseInt(yieldMatch[0], 10);
     }
 
+    const { cookTimeMinutes, ovenTemp } = extractCookingInfoFromSteps(steps);
+
     return res.status(200).json({
       title: recipe.name || '',
       photo_url: image,
       servings,
-      cook_time_minutes: parseIsoDuration(recipe.cookTime),
-      oven_temp_celsius: null,
+      cook_time_minutes: parseIsoDuration(recipe.cookTime) ?? cookTimeMinutes,
+      oven_temp_celsius: ovenTemp,
       ingredients,
       steps,
       source_url: targetUrl.toString()

@@ -205,6 +205,30 @@ function dewrapPdfLines(rawText) {
   return out.join('\n');
 }
 
+// Repère un temps de cuisson et une température de four mentionnés dans les
+// étapes (aucun des deux champs n'est jamais rempli par ailleurs pour un
+// document importé). Heuristique volontairement simple : priorité à une
+// mention de minutes proche d'un mot lié à la cuisson ("cuire", "four"...),
+// sinon la première trouvée dans le texte — reste modifiable ensuite comme
+// le reste d'un import.
+const COOK_CONTEXT_RE = /cuiss?on|cuire|cuit|enfourn|four/i;
+
+function extractCookingInfoFromSteps(steps) {
+  const fullText = steps.join(' \n ');
+
+  let cookTimeMinutes = null;
+  const timeMatches = [...fullText.matchAll(/(\d+)\s*(?:min(?:ute)?s?)\b/gi)];
+  const contextual = timeMatches.find(m => COOK_CONTEXT_RE.test(fullText.slice(Math.max(0, m.index - 30), m.index)));
+  const chosenTimeMatch = contextual || timeMatches[0];
+  if (chosenTimeMatch) cookTimeMinutes = parseInt(chosenTimeMatch[1], 10);
+
+  let ovenTemp = null;
+  const tempMatch = fullText.match(/(\d{2,3})\s*°\s*c?\b/i);
+  if (tempMatch) ovenTemp = parseInt(tempMatch[1], 10);
+
+  return { cookTimeMinutes, ovenTemp };
+}
+
 // Repère titre / portions / ingrédients / étapes à partir du texte brut
 // (une ligne par paragraphe). Sans en-tête reconnue pour les étapes (courant
 // dans les documents "faits maison"), bascule automatiquement dès qu'une
@@ -332,13 +356,14 @@ export default async function handler(req, res) {
   }
 
   const { title, servings, ingredients, steps } = extractRecipeFromText(text);
+  const { cookTimeMinutes, ovenTemp } = extractCookingInfoFromSteps(steps);
 
   return res.status(200).json({
     title,
     photo_url: null,
     servings,
-    cook_time_minutes: null,
-    oven_temp_celsius: null,
+    cook_time_minutes: cookTimeMinutes,
+    oven_temp_celsius: ovenTemp,
     ingredients,
     steps,
     source_url: null
