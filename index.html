@@ -310,6 +310,18 @@
   </div>
 </div>
 
+<div id="courseQtySheet" style="display:none;position:fixed;inset:0;z-index:400;align-items:flex-end;">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.4);" onclick="closeCourseQtySheet()"></div>
+  <div style="position:relative;width:100%;background:var(--surface-high);border-radius:var(--corner-radius-xlarge) var(--corner-radius-xlarge) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));">
+    <div class="detail-sheet-handle"></div>
+    <h2 id="courseQtyTitle" style="margin-bottom:var(--gap-vertical-section);"></h2>
+    <label class="field-label">Quantité</label>
+    <input id="courseQtyInput" class="field-input" placeholder="ex: 500 g" />
+    <button type="button" class="primary-btn" style="width:100%;margin-top:16px;" onclick="saveCourseQtySheet()"><i class="bi bi-check-lg"></i> Enregistrer</button>
+    <button type="button" style="display:block;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetCourseQtySheet()">Réinitialiser</button>
+  </div>
+</div>
+
 <div id="shareMenuModal" style="display:none;position:fixed;inset:0;z-index:400;align-items:flex-end;">
   <div style="position:absolute;inset:0;background:rgba(0,0,0,0.4);" onclick="closeShareMenu()"></div>
   <div style="position:relative;width:100%;background:var(--surface-high);border-radius:var(--corner-radius-xlarge) var(--corner-radius-xlarge) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));">
@@ -887,6 +899,7 @@
     bodyScrollLockCount = 0;
     closePlanOccurrenceSheet();
     closeShareMenu();
+    closeCourseQtySheet();
     document.getElementById('navHome').classList.remove('active');
     document.getElementById('navAdd').classList.remove('active');
     document.getElementById('navPlanning').classList.remove('active');
@@ -1504,6 +1517,7 @@
 
   enableSheetDragToClose('shareMenuModal', closeShareMenu);
   enableSheetDragToClose('planOccurrenceSheet', closePlanOccurrenceSheet);
+  enableSheetDragToClose('courseQtySheet', closeCourseQtySheet);
 
   (function setupEdgeSwipeBack() {
     const EDGE_ZONE = 24; // px depuis le bord gauche où le geste doit démarrer
@@ -2857,14 +2871,21 @@
         countByType[t] = occ ? occ.count : 1;
       });
     }
+    // Pré-sélectionne le premier repas possible quand la recette n'est pas
+    // encore planifiée : sans ça, les puces de repas (pas toujours évidentes
+    // à taper, voir le retour "tabs pas évidents") restaient toutes
+    // désélectionnées et "Enregistrer" ne faisait rien tant qu'aucune n'était
+    // cochée, ce qui donnait l'impression que l'ajout échouait silencieusement.
+    const existingTypes = existing.map(o => o.mealType).filter(t => tags.includes(t));
+    const selectedTypes = new Set(existingTypes.length > 0 ? existingTypes : (isMulti ? [tags[0]] : []));
     planSheetState = {
       recipeId,
       tags,
       isMulti,
-      selectedTypes: new Set(existing.map(o => o.mealType).filter(t => tags.includes(t))),
+      selectedTypes,
       servingsByType,
       countByType,
-      activeType: isMulti ? (tags.find(t => existing.some(o => o.mealType === t)) || tags[0]) : null,
+      activeType: isMulti ? (tags.find(t => selectedTypes.has(t)) || tags[0]) : null,
       singleServings: !isMulti ? (existing[0]?.servings ?? getServingsPerOccurrence(r)) : null,
       singleCount: !isMulti ? (existing[0]?.count ?? 1) : null
     };
@@ -2958,6 +2979,44 @@
     showToast('Retiré du planning');
   }
 
+  // ---- Bottom sheet d'édition manuelle d'une quantité de la liste de courses ----
+  let courseQtySheetKey = null;
+
+  function openCourseQtySheet(key, displayName, computedQtyText) {
+    courseQtySheetKey = key;
+    document.getElementById('courseQtyTitle').textContent = displayName;
+    const overrides = loadQtyOverrides();
+    document.getElementById('courseQtyInput').value = overrides[key] != null ? overrides[key] : computedQtyText;
+    document.getElementById('courseQtySheet').style.display = 'flex';
+    lockBackgroundScroll();
+  }
+
+  function closeCourseQtySheet() {
+    const wasOpen = document.getElementById('courseQtySheet').style.display !== 'none';
+    document.getElementById('courseQtySheet').style.display = 'none';
+    courseQtySheetKey = null;
+    if (wasOpen) unlockBackgroundScroll();
+  }
+
+  function saveCourseQtySheet() {
+    if (!courseQtySheetKey) return;
+    const value = document.getElementById('courseQtyInput').value.trim();
+    const overrides = loadQtyOverrides();
+    if (value) overrides[courseQtySheetKey] = value; else delete overrides[courseQtySheetKey];
+    saveQtyOverrides(overrides);
+    closeCourseQtySheet();
+    renderCoursesList();
+  }
+
+  function resetCourseQtySheet() {
+    if (!courseQtySheetKey) return;
+    const overrides = loadQtyOverrides();
+    delete overrides[courseQtySheetKey];
+    saveQtyOverrides(overrides);
+    closeCourseQtySheet();
+    renderCoursesList();
+  }
+
   function normalize(str) {
     return (str || '')
       .toLowerCase()
@@ -3031,10 +3090,8 @@
     return RAYON_FALLBACK;
   }
 
-  const COURSES_SORT_KEY = 'veggieRealm.coursesSortMode';
   const COURSES_CHECKED_KEY = 'veggieRealm.coursesChecked';
-  let coursesSortMode = 'rayon'; // 'alpha' | 'rayon' | 'qty'
-  try { coursesSortMode = localStorage.getItem(COURSES_SORT_KEY) || 'rayon'; } catch { /* ignoré */ }
+  const COURSES_QTY_OVERRIDE_KEY = 'veggieRealm.coursesQtyOverrides';
   let collapsedRayons = new Set();
   let courseRecheckTimeout = null;
 
@@ -3043,6 +3100,16 @@
   }
   function saveCheckedCourses(state) {
     try { localStorage.setItem(COURSES_CHECKED_KEY, JSON.stringify(state)); } catch { /* ignoré */ }
+  }
+
+  // Surcharge manuelle de la quantité affichée pour un ingrédient (texte
+  // libre, ex: "1 sachet" à la place d'un calcul bizarre) : propre à la
+  // liste de courses actuelle, effacée avec elle au "Réinitialiser".
+  function loadQtyOverrides() {
+    try { return JSON.parse(localStorage.getItem(COURSES_QTY_OVERRIDE_KEY)) || {}; } catch { return {}; }
+  }
+  function saveQtyOverrides(state) {
+    try { localStorage.setItem(COURSES_QTY_OVERRIDE_KEY, JSON.stringify(state)); } catch { /* ignoré */ }
   }
 
   function renderCoursesList() {
@@ -3082,98 +3149,88 @@
       return;
     }
 
-    // Nettoie les cases cochées d'ingrédients qui ne sont plus dans la liste actuelle.
+    // Nettoie les cases cochées et les quantités modifiées à la main
+    // d'ingrédients qui ne sont plus dans la liste actuelle.
     const checked = loadCheckedCourses();
+    const overrides = loadQtyOverrides();
     const currentKeys = new Set(Object.keys(aggregated));
     let checkedChanged = false;
     Object.keys(checked).forEach(k => {
       if (!currentKeys.has(k)) { delete checked[k]; checkedChanged = true; }
     });
     if (checkedChanged) saveCheckedCourses(checked);
+    let overridesChanged = false;
+    Object.keys(overrides).forEach(k => {
+      if (!currentKeys.has(k)) { delete overrides[k]; overridesChanged = true; }
+    });
+    if (overridesChanged) saveQtyOverrides(overrides);
 
     const items = Object.entries(aggregated).map(([key, item]) => ({ key, ...item }));
 
-    const formatQty = (item) => Object.values(item.units).map(u => {
+    const computedQtyText = (item) => Object.values(item.units).map(u => {
       if (u.quantity == null) return escapeHtml(u.label);
       const qDisplay = formatQuantityFr(u.quantity);
       return `${qDisplay} ${escapeHtml(u.label)}`.trim();
     }).filter(Boolean).join(' + ');
 
-    const totalQty = (item) => Object.values(item.units).reduce((sum, u) => sum + (u.quantity || 0), 0);
+    const displayQtyText = (item) => overrides[item.key] != null ? escapeHtml(overrides[item.key]) : computedQtyText(item);
 
     const renderItemRow = (item) => `
-      <label class="course-item ${checked[item.key] ? 'checked' : ''}">
-        <input type="checkbox" data-course-checkbox="${escapeHtml(item.key)}" ${checked[item.key] ? 'checked' : ''} />
+      <div class="course-item ${checked[item.key] ? 'checked' : ''}" data-course-row="${escapeHtml(item.key)}">
+        <input type="checkbox" data-course-checkbox="${escapeHtml(item.key)}" ${checked[item.key] ? 'checked' : ''} tabindex="-1" />
         <span class="text-body">${escapeHtml(item.displayName)}</span>
-        <span class="course-qty">${formatQty(item)}</span>
-      </label>
+        <button type="button" class="course-qty" data-edit-qty="${escapeHtml(item.key)}" data-qty-name="${escapeHtml(item.displayName)}" data-qty-computed="${computedQtyText(item)}">${displayQtyText(item)}</button>
+      </div>
     `;
 
-    // Les articles cochés passent toujours en fin de liste (ou de groupe),
-    // quel que soit le tri choisi.
+    // Les articles cochés passent toujours en fin de groupe.
     const byCheckedThen = (compare) => (a, b) => {
       const checkedDiff = (checked[a.key] ? 1 : 0) - (checked[b.key] ? 1 : 0);
       return checkedDiff || compare(a, b);
     };
     const byName = (a, b) => a.displayName.localeCompare(b.displayName, 'fr');
 
-    let bodyHtml;
-    if (coursesSortMode === 'rayon') {
-      const byRayon = {};
-      items.forEach(item => {
-        (byRayon[item.rayon] = byRayon[item.rayon] || []).push(item);
-      });
-      const rayonOrder = [...RAYON_KEYWORDS.map(([r]) => r), RAYON_FALLBACK];
-      bodyHtml = rayonOrder.filter(rayon => byRayon[rayon]?.length).map(rayon => {
-        const rayonItems = byRayon[rayon].sort(byCheckedThen(byName));
-        const checkedCount = rayonItems.filter(item => checked[item.key]).length;
-        const isCollapsed = collapsedRayons.has(rayon);
-        return `
-          <div class="course-rayon-group">
-            <button type="button" class="course-rayon-header" data-rayon-toggle="${escapeHtml(rayon)}">
-              <span class="text-body" style="font-weight:700;color:var(--text-icon-default);">${escapeHtml(rayon)}</span>
-              <span style="display:flex;align-items:center;gap:8px;">
-                <span class="course-rayon-count text-quantity-mono">${checkedCount} de ${rayonItems.length}</span>
-                <i class="bi ${isCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'}" style="color:var(--text-icon-default);"></i>
-              </span>
-            </button>
-            <div ${isCollapsed ? 'style="display:none;"' : ''}>
-              ${rayonItems.map(renderItemRow).join('')}
-            </div>
+    // Toujours groupé par rayon (plus de choix de tri affiché à l'écran).
+    const byRayon = {};
+    items.forEach(item => {
+      (byRayon[item.rayon] = byRayon[item.rayon] || []).push(item);
+    });
+    const rayonOrder = [...RAYON_KEYWORDS.map(([r]) => r), RAYON_FALLBACK];
+    const bodyHtml = rayonOrder.filter(rayon => byRayon[rayon]?.length).map(rayon => {
+      const rayonItems = byRayon[rayon].sort(byCheckedThen(byName));
+      const checkedCount = rayonItems.filter(item => checked[item.key]).length;
+      const isCollapsed = collapsedRayons.has(rayon);
+      return `
+        <div class="course-rayon-group">
+          <button type="button" class="course-rayon-header" data-rayon-toggle="${escapeHtml(rayon)}">
+            <span class="text-body" style="font-weight:700;color:var(--text-icon-default);">${escapeHtml(rayon)}</span>
+            <span style="display:flex;align-items:center;gap:8px;">
+              <span class="course-rayon-count text-quantity-mono">${checkedCount} de ${rayonItems.length}</span>
+              <i class="bi ${isCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'}" style="color:var(--text-icon-default);"></i>
+            </span>
+          </button>
+          <div ${isCollapsed ? 'style="display:none;"' : ''}>
+            ${rayonItems.map(renderItemRow).join('')}
           </div>
-        `;
-      }).join('');
-    } else if (coursesSortMode === 'qty') {
-      bodyHtml = [...items].sort(byCheckedThen((a, b) => totalQty(b) - totalQty(a))).map(renderItemRow).join('');
-    } else {
-      bodyHtml = [...items].sort(byCheckedThen(byName)).map(renderItemRow).join('');
-    }
-
-    const sortLabels = { alpha: 'Alphabétique', rayon: 'Par rayon', qty: 'Par quantité' };
-    listEl.innerHTML = `
-      <div class="course-sort-wrap">
-        <button type="button" class="tertiary-btn course-sort-btn" id="courseSortBtn">
-          <i class="bi bi-sort-down"></i> ${sortLabels[coursesSortMode]}
-        </button>
-        <div class="course-sort-menu" id="courseSortMenu" style="display:none;">
-          ${Object.entries(sortLabels).map(([mode, label]) => `
-            <button type="button" class="course-sort-menu-item text-body ${coursesSortMode === mode ? 'active' : ''}" data-sort-mode="${mode}"><span>${label}</span><i class="bi bi-check-lg course-sort-menu-check"></i></button>
-          `).join('')}
         </div>
-      </div>
-      ${bodyHtml}
-    `;
+      `;
+    }).join('');
 
-    const sortMenu = document.getElementById('courseSortMenu');
-    document.getElementById('courseSortBtn').onclick = () => {
-      sortMenu.style.display = sortMenu.style.display === 'none' ? 'block' : 'none';
-    };
+    listEl.innerHTML = bodyHtml;
 
-    listEl.querySelectorAll('[data-sort-mode]').forEach(btn => {
-      btn.onclick = () => {
-        coursesSortMode = btn.dataset.sortMode;
-        try { localStorage.setItem(COURSES_SORT_KEY, coursesSortMode); } catch { /* ignoré */ }
-        renderCoursesList();
+    listEl.querySelectorAll('[data-edit-qty]').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        openCourseQtySheet(btn.dataset.editQty, btn.dataset.qtyName, btn.dataset.qtyComputed);
+      };
+    });
+
+    listEl.querySelectorAll('[data-course-row]').forEach(row => {
+      row.onclick = (e) => {
+        if (e.target.closest('[data-edit-qty]')) return;
+        const checkbox = row.querySelector('[data-course-checkbox]');
+        checkbox.checked = !checkbox.checked;
+        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
       };
     });
 
@@ -3215,22 +3272,12 @@
     });
   }
 
-  document.addEventListener('click', (e) => {
-    const menu = document.getElementById('courseSortMenu');
-    if (menu && menu.style.display !== 'none' && !e.target.closest('.course-sort-wrap')) {
-      menu.style.display = 'none';
-    }
-    const planMenu = document.getElementById('planSortMenu');
-    if (planMenu && planMenu.style.display !== 'none' && !e.target.closest('.course-sort-wrap')) {
-      planMenu.style.display = 'none';
-    }
-  });
-
   document.getElementById('resetPlanningBtn').onclick = async () => {
     if (!confirm("Réinitialiser tout le planning de la semaine ?")) return;
     await sb.from('meal_plan').delete().neq('recipe_id', '00000000-0000-0000-0000-000000000000');
     mealPlan = {};
     try { localStorage.removeItem(COURSES_CHECKED_KEY); } catch { /* ignoré */ }
+    try { localStorage.removeItem(COURSES_QTY_OVERRIDE_KEY); } catch { /* ignoré */ }
     renderPlanningRecipes();
     showToast('Planning réinitialisé');
   };

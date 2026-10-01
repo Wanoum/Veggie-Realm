@@ -175,9 +175,7 @@
   display: flex; align-items: center; justify-content: center;
 }
 
-/* ---- Menu déroulant de tri (liste de courses, planning) ---- */
-.course-sort-wrap { position: relative; display: flex; justify-content: flex-end; margin-bottom: var(--gap-vertical-section); }
-.course-sort-btn { width: auto; margin-top: 0; }
+/* ---- Menu déroulant générique (photo, mode de portions...) ---- */
 .course-sort-menu {
   position: absolute;
   top: calc(100% + 6px);

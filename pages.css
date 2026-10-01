@@ -316,11 +316,26 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   padding: 11px 0;
   border-top: 1px solid var(--border-divider);
   font-size: 14px;
+  cursor: pointer;
 }
 .course-item:first-child { border-top: none; }
-.course-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--interaction-primary); }
+/* pointer-events:none : la case n'est qu'un indicateur visuel, le clic est
+   géré par la ligne entière (data-course-row) pour pouvoir laisser passer
+   celui du bouton de quantité sans cocher/décocher par erreur. */
+.course-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--interaction-primary); pointer-events: none; }
 .course-item.checked { color: var(--text-icon-secondary); text-decoration: line-through; }
-.course-qty { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 18px; line-height: 120%; color: var(--text-icon-secondary); white-space: nowrap; }
+.course-qty {
+  margin-left: auto;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 15px;
+  line-height: 120%;
+  color: var(--text-icon-default);
+  white-space: nowrap;
+  background: var(--surface-highest);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--corner-radius-default);
+  padding: 5px 10px;
+}
 .course-rayon-group { margin-bottom: 8px; }
 .course-rayon-header {
   width: 100%;
