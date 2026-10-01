@@ -62,7 +62,7 @@ function formatQty(ing) {
 
 function formatMeta(r) {
   const meta = [];
-  if (r.servings) meta.push(r.serving_mode === 'piece' ? `${r.servings} pièce${r.servings > 1 ? 's' : ''}` : `${r.servings} portion${r.servings > 1 ? 's' : ''}`);
+  if (r.servings) meta.push(r.serving_mode === 'piece' ? `${r.servings} pièce${r.servings > 1 ? 's' : ''}` : `${r.servings} personne${r.servings > 1 ? 's' : ''}`);
   if (r.cook_time_minutes) meta.push(`${r.cook_time_minutes} min`);
   if (r.oven_temp_celsius) meta.push(`${r.oven_temp_celsius}°C`);
   return meta;

@@ -163,11 +163,11 @@
         <input id="f_servings" class="field-input" type="number" placeholder="Quantité" style="flex:1;text-align:center;" />
         <div id="f_servingModeWrap" style="flex:2;position:relative;">
           <button type="button" id="f_servingModeBtn" class="field-input" style="width:100%;display:flex;align-items:center;justify-content:space-between;" onclick="toggleServingModeMenu()">
-            <span id="f_servingModeLabel">Portions</span>
+            <span id="f_servingModeLabel">Personnes</span>
             <i class="bi bi-chevron-down"></i>
           </button>
           <div id="f_servingModeMenu" class="course-sort-menu serving-mode-menu" style="display:none;">
-            <button type="button" class="course-sort-menu-item text-body active" data-serving-mode="portion"><span>Portions</span><i class="bi bi-check-lg course-sort-menu-check"></i></button>
+            <button type="button" class="course-sort-menu-item text-body active" data-serving-mode="portion"><span>Personnes</span><i class="bi bi-check-lg course-sort-menu-check"></i></button>
             <button type="button" class="course-sort-menu-item text-body" data-serving-mode="piece"><span>À la pièce</span><i class="bi bi-check-lg course-sort-menu-check"></i></button>
           </div>
         </div>
@@ -251,7 +251,7 @@
         <i class="bi bi-chevron-right"></i>
       </button>
       <button type="button" class="settings-row" onclick="openAccountEdit('default_servings')">
-        <span>Portions par défaut</span>
+        <span>Personnes par défaut</span>
         <span class="settings-row-value" id="account_default_servings_value"></span>
         <i class="bi bi-chevron-right"></i>
       </button>
@@ -271,26 +271,21 @@
 </div>
 
 <div id="planningView" style="display:none;">
-  <h1>Planning</h1>
+  <h1>Courses</h1>
   <div class="subtabs">
-    <button id="subtabRecipes" class="subtab-btn active">Recettes</button>
-    <button id="subtabCourses" class="subtab-btn">Liste de courses</button>
+    <button id="subtabRecipes" class="subtab-btn active">Repas prévus</button>
+    <button id="subtabCourses" class="subtab-btn">Liste</button>
   </div>
 
   <div id="planningRecipesPanel">
-    <p class="text-small-medium" id="planDefaultServingsLabel" style="color:var(--text-icon-secondary);margin:0 0 12px;"></p>
-    <div id="planSummary" class="plan-summary"></div>
-    <div class="plan-summary-header">
-      <div class="course-sort-wrap" style="justify-content:flex-start;margin-bottom:0;">
-        <button type="button" class="tertiary-btn course-sort-btn" id="planSortBtn">
-          <i class="bi bi-sort-down"></i> <span id="planSortLabel"></span>
-        </button>
-        <div class="course-sort-menu" id="planSortMenu" style="display:none;"></div>
-      </div>
-      <span class="text-small-medium" style="color:var(--text-icon-secondary);">Nombre de repas</span>
+    <div id="plannedRecipeList"></div>
+    <h2 style="margin-top:var(--gap-vertical-section);">Suggestions</h2>
+    <div id="planSuggestionList"></div>
+    <button id="resetPlanningBtn" style="display:block;margin:16px auto 32px;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;">Réinitialiser</button>
+    <div class="field-input-icon">
+      <i class="bi bi-search"></i>
+      <input id="planSearchInput" placeholder="Recette ou ingrédients" oninput="handlePlanSearchInput()" />
     </div>
-    <div id="planningRecipeList"></div>
-    <button id="resetPlanningBtn" style="display:block;margin:16px auto 32px;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;">Réinitialiser le planning</button>
   </div>
 
   <div id="planningCoursesPanel" style="display:none;">
@@ -298,13 +293,20 @@
   </div>
 </div>
 
-<div id="mealTypeChoiceModal" style="display:none;position:fixed;inset:0;z-index:400;align-items:flex-end;">
-  <div id="mealTypeChoiceOverlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.4);" onclick="closeMealTypeChoiceModal()"></div>
+<div id="planOccurrenceSheet" style="display:none;position:fixed;inset:0;z-index:400;align-items:flex-end;">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.4);" onclick="closePlanOccurrenceSheet()"></div>
   <div style="position:relative;width:100%;background:var(--surface-high);border-radius:var(--corner-radius-xlarge) var(--corner-radius-xlarge) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));">
     <div class="detail-sheet-handle"></div>
-    <h2 style="margin-bottom:var(--gap-vertical-section);">À quel repas ajouter cette recette ?</h2>
-    <div id="mealTypeChoiceOptions" style="display:flex;gap:8px;margin-bottom:20px;"></div>
-    <button type="button" class="secondary-btn" style="width:100%;margin-top:0;" onclick="closeMealTypeChoiceModal()">Annuler</button>
+    <h2 id="planOccurrenceTitle" style="margin-bottom:var(--gap-vertical-section);"></h2>
+    <div id="planOccurrenceMealTypes" style="display:flex;gap:8px;margin-bottom:20px;"></div>
+    <p class="text-body" id="planOccurrenceServingsLabel" style="margin:0 0 12px;">Pour combien de personnes ?</p>
+    <div class="servings-stepper" style="margin-bottom:20px;">
+      <button type="button" class="servings-minus" id="planOccurrenceMinus"><i class="bi bi-dash"></i></button>
+      <span class="servings-value" id="planOccurrenceValue">1</span>
+      <button type="button" class="servings-plus" id="planOccurrencePlus"><i class="bi bi-plus"></i></button>
+    </div>
+    <button type="button" class="primary-btn" style="width:100%;margin-top:0;" onclick="savePlanOccurrenceSheet()"><i class="bi bi-check-lg"></i> Enregistrer</button>
+    <button type="button" style="display:block;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetPlanOccurrenceSheet()">Réinitialiser</button>
   </div>
 </div>
 
@@ -398,10 +400,14 @@
     });
   }
 
+  function matchesQuery(r, query) {
+    if (!query) return true;
+    if (normalize(r.title).includes(query)) return true;
+    return (r.ingredients || []).some(ing => normalize(ing.name).includes(query));
+  }
+
   function matchesSearch(r) {
-    if (!searchQuery) return true;
-    if (normalize(r.title).includes(searchQuery)) return true;
-    return (r.ingredients || []).some(ing => normalize(ing.name).includes(searchQuery));
+    return matchesQuery(r, searchQuery);
   }
 
   function getFilteredIndices() {
@@ -519,7 +525,7 @@
     return isPieceMode(r) ? 1 : userDefaultServings;
   }
 
-  const SERVING_MODE_LABELS = { portion: 'Portions', piece: 'À la pièce' };
+  const SERVING_MODE_LABELS = { portion: 'Personnes', piece: 'À la pièce' };
   function setFormServingMode(mode) {
     formServingMode = mode;
     document.getElementById('f_servingModeLabel').textContent = SERVING_MODE_LABELS[mode];
@@ -634,7 +640,7 @@
         <h1 style="margin-bottom:var(--gap-vertical-section);">${escapeHtml(r.title)}</h1>
 
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);">
-          <span class="text-body">${isPieceMode(r) ? 'Pièce(s)' : 'Portions'}</span>
+          <span class="text-body">${isPieceMode(r) ? 'Pièce(s)' : 'Personnes'}</span>
           <div class="servings-stepper">
             <button class="servings-minus" onclick="changeServings(${i}, -1)"><i class="bi bi-dash"></i></button>
             <span class="servings-value">${s}</span>
@@ -657,63 +663,27 @@
     `;
   }
 
+  // Recette possédée ou partagée : clic sur le panier depuis sa fiche. Une
+  // recette avec plusieurs types de repas possibles (ex: Déjeuner + Dîner)
+  // ouvre toujours le bottom sheet, pour choisir lequel (ou lesquels).
+  // Sinon, ajout direct (ou incrément du nombre de fois planifiée) avec le
+  // nombre de personnes mémorisé pour cette recette.
   function addCurrentRecipeToPlanning(recipeId) {
-    // "count" représente désormais un nombre de repas (occurrences), pas un
-    // total de portions : chaque ajout compte pour un repas de plus. Le
-    // nombre de portions par repas est déduit séparément (voir
-    // getServingsPerOccurrence), à partir de ce qui est mémorisé pour cette
-    // recette ou du défaut du profil.
-    requestMealTypeForPlanning(recipeId, async (mealType) => {
-      const newVal = (mealPlan[recipeId]?.count || 0) + 1;
-      await applyMealPlanChange(recipeId, newVal, mealType);
-      showToast('Ajouté au planning');
-    });
-  }
-
-  // Détermine à quel type de repas rattacher l'ajout : reprend celui déjà choisi
-  // pour cette recette, l'unique tag repas de la recette, ou demande à l'utilisateur
-  // si la recette a plusieurs tags repas.
-  function requestMealTypeForPlanning(recipeId, onResolved) {
-    const existing = mealPlan[recipeId];
-    if (existing) { onResolved(existing.mealType); return; }
     const r = allRecipesForPlanning().find(x => x.id === recipeId);
-    const tags = (r?.tags || []).filter(t => MEAL_TYPES.includes(t));
+    if (!r) return;
+    const tags = recipeMealTypeTags(r);
     if (tags.length > 1) {
-      openMealTypeChoiceModal(tags, onResolved);
-    } else {
-      onResolved(tags[0] || null);
+      openPlanOccurrenceSheet(recipeId);
+      return;
     }
-  }
-
-  async function applyMealPlanChange(recipeId, newCount, mealType) {
-    if (newCount <= 0) {
-      delete mealPlan[recipeId];
-      await sb.from('meal_plan').delete().eq('recipe_id', recipeId);
-    } else {
-      mealPlan[recipeId] = { count: newCount, mealType };
-      await sb.from('meal_plan').upsert({ recipe_id: recipeId, count: newCount, meal_type: mealType, user_id: currentUser.id });
-    }
-  }
-
-  let mealTypeChoiceCallback = null;
-  function openMealTypeChoiceModal(tags, callback) {
-    mealTypeChoiceCallback = callback;
-    document.getElementById('mealTypeChoiceOptions').innerHTML = tags.map(t => `
-      <button type="button" class="filter-chip filter-chip-vertical" data-choice-type="${t}"><i class="bi ${MEAL_TYPE_ICONS[t]}" style="font-size:24px;"></i>${t}</button>
-    `).join('');
-    document.querySelectorAll('[data-choice-type]').forEach(btn => {
-      btn.onclick = (e) => {
-        const t = e.currentTarget.dataset.choiceType;
-        const cb = mealTypeChoiceCallback;
-        closeMealTypeChoiceModal();
-        if (cb) cb(t);
-      };
+    const mealType = tags[0] || null;
+    const existing = findOccurrence(recipeId, mealType, '');
+    const newCount = (existing?.count || 0) + 1;
+    const servings = existing?.servings ?? getServingsPerOccurrence(r);
+    upsertMealPlanOccurrence(recipeId, mealType, '', servings, newCount).then(() => {
+      showToast('Ajouté au planning');
+      if (document.getElementById('planningView').style.display !== 'none') renderPlanningRecipes();
     });
-    document.getElementById('mealTypeChoiceModal').style.display = 'flex';
-  }
-  function closeMealTypeChoiceModal() {
-    document.getElementById('mealTypeChoiceModal').style.display = 'none';
-    mealTypeChoiceCallback = null;
   }
 
   function changeServings(i, delta) {
@@ -770,7 +740,7 @@
     document.getElementById('cookingRecipeTitle').textContent = r.title;
     document.getElementById('cookingRecipeServings').textContent = isPieceMode(r)
       ? `pour ${cookingServings} pièce${cookingServings > 1 ? 's' : ''}`
-      : `pour ${cookingServings} portions`;
+      : `pour ${cookingServings} personne${cookingServings > 1 ? 's' : ''}`;
     document.getElementById('cookingModeView').style.display = 'flex';
     renderCookingSteps();
 
@@ -914,7 +884,7 @@
     document.body.style.left = '';
     document.body.style.right = '';
     document.documentElement.style.overflow = '';
-    closeMealTypeChoiceModal();
+    closePlanOccurrenceSheet();
     document.getElementById('navHome').classList.remove('active');
     document.getElementById('navAdd').classList.remove('active');
     document.getElementById('navPlanning').classList.remove('active');
@@ -1293,7 +1263,7 @@
     const { data: profile } = await sb.from('profiles').select('display_name, default_servings').eq('id', currentUser.id).maybeSingle();
     accountProfileCache = profile || {};
     document.getElementById('account_display_name_value').textContent = accountProfileCache.display_name || '—';
-    document.getElementById('account_default_servings_value').textContent = `${accountProfileCache.default_servings || 4} portions`;
+    document.getElementById('account_default_servings_value').textContent = `${accountProfileCache.default_servings || 4} personnes`;
   }
 
   document.getElementById('navAccount').onclick = showAccount;
@@ -1315,10 +1285,10 @@
       titleEl.textContent = 'Mot de passe';
       contentEl.innerHTML = `<input id="accountEdit_password" class="field-input" type="password" placeholder="Nouveau mot de passe" autocomplete="new-password" />`;
     } else if (field === 'default_servings') {
-      titleEl.textContent = 'Portions par défaut';
+      titleEl.textContent = 'Personnes par défaut';
       const current = accountProfileCache.default_servings || 4;
       contentEl.innerHTML = `
-        <p class="text-body" style="color:var(--text-icon-secondary);margin:0 0 16px;">Utilisé pour préremplir le nombre de portions à la création d'une recette.</p>
+        <p class="text-body" style="color:var(--text-icon-secondary);margin:0 0 16px;">Utilisé pour préremplir le nombre de personnes à la création d'une recette.</p>
         <div class="servings-stepper">
           <button type="button" class="servings-minus" id="accountEdit_servingsMinus"><i class="bi bi-dash"></i></button>
           <span class="servings-value" id="accountEdit_servingsValue">${current}</span>
@@ -2647,19 +2617,32 @@
   resetForm();
 
   // ---- Planning (sélection par compteur) ----
-  let mealPlan = {}; // { recipe_id: { count, mealType } }
+  // { recipe_id: [{ id, mealType, variantLabel, count, servings }, ...] } —
+  // une entrée par combinaison recette + type de repas + variante, pour
+  // pouvoir planifier une même recette à plusieurs repas avec des nombres de
+  // personnes différents (ex: 6 au déjeuner, 2 au dîner).
+  let mealPlan = {};
 
   async function loadMealPlan() {
     const { data, error } = await sb.from('meal_plan').select('*');
     if (error) { console.error(error); return; }
     mealPlan = {};
-    (data || []).forEach(row => { mealPlan[row.recipe_id] = { count: row.count, mealType: row.meal_type }; });
+    (data || []).forEach(row => {
+      const list = mealPlan[row.recipe_id] = mealPlan[row.recipe_id] || [];
+      list.push({
+        id: row.id,
+        mealType: row.meal_type || null,
+        variantLabel: row.variant_label || '',
+        count: row.count || 1,
+        servings: row.servings
+      });
+    });
   }
 
   // Recettes partagées (enregistrées via un lien de partage, pas possédées) :
   // elles peuvent être planifiées comme les recettes possédées, mais ne sont
   // "parcourables" dans la liste de planning que tant qu'elles y sont
-  // effectivement placées (voir sortedRecipes plus bas).
+  // effectivement placées (voir renderPlanningRecipes plus bas).
   function foreignPlanningRecipes() {
     return savedRecipes.map(row => row.recipe);
   }
@@ -2668,113 +2651,243 @@
     return recipes.concat(foreignPlanningRecipes());
   }
 
-  function renderPlanningRecipes() {
-    document.getElementById('planDefaultServingsLabel').textContent = `Pour ${userDefaultServings} personnes`;
+  // Tags de type de repas d'une recette, dans l'ordre canonique — détermine
+  // si elle a besoin du choix de repas (plusieurs tags) ou non (0 ou 1).
+  function recipeMealTypeTags(r) {
+    return MEAL_TYPES.filter(t => (r?.tags || []).includes(t));
+  }
 
-    const counts = MEAL_TYPES.map(type => {
-      let total = 0;
-      allRecipesForPlanning().forEach(r => {
-        const entry = mealPlan[r.id];
-        if (!entry || !entry.count) return;
-        // Repli sur le premier tag repas pour les entrées créées avant l'ajout de meal_type.
-        const effectiveType = entry.mealType || (r.tags || []).find(t => MEAL_TYPES.includes(t));
-        if (effectiveType === type) total += entry.count;
-      });
-      return total;
+  function getOccurrences(recipeId) {
+    return mealPlan[recipeId] || [];
+  }
+
+  function findOccurrence(recipeId, mealType, variantLabel) {
+    return getOccurrences(recipeId).find(o => (o.mealType || '') === (mealType || '') && (o.variantLabel || '') === (variantLabel || ''));
+  }
+
+  async function upsertMealPlanOccurrence(recipeId, mealType, variantLabel, servings, count) {
+    const payload = {
+      recipe_id: recipeId,
+      meal_type: mealType || '',
+      variant_label: variantLabel || '',
+      servings: servings,
+      count: count != null ? count : 1,
+      user_id: currentUser.id
+    };
+    const { data, error } = await sb.from('meal_plan')
+      .upsert(payload, { onConflict: 'user_id,recipe_id,meal_type,variant_label' })
+      .select()
+      .single();
+    if (error) { console.error(error); return; }
+    const list = (mealPlan[recipeId] = (mealPlan[recipeId] || []).filter(o => (o.mealType || '') !== (mealType || '')));
+    list.push({ id: data.id, mealType: data.meal_type || null, variantLabel: data.variant_label || '', count: data.count, servings: data.servings });
+  }
+
+  async function deleteMealPlanOccurrence(occurrenceId) {
+    await sb.from('meal_plan').delete().eq('id', occurrenceId);
+    Object.keys(mealPlan).forEach(recipeId => {
+      mealPlan[recipeId] = mealPlan[recipeId].filter(o => o.id !== occurrenceId);
+      if (mealPlan[recipeId].length === 0) delete mealPlan[recipeId];
     });
+  }
 
-    document.getElementById('planSummary').innerHTML = MEAL_TYPES.map((type, idx) => `
-      <div class="meal-category-card ${planMealTypeFilter === type ? 'active' : ''}" onclick="toggleMealTypeFilter('${type}')">
-        <p class="meal-category-number">${counts[idx]}</p>
-        <p class="meal-category-label">${type}</p>
-      </div>
-    `).join('');
+  async function clearMealPlanOccurrences(recipeId) {
+    await sb.from('meal_plan').delete().eq('recipe_id', recipeId);
+    delete mealPlan[recipeId];
+  }
 
-    // Liste des recettes avec stepper
-    const planSortLabels = { alpha: 'Alphabétique', frequent: 'Fréquemment cuisiné' };
-    document.getElementById('planSortLabel').textContent = planSortLabels[planSortMode];
+  let planSearchQuery = '';
+  function handlePlanSearchInput() {
+    planSearchQuery = normalize(document.getElementById('planSearchInput').value);
+    renderPlanningRecipes();
+  }
 
-    // Une recette partagée n'apparaît dans cette liste que tant qu'elle est
-    // effectivement planifiée : contrairement aux recettes possédées, on ne
-    // peut pas parcourir ici celles des autres.
-    const plannedForeign = foreignPlanningRecipes().filter(r => (mealPlan[r.id]?.count || 0) > 0);
-    const candidateRecipes = recipes.concat(plannedForeign);
+  function renderPlanningRecipes() {
+    const planned = allRecipesForPlanning().filter(r => getOccurrences(r.id).length > 0);
+    planned.sort((a, b) => a.title.localeCompare(b.title, 'fr'));
 
-    let sortedRecipes = planMealTypeFilter
-      ? candidateRecipes.filter(r => (r.tags || []).includes(planMealTypeFilter))
-      : candidateRecipes;
-    if (planSortMode === 'frequent') {
-      sortedRecipes.sort((a, b) => {
-        const countA = cookCounts[a.id] || 0;
-        const countB = cookCounts[b.id] || 0;
-        if (countA !== countB) return countB - countA;
-        return a.title.localeCompare(b.title, 'fr');
-      });
+    const plannedListEl = document.getElementById('plannedRecipeList');
+    if (planned.length === 0) {
+      plannedListEl.innerHTML = `<p class="text-body" style="color:var(--text-icon-secondary);">Aucun repas prévu pour l'instant.</p>`;
     } else {
-      sortedRecipes.sort((a, b) => a.title.localeCompare(b.title, 'fr'));
+      plannedListEl.innerHTML = planned.map(r => {
+        const occs = getOccurrences(r.id);
+        const detailIdx = recipes.findIndex(x => x.id === r.id);
+        const thumbOnclick = detailIdx === -1
+          ? `loadSharedRecipe('${r.share_token}', 'planning')`
+          : `openRecipeDetail(${detailIdx}, 'planning')`;
+        const recap = occs.map(o => {
+          const label = o.mealType || 'Repas';
+          const unitWord = isPieceMode(r) ? (o.servings > 1 ? 'pièces' : 'pièce') : (o.servings > 1 ? 'personnes' : 'personne');
+          const countPrefix = o.count > 1 ? `${o.count}× ` : '';
+          return `${label} : ${countPrefix}${o.servings} ${unitWord}`;
+        }).join(' · ');
+        return `
+          <div class="plan-recipe-row">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:72px;height:72px;border-radius:var(--corner-radius-large);overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;" onclick="${thumbOnclick}">
+                ${safeUrl(r.photo_url)
+                  ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
+                  : '<i class="bi bi-image" style="font-size:16px;color:var(--text-icon-secondary);"></i>'}
+              </div>
+              <div>
+                <div class="plan-recipe-name">${escapeHtml(r.title)}</div>
+                <div class="text-small" style="color:var(--text-icon-secondary);">${recap}</div>
+              </div>
+            </div>
+            <button type="button" class="icon-btn" data-edit-plan="${r.id}"><i class="bi bi-pencil"></i></button>
+          </div>
+        `;
+      }).join('');
+      plannedListEl.querySelectorAll('[data-edit-plan]').forEach(btn => {
+        btn.onclick = () => openPlanOccurrenceSheet(btn.dataset.editPlan);
+      });
     }
 
-    const listEl = document.getElementById('planningRecipeList');
-    listEl.innerHTML = sortedRecipes.map(r => {
-      const count = mealPlan[r.id]?.count || 0;
-      const total = count * getServingsPerOccurrence(r);
-      const totalLabel = count > 0
-        ? (isPieceMode(r) ? `${total} pièce${total > 1 ? 's' : ''}` : `${total} portion${total > 1 ? 's' : ''}`)
-        : '';
+    const plannedIds = new Set(planned.map(r => r.id));
+    let suggestions = recipes.filter(r => !plannedIds.has(r.id));
+    if (planSearchQuery) suggestions = suggestions.filter(r => matchesQuery(r, planSearchQuery));
+    suggestions.sort((a, b) => a.title.localeCompare(b.title, 'fr'));
+
+    const suggestionListEl = document.getElementById('planSuggestionList');
+    suggestionListEl.innerHTML = suggestions.map(r => {
       const detailIdx = recipes.findIndex(x => x.id === r.id);
-      const thumbOnclick = detailIdx === -1
-        ? `loadSharedRecipe('${r.share_token}', 'planning')`
-        : `openRecipeDetail(${detailIdx}, 'planning')`;
       return `
         <div class="plan-recipe-row">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:72px;height:72px;border-radius:var(--corner-radius-large);overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;" onclick="${thumbOnclick}">
+          <div style="display:flex;align-items:center;gap:12px;" onclick="openRecipeDetail(${detailIdx}, 'planning')">
+            <div style="width:72px;height:72px;border-radius:var(--corner-radius-large);overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;">
               ${safeUrl(r.photo_url)
                 ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
                 : '<i class="bi bi-image" style="font-size:16px;color:var(--text-icon-secondary);"></i>'}
             </div>
-            <div>
-              <div class="plan-recipe-name">${escapeHtml(r.title)}</div>
-              ${totalLabel ? `<div class="text-small" style="color:var(--text-icon-secondary);">${totalLabel}</div>` : ''}
-            </div>
+            <div class="plan-recipe-name">${escapeHtml(r.title)}</div>
           </div>
-          <div class="servings-stepper">
-            <button class="servings-minus" type="button" data-plan-recipe="${r.id}" data-delta="-1"><i class="bi bi-dash"></i></button>
-            <span class="servings-value" data-plan-count="${r.id}">${count}</span>
-            <button class="servings-plus" type="button" data-plan-recipe="${r.id}" data-delta="1"><i class="bi bi-plus"></i></button>
-          </div>
+          <button type="button" class="icon-btn" data-add-plan="${r.id}"><i class="bi bi-plus-lg"></i></button>
         </div>
       `;
     }).join('');
-
-    document.getElementById('planSortMenu').innerHTML = Object.entries(planSortLabels).map(([mode, label]) => `
-      <button type="button" class="course-sort-menu-item text-body ${planSortMode === mode ? 'active' : ''}" data-plan-sort-mode="${mode}"><span>${label}</span><i class="bi bi-check-lg course-sort-menu-check"></i></button>
-    `).join('');
-
-    const planSortMenu = document.getElementById('planSortMenu');
-    document.getElementById('planSortBtn').onclick = () => {
-      planSortMenu.style.display = planSortMenu.style.display === 'none' ? 'block' : 'none';
-    };
-    planSortMenu.querySelectorAll('[data-plan-sort-mode]').forEach(btn => {
-      btn.onclick = () => {
-        planSortMode = btn.dataset.planSortMode;
-        try { localStorage.setItem(PLAN_SORT_KEY, planSortMode); } catch { /* ignoré */ }
-        renderPlanningRecipes();
-      };
-    });
-
-    document.querySelectorAll('[data-plan-recipe]').forEach(btn => {
+    suggestionListEl.querySelectorAll('[data-add-plan]').forEach(btn => {
       btn.onclick = (e) => {
-        const recipeId = e.currentTarget.dataset.planRecipe;
-        const delta = Number(e.currentTarget.dataset.delta);
-        if (delta < 0 && !mealPlan[recipeId]) return;
-        requestMealTypeForPlanning(recipeId, async (mealType) => {
-          const newVal = Math.max(0, (mealPlan[recipeId]?.count || 0) + delta);
-          await applyMealPlanChange(recipeId, newVal, mealType);
-          renderPlanningRecipes();
-        });
+        e.stopPropagation();
+        openPlanOccurrenceSheet(btn.dataset.addPlan);
       };
     });
+  }
+
+  // ---- Bottom sheet d'ajout/édition d'une occurrence de planning ----
+  let planSheetState = null;
+
+  function openPlanOccurrenceSheet(recipeId) {
+    const r = allRecipesForPlanning().find(x => x.id === recipeId);
+    if (!r) return;
+    const tags = recipeMealTypeTags(r);
+    const existing = getOccurrences(recipeId);
+    const isMulti = tags.length > 1;
+    const servingsByType = {};
+    const countByType = {};
+    if (isMulti) {
+      tags.forEach(t => {
+        const occ = existing.find(o => o.mealType === t);
+        servingsByType[t] = occ ? occ.servings : getServingsPerOccurrence(r);
+        countByType[t] = occ ? occ.count : 1;
+      });
+    }
+    planSheetState = {
+      recipeId,
+      tags,
+      isMulti,
+      selectedTypes: new Set(existing.map(o => o.mealType).filter(t => tags.includes(t))),
+      servingsByType,
+      countByType,
+      activeType: isMulti ? (tags.find(t => existing.some(o => o.mealType === t)) || tags[0]) : null,
+      singleServings: !isMulti ? (existing[0]?.servings ?? getServingsPerOccurrence(r)) : null,
+      singleCount: !isMulti ? (existing[0]?.count ?? 1) : null
+    };
+    renderPlanOccurrenceSheet();
+    document.getElementById('planOccurrenceSheet').style.display = 'flex';
+  }
+
+  function currentSheetServings() {
+    if (!planSheetState) return 1;
+    return planSheetState.isMulti ? (planSheetState.servingsByType[planSheetState.activeType] ?? 1) : planSheetState.singleServings;
+  }
+
+  function setSheetServings(v) {
+    if (!planSheetState) return;
+    const clamped = Math.max(1, v);
+    if (planSheetState.isMulti) planSheetState.servingsByType[planSheetState.activeType] = clamped;
+    else planSheetState.singleServings = clamped;
+    document.getElementById('planOccurrenceValue').textContent = clamped;
+  }
+
+  function renderPlanOccurrenceSheet() {
+    const st = planSheetState;
+    const r = allRecipesForPlanning().find(x => x.id === st.recipeId);
+    document.getElementById('planOccurrenceTitle').textContent = r.title;
+    const chipsEl = document.getElementById('planOccurrenceMealTypes');
+    if (st.isMulti) {
+      chipsEl.style.display = 'flex';
+      chipsEl.innerHTML = st.tags.map(t => `
+        <button type="button" class="filter-chip filter-chip-vertical ${st.selectedTypes.has(t) ? 'active' : ''}" data-occ-type="${t}"><i class="bi ${MEAL_TYPE_ICONS[t]}" style="font-size:24px;"></i>${t}</button>
+      `).join('');
+      chipsEl.querySelectorAll('[data-occ-type]').forEach(btn => {
+        btn.onclick = () => {
+          const t = btn.dataset.occType;
+          if (st.selectedTypes.has(t)) st.selectedTypes.delete(t); else st.selectedTypes.add(t);
+          st.activeType = t;
+          renderPlanOccurrenceSheet();
+        };
+      });
+      document.getElementById('planOccurrenceServingsLabel').textContent = `Pour combien de personnes (${st.activeType}) ?`;
+    } else {
+      chipsEl.style.display = 'none';
+      chipsEl.innerHTML = '';
+      document.getElementById('planOccurrenceServingsLabel').textContent = 'Pour combien de personnes ?';
+    }
+    document.getElementById('planOccurrenceValue').textContent = currentSheetServings();
+  }
+
+  document.getElementById('planOccurrenceMinus').onclick = () => setSheetServings(currentSheetServings() - 1);
+  document.getElementById('planOccurrencePlus').onclick = () => setSheetServings(currentSheetServings() + 1);
+
+  function closePlanOccurrenceSheet() {
+    document.getElementById('planOccurrenceSheet').style.display = 'none';
+    planSheetState = null;
+  }
+
+  async function savePlanOccurrenceSheet() {
+    const st = planSheetState;
+    if (!st) return;
+    if (st.isMulti) {
+      if (st.selectedTypes.size === 0) {
+        showToast('Choisis au moins un repas');
+        return;
+      }
+      const existing = getOccurrences(st.recipeId);
+      for (const occ of existing) {
+        if (occ.mealType && !st.selectedTypes.has(occ.mealType)) {
+          await deleteMealPlanOccurrence(occ.id);
+        }
+      }
+      for (const t of st.selectedTypes) {
+        await upsertMealPlanOccurrence(st.recipeId, t, '', st.servingsByType[t] || 1, st.countByType[t] || 1);
+      }
+    } else {
+      const t = st.tags[0] || null;
+      await upsertMealPlanOccurrence(st.recipeId, t, '', st.singleServings || 1, st.singleCount || 1);
+    }
+    closePlanOccurrenceSheet();
+    renderPlanningRecipes();
+    showToast('Planning mis à jour');
+  }
+
+  async function resetPlanOccurrenceSheet() {
+    const st = planSheetState;
+    if (!st) return;
+    await clearMealPlanOccurrences(st.recipeId);
+    closePlanOccurrenceSheet();
+    renderPlanningRecipes();
+    showToast('Retiré du planning');
   }
 
   function normalize(str) {
@@ -2857,21 +2970,6 @@
   let collapsedRayons = new Set();
   let courseRecheckTimeout = null;
 
-  const PLAN_SORT_KEY = 'veggieRealm.planSortMode';
-  let planSortMode = 'alpha'; // 'alpha' | 'frequent'
-  try {
-    const stored = localStorage.getItem(PLAN_SORT_KEY);
-    if (stored === 'alpha' || stored === 'frequent') planSortMode = stored;
-  } catch { /* ignoré */ }
-
-  // Filtre par type de repas : cliquer sur un encart (Petit-déj/Déjeuner/...)
-  // ne garde que les recettes qui portent ce tag ; recliquer dessus l'enlève.
-  let planMealTypeFilter = null;
-  function toggleMealTypeFilter(type) {
-    planMealTypeFilter = planMealTypeFilter === type ? null : type;
-    renderPlanningRecipes();
-  }
-
   function loadCheckedCourses() {
     try { return JSON.parse(localStorage.getItem(COURSES_CHECKED_KEY)) || {}; } catch { return {}; }
   }
@@ -2884,11 +2982,11 @@
     let hasAnySelection = false;
 
     allRecipesForPlanning().forEach(r => {
-      const count = mealPlan[r.id]?.count || 0;
-      if (count === 0) return;
+      const occs = getOccurrences(r.id);
+      if (occs.length === 0) return;
       hasAnySelection = true;
       const base = getRecipeBase(r);
-      const totalUnits = count * getServingsPerOccurrence(r);
+      const totalUnits = occs.reduce((sum, o) => sum + (o.count || 1) * (o.servings || 1), 0);
       (r.ingredients || []).forEach(ing => {
         if (!ing.name || !ing.name.trim()) return;
         const nameKey = normalize(ing.name).replace(/s$/, '');
@@ -2911,7 +3009,7 @@
       listEl.innerHTML = `
         <div style="text-align:center;padding:64px 24px;">
           <i class="bi bi-basket3" style="font-size:48px;color:var(--text-icon-secondary);display:block;margin-bottom:16px;"></i>
-          <p class="text-body" style="color:var(--text-icon-secondary);margin:0;">Sélectionne des recettes dans l'onglet "Recettes" pour générer ta liste de courses.</p>
+          <p class="text-body" style="color:var(--text-icon-secondary);margin:0;">Prévois des recettes dans l'onglet "Repas prévus" pour générer ta liste de courses.</p>
         </div>`;
       return;
     }
