@@ -884,7 +884,9 @@
     document.body.style.left = '';
     document.body.style.right = '';
     document.documentElement.style.overflow = '';
+    bodyScrollLockCount = 0;
     closePlanOccurrenceSheet();
+    closeShareMenu();
     document.getElementById('navHome').classList.remove('active');
     document.getElementById('navAdd').classList.remove('active');
     document.getElementById('navPlanning').classList.remove('active');
@@ -1422,6 +1424,87 @@
   // elle-même passe en position:fixed à ce moment-là, donc le rendu ne
   // change pas visuellement), puis on la restaure en fixed si le geste est
   // abandonné.
+  // Verrouillage du scroll en arrière-plan, à compteur : plusieurs choses
+  // (geste de retour par le bord, bottom sheet) peuvent le demander en même
+  // temps, donc on ne déverrouille vraiment que quand plus aucune ne le
+  // demande. overflow:hidden seul ne bloque pas fiablement le scroll tactile
+  // sur Safari iOS — la technique robuste consiste à passer body en
+  // position:fixed le temps voulu (on part toujours de scrollY===0 dans tous
+  // les cas d'usage actuels, donc pas besoin de compenser un décalage de
+  // scroll à restaurer).
+  let bodyScrollLockCount = 0;
+  function lockBackgroundScroll() {
+    bodyScrollLockCount++;
+    if (bodyScrollLockCount > 1) return;
+    document.body.style.position = 'fixed';
+    document.body.style.top = '0';
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.documentElement.style.overflow = 'hidden';
+  }
+
+  function unlockBackgroundScroll() {
+    bodyScrollLockCount = Math.max(0, bodyScrollLockCount - 1);
+    if (bodyScrollLockCount > 0) return;
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.documentElement.style.overflow = '';
+  }
+
+  // Permet de fermer un bottom sheet en le tirant vers le bas depuis sa
+  // poignée, en plus du clic sur l'overlay (déjà géré par chaque sheet via
+  // son propre onclick). La zone de prise déborde largement de la poignée
+  // visuelle (.detail-sheet-handle, 4px de haut) car elle serait sinon bien
+  // trop fine pour être attrapée au doigt de façon fiable.
+  function enableSheetDragToClose(sheetId, closeFn) {
+    const handleEl = document.querySelector(`#${sheetId} .detail-sheet-handle`);
+    const panelEl = handleEl.parentElement;
+    const DRAG_ZONE_PX = 48;
+    const CLOSE_RATIO = 0.25;
+    const EASING = 'cubic-bezier(0.32, 0.72, 0, 1)';
+    let startY = null;
+    let dragging = false;
+
+    panelEl.addEventListener('touchstart', (e) => {
+      const rect = panelEl.getBoundingClientRect();
+      if (e.touches[0].clientY - rect.top > DRAG_ZONE_PX) return;
+      startY = e.touches[0].clientY;
+      dragging = true;
+      panelEl.style.transition = 'none';
+    }, { passive: true });
+
+    panelEl.addEventListener('touchmove', (e) => {
+      if (!dragging) return;
+      const delta = Math.max(0, e.touches[0].clientY - startY);
+      panelEl.style.transform = `translateY(${delta}px)`;
+    }, { passive: true });
+
+    function endDrag() {
+      if (!dragging) return;
+      dragging = false;
+      const match = /translateY\(([\d.]+)px\)/.exec(panelEl.style.transform);
+      const delta = match ? parseFloat(match[1]) : 0;
+      panelEl.style.transition = `transform 0.25s ${EASING}`;
+      if (delta > panelEl.offsetHeight * CLOSE_RATIO) {
+        panelEl.style.transform = 'translateY(100%)';
+        setTimeout(() => {
+          closeFn();
+          panelEl.style.transition = '';
+          panelEl.style.transform = '';
+        }, 220);
+      } else {
+        panelEl.style.transform = '';
+      }
+    }
+    panelEl.addEventListener('touchend', endDrag);
+    panelEl.addEventListener('touchcancel', endDrag);
+  }
+
+  enableSheetDragToClose('shareMenuModal', closeShareMenu);
+  enableSheetDragToClose('planOccurrenceSheet', closePlanOccurrenceSheet);
+
   (function setupEdgeSwipeBack() {
     const EDGE_ZONE = 24; // px depuis le bord gauche où le geste doit démarrer
     const AXIS_LOCK_PX = 4; // mouvement minimal avant de trancher horizontal/vertical (faible : on tranche tôt pour ne laisser fuiter aucun scroll)
@@ -1438,27 +1521,6 @@
     let dragging = false; // confirmé horizontal (au-delà du verrou d'axe)
     let liveAnimationEnabled = false;
     let photoEl = null;
-
-    function lockBackgroundScroll() {
-      // overflow:hidden seul ne bloque pas fiablement le scroll tactile sur
-      // Safari iOS. La technique robuste consiste à passer body en
-      // position:fixed le temps du geste (on part toujours de scrollY===0
-      // ici, voir liveAnimationEnabled, donc pas besoin de compenser un
-      // décalage de scroll à restaurer).
-      document.body.style.position = 'fixed';
-      document.body.style.top = '0';
-      document.body.style.left = '0';
-      document.body.style.right = '0';
-      document.documentElement.style.overflow = 'hidden';
-    }
-
-    function unlockBackgroundScroll() {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      document.documentElement.style.overflow = '';
-    }
 
     function beginLiveDrag() {
       photoEl = detailEl.querySelector('.detail-photo');
@@ -1708,11 +1770,14 @@
   function shareCurrentRecipe(i) {
     shareMenuRecipeIndex = i;
     document.getElementById('shareMenuModal').style.display = 'flex';
+    lockBackgroundScroll();
   }
 
   function closeShareMenu() {
+    const wasOpen = document.getElementById('shareMenuModal').style.display !== 'none';
     document.getElementById('shareMenuModal').style.display = 'none';
     shareMenuRecipeIndex = null;
+    if (wasOpen) unlockBackgroundScroll();
   }
 
   async function shareRecipeLink() {
@@ -2805,6 +2870,7 @@
     };
     renderPlanOccurrenceSheet();
     document.getElementById('planOccurrenceSheet').style.display = 'flex';
+    lockBackgroundScroll();
   }
 
   function currentSheetServings() {
@@ -2851,8 +2917,10 @@
   document.getElementById('planOccurrencePlus').onclick = () => setSheetServings(currentSheetServings() + 1);
 
   function closePlanOccurrenceSheet() {
+    const wasOpen = document.getElementById('planOccurrenceSheet').style.display !== 'none';
     document.getElementById('planOccurrenceSheet').style.display = 'none';
     planSheetState = null;
+    if (wasOpen) unlockBackgroundScroll();
   }
 
   async function savePlanOccurrenceSheet() {
