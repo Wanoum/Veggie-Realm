@@ -474,22 +474,43 @@
      pour rester juste au-dessus du bouton plutôt que collé dessus. */
   bottom: calc(var(--height-default) + 12px + env(safe-area-inset-bottom) + 8px);
   transform: translateX(-50%) translateY(12px);
+  display: flex;
+  align-items: center;
+  gap: var(--gap-xsmall);
   width: max-content;
   max-width: calc(100% - (2 * var(--padding-horizontal-app)));
-  padding: var(--gap-default) var(--padding-horizontal-default);
-  background: var(--interaction-primary);
+  min-height: 34px;
+  padding: 4px 6px 4px var(--padding-horizontal-contained);
+  background: var(--interaction-inverted);
   color: var(--text-icon-on-primary);
   font-family: 'Inter', sans-serif;
   font-size: 14px;
   font-weight: 500;
   text-align: center;
   border-radius: var(--corner-radius-round);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  box-shadow: 0 0 6px rgba(41,59,46,0.2), 0 8px 10px rgba(41,59,46,0.25);
   z-index: 500;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
+.toast-message { padding-right: 6px; white-space: nowrap; }
+.toast-action {
+  display: none;
+  height: 24px;
+  padding: 0 8px;
+  border: none;
+  border-radius: var(--corner-radius-round);
+  background: var(--interaction-secondary);
+  color: var(--text-icon-accent);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  pointer-events: auto;
+}
+.toast.has-action .toast-action { display: block; }
 .toast.visible {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
