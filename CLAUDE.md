@@ -21,6 +21,20 @@ Toujours utiliser les tokens CSS existants plutôt que des valeurs codées en du
 5. `git push -u origin main`.
 6. Résumer brièvement au user ce qui a changé et ce qui reste à tester sur son iPhone — rappeler de vérifier la "Version du ..." dans Compte (= `document.lastModified`, automatique) si un comportement ne semble pas avoir changé, pour écarter un souci de cache PWA avant de creuser plus loin.
 
+## Bug en pause (mis de côté par l'utilisateur)
+
+- **Bottom sheet pas calé en bas** (PWA installée sur iPhone uniquement — pas reproductible en Safari onglet ni en émulation desktop) : un bandeau de fond de page (cream, `--surface-high`/`--light-50` ou `--light-150`) reste visible sous le panneau d'un bottom sheet (`planOccurrenceSheet`, `courseQtySheet`, `shareMenuModal`), comme si le panneau n'atteignait pas le vrai bas de l'écran. **8 pistes essayées, aucune n'a changé le résultat** (confirmé identique à chaque fois par capture d'écran) :
+  1. Retrait de `backdrop-filter` (suspecté avec `position:fixed`).
+  2. `min-height:-webkit-fill-available`.
+  3. Hauteur mesurée en JS (`--app-height` via `visualViewport.height`/`innerHeight`) avec re-mesures différées (rAF, +300ms, `load`, `pageshow`, `resize`).
+  4. Repli CSS en `100dvh` au lieu de `100vh`.
+  5. Retrait de `document.documentElement.style.overflow = 'hidden'` posé par `lockBackgroundScroll()` (hypothèse : rognait les éléments fixed en-dessous).
+  6. Panneau en `position:fixed;bottom:0` directement au lieu d'un alignement flex dans un conteneur englobant.
+  7. Décalage négatif `bottom:calc(-1 * env(safe-area-inset-bottom))` sur voile + panneau (hypothèse zone de sécurité/indicateur d'accueil — la mesure de l'espace sur capture correspondait à peu près à cette valeur, mais le correctif n'a rien changé, donc écarté).
+  8. Retrait de l'imbrication `position:fixed` dans `position:fixed` (voile + panneau étaient enfants d'un conteneur englobant lui-même `position:fixed;inset:0` — hypothèse d'un bug WebKit de calcul relatif à l'ancêtre plutôt qu'au viewport ; `#bottomNav`, structurellement différent — fixed direct, sans wrapper — n'a lui jamais ce problème).
+  
+  Piste non explorée pour la prochaine fois : `#bottomNav` reste affiché (`display:flex`) derrière les sheets, qui ont pourtant un z-index supérieur (400 vs 100) — vérifier si un ancêtre crée un contexte d'empilement qui invalide cette comparaison, ou simplement masquer `#bottomNav` à l'ouverture d'un sheet (via `lockBackgroundScroll`/`unlockBackgroundScroll`, déjà appelés par les 3 sheets concernés) pour éliminer la variable au lieu de continuer à deviner sur le positionnement du sheet lui-même.
+
 ## Backlog / idées pour plus tard
 
 - **Audit visuel** : parcourir l'app et unifier avec les tokens CSS existants (repérer les valeurs codées en dur restantes).
