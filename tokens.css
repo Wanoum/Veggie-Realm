@@ -112,8 +112,10 @@
 input, select, textarea, button { outline: none; }
 /* Safari iOS applique son propre rendu natif aux <button> (dont le bleu
    système) tant que -webkit-appearance n'est pas désactivé — même quand une
-   couleur de texte est déjà fixée en CSS. */
-button { -webkit-appearance: none; appearance: none; background: none; color: inherit; font: inherit; }
+   couleur de texte est déjà fixée en CSS. -webkit-text-fill-color est un
+   deuxième verrou séparé : sans lui, le texte peut rester figé sur une
+   couleur par défaut (noir) même une fois le rendu natif désactivé. */
+button { -webkit-appearance: none; appearance: none; background: none; color: inherit; -webkit-text-fill-color: currentColor; font: inherit; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 html { height: 100%; }
 body {

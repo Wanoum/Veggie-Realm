@@ -86,13 +86,13 @@
   <div id="cards" style="display:grid;grid-template-columns:1fr;gap:var(--gap-large);"></div>
 </div>
 
-<div id="edgeSwipeScrim" style="display:none;position:fixed;inset:0;min-height:-webkit-fill-available;background:rgba(0,0,0,0.35);z-index:290;pointer-events:none;"></div>
+<div id="edgeSwipeScrim" style="display:none;position:fixed;inset:0;min-height:-webkit-fill-available;height:var(--app-height, 100vh);background:rgba(0,0,0,0.35);z-index:290;pointer-events:none;"></div>
 
 <div id="detailView" style="display:none;margin:calc(-1 * (var(--padding-horizontal-app) + env(safe-area-inset-top))) calc(-1 * var(--padding-horizontal-app)) 0;">
   <div id="detailContent"></div>
 </div>
 
-<div id="cookingModeView" style="display:none;position:fixed;inset:0;min-height:-webkit-fill-available;overflow:hidden;background:var(--interaction-inverted);color:var(--text-icon-on-primary);z-index:300;flex-direction:column;">
+<div id="cookingModeView" style="display:none;position:fixed;inset:0;min-height:-webkit-fill-available;height:var(--app-height, 100vh);overflow:hidden;background:var(--interaction-inverted);color:var(--text-icon-on-primary);z-index:300;flex-direction:column;">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:16px;padding-top:calc(16px + env(safe-area-inset-top));">
     <div>
       <p id="cookingRecipeTitle" style="font-family:'Inter',sans-serif;font-size:20px;line-height:120%;font-weight:600;margin:0 0 2px;"></p>
@@ -295,7 +295,7 @@
   </div>
 </div>
 
-<div id="planOccurrenceSheet" style="display:none;position:fixed;inset:0;min-height:-webkit-fill-available;z-index:400;align-items:flex-end;">
+<div id="planOccurrenceSheet" style="display:none;position:fixed;inset:0;min-height:-webkit-fill-available;height:var(--app-height, 100vh);z-index:400;align-items:flex-end;">
   <div style="position:absolute;inset:0;background:var(--overlay-default);" onclick="closePlanOccurrenceSheet()"></div>
   <div style="position:relative;width:100%;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));">
     <div class="detail-sheet-handle"></div>
@@ -312,7 +312,7 @@
   </div>
 </div>
 
-<div id="courseQtySheet" style="display:none;position:fixed;inset:0;min-height:-webkit-fill-available;z-index:400;align-items:flex-end;">
+<div id="courseQtySheet" style="display:none;position:fixed;inset:0;min-height:-webkit-fill-available;height:var(--app-height, 100vh);z-index:400;align-items:flex-end;">
   <div style="position:absolute;inset:0;background:var(--overlay-default);" onclick="closeCourseQtySheet()"></div>
   <div style="position:relative;width:100%;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));">
     <div class="detail-sheet-handle"></div>
@@ -333,7 +333,7 @@
   </div>
 </div>
 
-<div id="shareMenuModal" style="display:none;position:fixed;inset:0;min-height:-webkit-fill-available;z-index:400;align-items:flex-end;">
+<div id="shareMenuModal" style="display:none;position:fixed;inset:0;min-height:-webkit-fill-available;height:var(--app-height, 100vh);z-index:400;align-items:flex-end;">
   <div style="position:absolute;inset:0;background:var(--overlay-default);" onclick="closeShareMenu()"></div>
   <div style="position:relative;width:100%;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));">
     <div class="detail-sheet-handle"></div>
@@ -358,6 +358,22 @@
       fetch: (url, options = {}) => fetch(url, { ...options, cache: 'no-store' })
     }
   });
+
+  // Hauteur réelle de l'écran, mesurée en JS plutôt que confiée à 100vh/
+  // 100dvh/-webkit-fill-available : en PWA installée (écran d'accueil) sur
+  // iOS, ces unités peuvent sous-évaluer la hauteur réelle près de la zone
+  // de l'indicateur d'accueil, ce qui laisse un bandeau du fond de page
+  // visible sous les éléments plein écran en position fixed (bottom sheets,
+  // mode cuisine...). --app-height sert de hauteur de référence fiable pour
+  // ces éléments-là.
+  function setAppHeightVar() {
+    const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  setAppHeightVar();
+  window.addEventListener('resize', setAppHeightVar);
+  window.addEventListener('orientationchange', setAppHeightVar);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', setAppHeightVar);
 
   // Échappe le HTML avant injection dans le DOM. Nécessaire car titres, notes,
   // ingrédients, étapes et pseudos peuvent provenir d'une recette importée
