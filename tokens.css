@@ -59,6 +59,7 @@
   --text-icon-secondary: var(--grey-700);
 
   /* ---- Sizes ---- */
+  --corner-radius-small: 0.25rem;
   --corner-radius-default: 0.5rem;
   --corner-radius-large: 1rem;
   --corner-radius-xlarge: 2rem;

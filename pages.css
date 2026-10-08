@@ -312,29 +312,48 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 .course-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 11px 0;
-  border-top: 1px solid var(--border-divider);
-  font-size: 14px;
+  gap: var(--gap-default);
+  min-height: 40px;
+  padding: 6px 0;
   cursor: pointer;
 }
-.course-item:first-child { border-top: none; }
-/* pointer-events:none : la case n'est qu'un indicateur visuel, le clic est
-   géré par la ligne entière (data-course-row) pour pouvoir laisser passer
-   celui du bouton de quantité sans cocher/décocher par erreur. */
-.course-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--interaction-primary); pointer-events: none; }
-.course-item.checked { color: var(--text-icon-secondary); text-decoration: line-through; }
+/* La case n'est qu'un indicateur d'état (pour :checked/les sélecteurs JS) ;
+   le rendu visuel est pris en charge par .course-checkbox-visual juste à
+   côté, pour matcher la maquette (case 24px, coins carrés, coche custom) —
+   un checkbox natif ne peut pas rendre ça de façon fiable cross-navigateur.
+   Le clic est géré par la ligne entière (data-course-row), pas la case
+   elle-même, pour laisser passer celui du bouton de quantité sans
+   cocher/décocher par erreur. */
+.course-item input[type="checkbox"] { display: none; }
+.course-checkbox-visual {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-highest);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--corner-radius-small);
+  color: var(--interaction-primary);
+  font-size: 16px;
+}
+.course-checkbox-visual i { visibility: hidden; }
+.course-item.checked .course-checkbox-visual { background: var(--interaction-secondary); }
+.course-item.checked .course-checkbox-visual i { visibility: visible; }
+.course-item-name { color: var(--text-icon-accent); }
+.course-item.checked .course-item-name { color: var(--text-icon-disabled); text-decoration: line-through; }
 .course-qty {
   margin-left: auto;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 15px;
-  line-height: 120%;
-  color: var(--text-icon-default);
+  font-size: 18px;
+  line-height: 140%;
+  color: var(--text-icon-accent);
   white-space: nowrap;
   background: var(--surface-highest);
-  border: 1px solid var(--border-divider);
-  border-radius: var(--corner-radius-default);
-  padding: 5px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--corner-radius-small);
+  padding: 2px 6px;
 }
 .course-rayon-group { margin-bottom: 8px; }
 .course-rayon-header {
@@ -344,45 +363,11 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   justify-content: space-between;
   background: none;
   border: none;
-  border-bottom: 1px solid var(--border-divider);
   padding: 12px 0;
 }
 .course-rayon-count { color: var(--text-icon-secondary); }
 
 /* ---- Planning ---- */
-/* Le bouton de tri est aligné à gauche ici (contrairement à la liste de
-   courses, où il est à droite) : le menu doit s'ancrer à gauche lui aussi,
-   sinon son ancrage par défaut à droite le fait déborder de l'écran. */
-#planSortMenu {
-  left: 0;
-  right: auto;
-}
-.plan-summary {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-bottom: 20px;
-}
-.plan-summary-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.meal-category-card {
-  height: 86px;
-  background: var(--interaction-tertiary);
-  border-radius: var(--corner-radius-default);
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  cursor: pointer;
-}
-.meal-category-number { font-family: 'IBM Plex Mono', monospace; font-size: 40px; line-height: 100%; font-weight: 400; color: var(--text-icon-default); margin: 0; }
-.meal-category-label { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 120%; font-weight: 400; color: var(--text-icon-secondary); margin: 6px 0 0; }
-/* Sélectionné : même traitement que les onglets/chips actifs (.subtab-btn.active, .filter-chip.active). */
-.meal-category-card.active { background: var(--interaction-primary); border-radius: var(--corner-radius-xlarge); }
-.meal-category-card.active .meal-category-number,
-.meal-category-card.active .meal-category-label { color: var(--text-icon-on-primary); }
-.meal-category-card.active .meal-category-label { font-weight: 500; }
 .plan-recipe-row {
   display: flex;
   align-items: center;
