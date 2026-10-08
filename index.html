@@ -271,7 +271,10 @@
 </div>
 
 <div id="planningView" style="display:none;">
-  <h1>Courses</h1>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);">
+    <h1 style="margin:0;">Courses</h1>
+    <button type="button" class="icon-btn" id="coursesResetBtn"><i class="bi bi-arrow-counterclockwise"></i></button>
+  </div>
   <div class="subtabs">
     <button id="subtabRecipes" class="subtab-btn active">Repas prévus</button>
     <button id="subtabCourses" class="subtab-btn">Liste</button>
@@ -281,8 +284,7 @@
     <div id="plannedRecipeList"></div>
     <h2 style="margin-top:var(--gap-vertical-section);">Suggestions</h2>
     <div id="planSuggestionList"></div>
-    <button id="resetPlanningBtn" style="display:block;margin:16px auto 32px;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;">Réinitialiser</button>
-    <div class="field-input-icon">
+    <div class="field-input-icon" style="margin-top:var(--gap-vertical-section);">
       <i class="bi bi-search"></i>
       <input id="planSearchInput" placeholder="Recette ou ingrédients" oninput="handlePlanSearchInput()" />
     </div>
@@ -306,7 +308,7 @@
       <button type="button" class="servings-plus" id="planOccurrencePlus"><i class="bi bi-plus"></i></button>
     </div>
     <button type="button" class="primary-btn" style="width:100%;margin-top:0;" onclick="savePlanOccurrenceSheet()"><i class="bi bi-check-lg"></i> Enregistrer</button>
-    <button type="button" style="display:block;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetPlanOccurrenceSheet()">Réinitialiser</button>
+    <button type="button" style="display:block;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetPlanOccurrenceSheet()">Retirer la recette</button>
   </div>
 </div>
 
@@ -318,7 +320,7 @@
     <label class="field-label">Quantité</label>
     <input id="courseQtyInput" class="field-input" placeholder="ex: 500 g" />
     <button type="button" class="primary-btn" style="width:100%;margin-top:16px;" onclick="saveCourseQtySheet()"><i class="bi bi-check-lg"></i> Enregistrer</button>
-    <button type="button" style="display:block;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetCourseQtySheet()">Réinitialiser</button>
+    <button type="button" style="display:block;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetCourseQtySheet()">Revenir au calcul automatique</button>
   </div>
 </div>
 
@@ -2784,12 +2786,15 @@
   function renderPlanningRecipes() {
     const planned = allRecipesForPlanning().filter(r => getOccurrences(r.id).length > 0);
     planned.sort((a, b) => a.title.localeCompare(b.title, 'fr'));
+    // La recherche filtre aussi les recettes déjà planifiées, pas seulement
+    // les suggestions : sinon une recette déjà prévue semble introuvable.
+    const plannedFiltered = planSearchQuery ? planned.filter(r => matchesQuery(r, planSearchQuery)) : planned;
 
     const plannedListEl = document.getElementById('plannedRecipeList');
     if (planned.length === 0) {
       plannedListEl.innerHTML = `<p class="text-body" style="color:var(--text-icon-secondary);">Aucun repas prévu pour l'instant.</p>`;
     } else {
-      plannedListEl.innerHTML = planned.map(r => {
+      plannedListEl.innerHTML = plannedFiltered.map(r => {
         const occs = getOccurrences(r.id);
         const detailIdx = recipes.findIndex(x => x.id === r.id);
         const thumbOnclick = detailIdx === -1
@@ -3251,20 +3256,30 @@
         cb.closest('.course-item').classList.toggle('checked', cb.checked);
 
         const group = cb.closest('.course-rayon-group');
+        let justCompletedRayon = null;
         if (group) {
           const groupCheckboxes = group.querySelectorAll('[data-course-checkbox]');
           const groupChecked = group.querySelectorAll('[data-course-checkbox]:checked').length;
           const counterEl = group.querySelector('.course-rayon-count');
           if (counterEl) counterEl.textContent = `${groupChecked} de ${groupCheckboxes.length}`;
+          if (cb.checked && groupCheckboxes.length > 0 && groupChecked === groupCheckboxes.length) {
+            justCompletedRayon = group.querySelector('[data-rayon-toggle]')?.dataset.rayonToggle;
+          }
         }
 
         // Laisse le temps de voir la case se cocher avant de renvoyer
         // l'article en bas de liste (le tri le place toujours en dernier).
         // Décocher remet à jour tout de suite (ou annule l'envoi en bas s'il
-        // n'a pas encore eu lieu).
+        // n'a pas encore eu lieu). Un rayon entièrement coché se replie tout
+        // seul au même moment (une seule fois, au passage du dernier article
+        // — pas recalculé à chaque rendu, pour ne pas rouvrir de force un
+        // groupe qu'on vient de ré-ouvrir manuellement pour vérifier).
         clearTimeout(courseRecheckTimeout);
         if (cb.checked) {
-          courseRecheckTimeout = setTimeout(() => renderCoursesList(), 800);
+          courseRecheckTimeout = setTimeout(() => {
+            if (justCompletedRayon) collapsedRayons.add(justCompletedRayon);
+            renderCoursesList();
+          }, 800);
         } else {
           renderCoursesList();
         }
@@ -3272,14 +3287,28 @@
     });
   }
 
-  document.getElementById('resetPlanningBtn').onclick = async () => {
-    if (!confirm("Réinitialiser tout le planning de la semaine ?")) return;
-    await sb.from('meal_plan').delete().neq('recipe_id', '00000000-0000-0000-0000-000000000000');
-    mealPlan = {};
-    try { localStorage.removeItem(COURSES_CHECKED_KEY); } catch { /* ignoré */ }
-    try { localStorage.removeItem(COURSES_QTY_OVERRIDE_KEY); } catch { /* ignoré */ }
-    renderPlanningRecipes();
-    showToast('Planning réinitialisé');
+  // Un seul bouton icône à côté du titre "Courses" : l'action et le texte de
+  // confirmation dépendent de l'onglet actif, pour ne plus avoir plusieurs
+  // "Réinitialiser" ambigus au même endroit — celui-ci vide tout le planning
+  // (Repas prévus) ou juste l'état de la liste (Liste), jamais les deux à la
+  // fois.
+  document.getElementById('coursesResetBtn').onclick = async () => {
+    const onListTab = document.getElementById('subtabCourses').classList.contains('active');
+    if (onListTab) {
+      if (!confirm("Réinitialiser la liste ? Les cases cochées et les quantités modifiées seront remises à zéro.")) return;
+      try { localStorage.removeItem(COURSES_CHECKED_KEY); } catch { /* ignoré */ }
+      try { localStorage.removeItem(COURSES_QTY_OVERRIDE_KEY); } catch { /* ignoré */ }
+      renderCoursesList();
+      showToast('Liste réinitialisée');
+    } else {
+      if (!confirm("Réinitialiser le planning ? Toutes les recettes prévues seront retirées.")) return;
+      await sb.from('meal_plan').delete().neq('recipe_id', '00000000-0000-0000-0000-000000000000');
+      mealPlan = {};
+      try { localStorage.removeItem(COURSES_CHECKED_KEY); } catch { /* ignoré */ }
+      try { localStorage.removeItem(COURSES_QTY_OVERRIDE_KEY); } catch { /* ignoré */ }
+      renderPlanningRecipes();
+      showToast('Planning réinitialisé');
+    }
   };
 
   document.getElementById('subtabRecipes').onclick = () => {
