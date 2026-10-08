@@ -1522,7 +1522,12 @@
     document.body.style.top = '0';
     document.body.style.left = '0';
     document.body.style.right = '0';
-    document.documentElement.style.overflow = 'hidden';
+    // Pas de overflow:hidden sur <html> ici : body en position fixed suffit
+    // déjà à bloquer le scroll, et <html> ayant height:100% (tokens.css),
+    // ajouter overflow:hidden dessus risque de rogner de quelques pixels tout
+    // élément position:fixed en-dessous si cette hauteur à 100% est calculée
+    // avant que Safari ait fini de stabiliser le vrai viewport — explication
+    // plausible du bottom sheet jamais tout à fait calé en bas.
   }
 
   function unlockBackgroundScroll() {
@@ -1532,7 +1537,6 @@
     document.body.style.top = '';
     document.body.style.left = '';
     document.body.style.right = '';
-    document.documentElement.style.overflow = '';
   }
 
   // Permet de fermer un bottom sheet en le tirant vers le bas depuis sa
@@ -2826,9 +2830,13 @@
       .upsert(payload, { onConflict: 'user_id,recipe_id,meal_type,variant_label' })
       .select()
       .single();
-    if (error) { console.error(error); return; }
+    // Remonté à l'appelant plutôt qu'avalé en silence : un échec serveur ici
+    // (ex: contrainte d'unicité absente côté base) donnait l'impression que
+    // "ça n'enregistre qu'un seul type de repas", sans aucun signal visible.
+    if (error) { console.error(error); return false; }
     const list = (mealPlan[recipeId] = (mealPlan[recipeId] || []).filter(o => (o.mealType || '') !== (mealType || '')));
     list.push({ id: data.id, mealType: data.meal_type || null, variantLabel: data.variant_label || '', count: data.count, servings: data.servings });
+    return true;
   }
 
   async function deleteMealPlanOccurrence(occurrenceId) {
@@ -3025,6 +3033,7 @@
   async function savePlanOccurrenceSheet() {
     const st = planSheetState;
     if (!st) return;
+    let allOk = true;
     if (st.isMulti) {
       // Enregistre TOUS les types de repas de la recette, pas seulement celui
       // actuellement sélectionné dans le sheet — sinon, modifier déjeuner puis
@@ -3036,16 +3045,21 @@
         if (servings <= 0) {
           if (existing) await deleteMealPlanOccurrence(existing.id);
         } else {
-          await upsertMealPlanOccurrence(st.recipeId, t, '', servings, st.countByType[t] || 1);
+          const ok = await upsertMealPlanOccurrence(st.recipeId, t, '', servings, st.countByType[t] || 1);
+          if (!ok) allOk = false;
         }
       }
     } else {
       const t = st.tags[0] || null;
-      await upsertMealPlanOccurrence(st.recipeId, t, '', st.singleServings || 1, st.singleCount || 1);
+      const ok = await upsertMealPlanOccurrence(st.recipeId, t, '', st.singleServings || 1, st.singleCount || 1);
+      if (!ok) allOk = false;
     }
     closePlanOccurrenceSheet();
     renderPlanningRecipes();
-    showToast('Planning mis à jour');
+    // Un échec serveur partiel ne doit jamais ressembler à un succès : sinon
+    // on referme le sheet en pensant tout avoir enregistré alors qu'un des
+    // deux repas n'a pas été écrit en base.
+    showToast(allOk ? 'Planning mis à jour' : "Un des repas n'a pas pu être enregistré, réessaie");
   }
 
   async function resetPlanOccurrenceSheet() {

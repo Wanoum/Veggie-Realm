@@ -3,5 +3,13 @@
     "api/export-recipe.js": {
       "includeFiles": "Krylon.otf"
     }
-  }
+  },
+  "headers": [
+    {
+      "source": "/(index.html|sw.js|tokens.css|components.css|pages.css)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
+      ]
+    }
+  ]
 }
