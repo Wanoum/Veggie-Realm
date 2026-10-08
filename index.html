@@ -317,8 +317,17 @@
   <div style="position:relative;width:100%;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));">
     <div class="detail-sheet-handle"></div>
     <h2 id="courseQtyTitle" style="margin-bottom:var(--gap-vertical-section);"></h2>
-    <label class="field-label">Quantité</label>
-    <input id="courseQtyInput" class="field-input" placeholder="ex: 500 g" />
+    <div id="courseQtyStepperWrap" style="display:none;">
+      <div class="servings-stepper servings-stepper-lg">
+        <button type="button" class="servings-minus" id="courseQtyMinus"><i class="bi bi-dash"></i></button>
+        <span class="servings-value" id="courseQtyValue">0</span>
+        <button type="button" class="servings-plus" id="courseQtyPlus"><i class="bi bi-plus"></i></button>
+      </div>
+    </div>
+    <div id="courseQtyInputWrap">
+      <label class="field-label">Quantité</label>
+      <input id="courseQtyInput" class="field-input" placeholder="ex: 500 g" />
+    </div>
     <button type="button" class="primary-btn" style="width:100%;margin-top:16px;" onclick="saveCourseQtySheet()"><i class="bi bi-check-lg"></i> Enregistrer</button>
     <button type="button" style="display:block;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetCourseQtySheet()">Revenir au calcul automatique</button>
   </div>
@@ -2985,16 +2994,55 @@
   }
 
   // ---- Bottom sheet d'édition manuelle d'une quantité de la liste de courses ----
+  // Une ligne à une seule unité numérique (le cas courant : "400 g", "6")
+  // utilise un stepper, comme la maquette. Une ligne composite ("400 g +
+  // 1 pincée") ou sans quantité n'a pas d'équivalent numérique simple et
+  // retombe sur la saisie libre déjà en place.
   let courseQtySheetKey = null;
+  let courseQtySheetMode = 'text'; // 'stepper' | 'text'
+  let courseQtySheetUnit = '';
 
-  function openCourseQtySheet(key, displayName, computedQtyText) {
+  function openCourseQtySheet(key, displayName, computedQtyText, qtyValue, qtyUnit) {
     courseQtySheetKey = key;
     document.getElementById('courseQtyTitle').textContent = displayName;
     const overrides = loadQtyOverrides();
-    document.getElementById('courseQtyInput').value = overrides[key] != null ? overrides[key] : computedQtyText;
+    const hasNumeric = qtyValue != null && qtyValue !== '';
+    courseQtySheetMode = hasNumeric ? 'stepper' : 'text';
+    courseQtySheetUnit = qtyUnit || '';
+    document.getElementById('courseQtyStepperWrap').style.display = hasNumeric ? 'block' : 'none';
+    document.getElementById('courseQtyInputWrap').style.display = hasNumeric ? 'none' : 'block';
+    if (hasNumeric) {
+      const overrideNum = overrides[key] != null ? parseFloat(overrides[key]) : NaN;
+      const startValue = !Number.isNaN(overrideNum) ? overrideNum : parseFloat(qtyValue);
+      setCourseQtyStepperValue(startValue);
+    } else {
+      document.getElementById('courseQtyInput').value = overrides[key] != null ? overrides[key] : computedQtyText;
+    }
     document.getElementById('courseQtySheet').style.display = 'flex';
     lockBackgroundScroll();
   }
+
+  // Pas à pas plus large au-delà de 50 : corriger "400 g" au gramme près
+  // au clic serait inutilisable.
+  function courseQtyStep(value) {
+    return value >= 50 ? 10 : 1;
+  }
+
+  function setCourseQtyStepperValue(v) {
+    const clamped = Math.max(0, v);
+    const valueEl = document.getElementById('courseQtyValue');
+    valueEl.dataset.rawValue = clamped;
+    valueEl.textContent = `${formatQuantityFr(clamped)}${courseQtySheetUnit ? ' ' + courseQtySheetUnit : ''}`;
+  }
+
+  document.getElementById('courseQtyMinus').onclick = () => {
+    const current = parseFloat(document.getElementById('courseQtyValue').dataset.rawValue || '0');
+    setCourseQtyStepperValue(current - courseQtyStep(current));
+  };
+  document.getElementById('courseQtyPlus').onclick = () => {
+    const current = parseFloat(document.getElementById('courseQtyValue').dataset.rawValue || '0');
+    setCourseQtyStepperValue(current + courseQtyStep(current));
+  };
 
   function closeCourseQtySheet() {
     const wasOpen = document.getElementById('courseQtySheet').style.display !== 'none';
@@ -3005,9 +3053,14 @@
 
   function saveCourseQtySheet() {
     if (!courseQtySheetKey) return;
-    const value = document.getElementById('courseQtyInput').value.trim();
     const overrides = loadQtyOverrides();
-    if (value) overrides[courseQtySheetKey] = value; else delete overrides[courseQtySheetKey];
+    if (courseQtySheetMode === 'stepper') {
+      const raw = parseFloat(document.getElementById('courseQtyValue').dataset.rawValue || '0');
+      overrides[courseQtySheetKey] = `${formatQuantityFr(raw)}${courseQtySheetUnit ? ' ' + courseQtySheetUnit : ''}`.trim();
+    } else {
+      const value = document.getElementById('courseQtyInput').value.trim();
+      if (value) overrides[courseQtySheetKey] = value; else delete overrides[courseQtySheetKey];
+    }
     saveQtyOverrides(overrides);
     closeCourseQtySheet();
     renderCoursesList();
@@ -3180,14 +3233,26 @@
 
     const displayQtyText = (item) => overrides[item.key] != null ? escapeHtml(overrides[item.key]) : computedQtyText(item);
 
-    const renderItemRow = (item) => `
+    // Un seul rayon/unité numérique (le cas courant) : on peut proposer un
+    // stepper pour corriger la quantité. Une ligne composite (ex: "400 g +
+    // 1 pincée") ou sans quantité n'a pas d'équivalent numérique simple —
+    // le sheet retombe alors sur la saisie libre.
+    const singleNumericUnit = (item) => {
+      const units = Object.values(item.units);
+      return (units.length === 1 && units[0].quantity != null) ? units[0] : null;
+    };
+
+    const renderItemRow = (item) => {
+      const su = singleNumericUnit(item);
+      return `
       <div class="course-item ${checked[item.key] ? 'checked' : ''}" data-course-row="${escapeHtml(item.key)}">
         <input type="checkbox" data-course-checkbox="${escapeHtml(item.key)}" ${checked[item.key] ? 'checked' : ''} tabindex="-1" />
         <span class="course-checkbox-visual"><i class="bi bi-check-lg"></i></span>
         <span class="text-body course-item-name">${escapeHtml(item.displayName)}</span>
-        <button type="button" class="course-qty" data-edit-qty="${escapeHtml(item.key)}" data-qty-name="${escapeHtml(item.displayName)}" data-qty-computed="${computedQtyText(item)}">${displayQtyText(item)}</button>
+        <button type="button" class="course-qty" data-edit-qty="${escapeHtml(item.key)}" data-qty-name="${escapeHtml(item.displayName)}" data-qty-computed="${computedQtyText(item)}" data-qty-value="${su ? su.quantity : ''}" data-qty-unit="${su ? escapeHtml(su.label) : ''}">${displayQtyText(item)}</button>
       </div>
     `;
+    };
 
     // Les articles cochés passent toujours en fin de groupe.
     const byCheckedThen = (compare) => (a, b) => {
@@ -3227,7 +3292,7 @@
     listEl.querySelectorAll('[data-edit-qty]').forEach(btn => {
       btn.onclick = (e) => {
         e.stopPropagation();
-        openCourseQtySheet(btn.dataset.editQty, btn.dataset.qtyName, btn.dataset.qtyComputed);
+        openCourseQtySheet(btn.dataset.editQty, btn.dataset.qtyName, btn.dataset.qtyComputed, btn.dataset.qtyValue, btn.dataset.qtyUnit);
       };
     });
 
