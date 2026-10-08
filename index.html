@@ -2919,9 +2919,14 @@
     const servingsByType = {};
     const countByType = {};
     if (isMulti) {
+      // 0 si pas d'occurrence pour ce repas — qu'elle n'ait jamais existé ou
+      // qu'elle vienne d'être mise à 0 (et donc supprimée) : on affiche
+      // toujours exactement ce qui est enregistré, jamais une valeur par
+      // défaut qui donnerait l'impression qu'une modification n'a pas été
+      // prise en compte.
       tags.forEach(t => {
         const occ = existing.find(o => o.mealType === t);
-        servingsByType[t] = occ ? occ.servings : getServingsPerOccurrence(r);
+        servingsByType[t] = occ ? occ.servings : 0;
         countByType[t] = occ ? occ.count : 1;
       });
     }
