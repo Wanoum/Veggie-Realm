@@ -2936,7 +2936,13 @@
 
   function setSheetServings(v) {
     if (!planSheetState) return;
-    const clamped = Math.max(1, v);
+    // Un repas peut descendre à 0 (= pas d'occurrence pour ce repas-là) :
+    // si les deux repas possibles finissent à 0, la recette repart
+    // naturellement en Suggestions, puisqu'elle n'a plus aucune occurrence.
+    // Une recette à un seul repas garde 1 comme plancher : "Retirer la
+    // recette" fait déjà ce travail dans ce cas.
+    const floor = planSheetState.isMulti ? 0 : 1;
+    const clamped = Math.max(floor, v);
     if (planSheetState.isMulti) planSheetState.servingsByType[planSheetState.selectedType] = clamped;
     else planSheetState.singleServings = clamped;
     document.getElementById('planOccurrenceValue').textContent = clamped;
@@ -2981,7 +2987,13 @@
     const st = planSheetState;
     if (!st) return;
     if (st.isMulti) {
-      await upsertMealPlanOccurrence(st.recipeId, st.selectedType, '', st.servingsByType[st.selectedType] || 1, st.countByType[st.selectedType] || 1);
+      const servings = st.servingsByType[st.selectedType] || 0;
+      if (servings <= 0) {
+        const existing = findOccurrence(st.recipeId, st.selectedType, '');
+        if (existing) await deleteMealPlanOccurrence(existing.id);
+      } else {
+        await upsertMealPlanOccurrence(st.recipeId, st.selectedType, '', servings, st.countByType[st.selectedType] || 1);
+      }
     } else {
       const t = st.tags[0] || null;
       await upsertMealPlanOccurrence(st.recipeId, t, '', st.singleServings || 1, st.singleCount || 1);
