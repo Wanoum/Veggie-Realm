@@ -2817,6 +2817,11 @@
     return getOccurrences(recipeId).find(o => (o.mealType || '') === (mealType || '') && (o.variantLabel || '') === (variantLabel || ''));
   }
 
+  // Dernier message d'erreur serveur rencontré lors d'un enregistrement de
+  // planning — affiché directement dans le toast (voir savePlanOccurrenceSheet)
+  // le temps de diagnostiquer, faute d'accès à la console sur iPhone.
+  let lastMealPlanError = '';
+
   async function upsertMealPlanOccurrence(recipeId, mealType, variantLabel, servings, count) {
     const payload = {
       recipe_id: recipeId,
@@ -2833,7 +2838,7 @@
     // Remonté à l'appelant plutôt qu'avalé en silence : un échec serveur ici
     // (ex: contrainte d'unicité absente côté base) donnait l'impression que
     // "ça n'enregistre qu'un seul type de repas", sans aucun signal visible.
-    if (error) { console.error(error); return false; }
+    if (error) { console.error(error); lastMealPlanError = error.message || error.details || error.hint || JSON.stringify(error); return false; }
     const list = (mealPlan[recipeId] = (mealPlan[recipeId] || []).filter(o => (o.mealType || '') !== (mealType || '')));
     list.push({ id: data.id, mealType: data.meal_type || null, variantLabel: data.variant_label || '', count: data.count, servings: data.servings });
     return true;
@@ -3058,8 +3063,10 @@
     renderPlanningRecipes();
     // Un échec serveur partiel ne doit jamais ressembler à un succès : sinon
     // on referme le sheet en pensant tout avoir enregistré alors qu'un des
-    // deux repas n'a pas été écrit en base.
-    showToast(allOk ? 'Planning mis à jour' : "Un des repas n'a pas pu être enregistré, réessaie");
+    // deux repas n'a pas été écrit en base. alert() plutôt que le toast
+    // (tronqué en une ligne) le temps de diagnostiquer le message exact.
+    if (allOk) showToast('Planning mis à jour');
+    else alert(`Erreur d'enregistrement : ${lastMealPlanError}`);
   }
 
   async function resetPlanOccurrenceSheet() {
