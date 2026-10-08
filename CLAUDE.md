@@ -52,7 +52,7 @@ Toujours utiliser les tokens CSS existants plutôt que des valeurs codées en du
 ### En attente d'une maquette de l'utilisateur
 
 - **Mode édition de la liste de courses** (déplacer un ingrédient vers un autre rayon, fusionner deux articles similaires) — voir décision ci-dessus.
-- **Lignes séparées par occurrence** sur la carte d'une recette planifiée (actuellement un seul bloc de texte concaténé "Déjeuner : 6 personnes · Dîner : 2 personnes") — une vraie ligne par occurrence, avec sa propre case à cocher "cuisiné". Pas bloquant : solution provisoire posée dans le sheet d'édition en attendant.
+- **Case à cocher "cuisiné" par occurrence** sur la carte d'une recette planifiée — chaque repas prévu a maintenant sa propre ligne (fait), reste à ajouter la case à cocher individuelle. Pas bloquant : solution provisoire posée dans le sheet d'édition en attendant.
 - **Badge "tous les ingrédients cochés"** sur une recette planifiée — l'utilisateur ne veut pas d'un mode "à cuisiner" séparé (on peut cuisiner sans avoir coché 100% des ingrédients), mais un badge visuel sur la carte quand c'est le cas serait utile.
 - **Vue de la liste de courses groupée par recette** (en plus du regroupement par rayon existant) — idée soulevée en lien avec le badge ci-dessus, pas encore de maquette.
 - **Partage/édition pas évidents** (cité 2 fois) — les icônes seules (partage/crayon/poubelle) sur la fiche recette n'ont aucun libellé. Doit être réglé par le futur menu kebab unique (remplace les 3 icônes), déjà présent dans la maquette Figma.

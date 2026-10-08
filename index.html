@@ -2880,12 +2880,14 @@
         const thumbOnclick = detailIdx === -1
           ? `loadSharedRecipe('${r.share_token}', 'planning')`
           : `openRecipeDetail(${detailIdx}, 'planning')`;
+        // Une ligne par occurrence plutôt qu'un seul bloc concaténé avec
+        // " · " : plus lisible dès qu'une recette a plusieurs repas prévus.
         const recap = occs.map(o => {
           const label = o.mealType || 'Repas';
           const unitWord = isPieceMode(r) ? (o.servings > 1 ? 'pièces' : 'pièce') : (o.servings > 1 ? 'personnes' : 'personne');
           const countPrefix = o.count > 1 ? `${o.count}× ` : '';
-          return `${label} : ${countPrefix}${o.servings} ${unitWord}`;
-        }).join(' · ');
+          return `<div>${escapeHtml(label)} : ${countPrefix}${o.servings} ${unitWord}</div>`;
+        }).join('');
         return `
           <div class="plan-recipe-row">
             <div style="display:flex;align-items:center;gap:12px;">
