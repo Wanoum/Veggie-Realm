@@ -334,14 +334,16 @@
   </div>
 </div>
 
-<div id="shareMenuModal" style="display:none;">
-  <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;" onclick="closeShareMenu()"></div>
+<div id="recipeActionsMenu" style="display:none;">
+  <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;" onclick="closeRecipeActionsMenu()"></div>
   <div style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
     <div class="detail-sheet-handle"></div>
     <button type="button" class="settings-row" onclick="shareRecipeLink()"><span style="display:flex;align-items:center;gap:10px;"><i class="bi bi-share"></i> Partager le lien</span></button>
     <button type="button" class="settings-row" onclick="exportRecipeAs('pdf')"><span style="display:flex;align-items:center;gap:10px;"><i class="bi bi-file-earmark-pdf"></i> Exporter en PDF</span></button>
     <button type="button" class="settings-row" onclick="exportRecipeAs('docx')"><span style="display:flex;align-items:center;gap:10px;"><i class="bi bi-file-earmark-word"></i> Exporter en Word</span></button>
-    <button type="button" class="secondary-btn" style="width:100%;margin-top:16px;" onclick="closeShareMenu()">Annuler</button>
+    <button type="button" class="settings-row" onclick="closeRecipeActionsMenu(); editCurrentRecipe();"><span style="display:flex;align-items:center;gap:10px;"><i class="bi bi-pencil"></i> Modifier</span></button>
+    <button type="button" class="settings-row" style="color:var(--text-icon-error);" onclick="closeRecipeActionsMenu(); deleteCurrentRecipe();"><span style="display:flex;align-items:center;gap:10px;"><i class="bi bi-trash"></i> Supprimer</span></button>
+    <button type="button" class="secondary-btn" style="width:100%;margin-top:16px;" onclick="closeRecipeActionsMenu()">Annuler</button>
   </div>
 </div>
 
@@ -685,10 +687,8 @@
           ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.querySelector('img').style.display='none'" />`
           : '<div class="photo-empty"><i class="bi bi-image" style="font-size:48px;"></i></div>'}
         <button class="icon-btn icon-btn-lg" style="position:absolute;top:calc(18px + env(safe-area-inset-top));left:18px;" onclick="goBackFromDetail()"><i class="bi bi-arrow-left icon"></i></button>
-        <div style="position:absolute;top:calc(18px + env(safe-area-inset-top));right:18px;display:flex;gap:8px;">
-          <button class="icon-btn icon-btn-lg" onclick="shareCurrentRecipe(${i})"><i class="bi bi-share icon"></i></button>
-          <button class="icon-btn icon-btn-lg" onclick="editCurrentRecipe()"><i class="bi bi-pencil icon"></i></button>
-          <button class="icon-btn icon-btn-lg" onclick="deleteCurrentRecipe()"><i class="bi bi-trash icon"></i></button>
+        <div style="position:absolute;top:calc(18px + env(safe-area-inset-top));right:18px;">
+          <button class="icon-btn icon-btn-lg" onclick="openRecipeActionsMenu(${i})"><i class="bi bi-three-dots-vertical icon"></i></button>
         </div>
       </div>
       <div class="detail-sheet">
@@ -946,7 +946,7 @@
     document.documentElement.style.overflow = '';
     bodyScrollLockCount = 0;
     closePlanOccurrenceSheet();
-    closeShareMenu();
+    closeRecipeActionsMenu();
     closeCourseQtySheet();
     document.getElementById('navHome').classList.remove('active');
     document.getElementById('navAdd').classList.remove('active');
@@ -1588,7 +1588,7 @@
     panelEl.addEventListener('touchcancel', endDrag);
   }
 
-  enableSheetDragToClose('shareMenuModal', closeShareMenu);
+  enableSheetDragToClose('recipeActionsMenu', closeRecipeActionsMenu);
   enableSheetDragToClose('planOccurrenceSheet', closePlanOccurrenceSheet);
   enableSheetDragToClose('courseQtySheet', closeCourseQtySheet);
 
@@ -1852,24 +1852,24 @@
     sessionStorage.setItem('lastView', 'form');
   }
 
-  let shareMenuRecipeIndex = null;
+  let recipeActionsIndex = null;
 
-  function shareCurrentRecipe(i) {
-    shareMenuRecipeIndex = i;
-    document.getElementById('shareMenuModal').style.display = 'flex';
+  function openRecipeActionsMenu(i) {
+    recipeActionsIndex = i;
+    document.getElementById('recipeActionsMenu').style.display = 'flex';
     lockBackgroundScroll();
   }
 
-  function closeShareMenu() {
-    const wasOpen = document.getElementById('shareMenuModal').style.display !== 'none';
-    document.getElementById('shareMenuModal').style.display = 'none';
-    shareMenuRecipeIndex = null;
+  function closeRecipeActionsMenu() {
+    const wasOpen = document.getElementById('recipeActionsMenu').style.display !== 'none';
+    document.getElementById('recipeActionsMenu').style.display = 'none';
+    recipeActionsIndex = null;
     if (wasOpen) unlockBackgroundScroll();
   }
 
   async function shareRecipeLink() {
-    const r = recipes[shareMenuRecipeIndex];
-    closeShareMenu();
+    const r = recipes[recipeActionsIndex];
+    closeRecipeActionsMenu();
     let token = r.share_token;
 
     if (!token) {
@@ -1895,8 +1895,8 @@
   }
 
   async function exportRecipeAs(format) {
-    const r = recipes[shareMenuRecipeIndex];
-    closeShareMenu();
+    const r = recipes[recipeActionsIndex];
+    closeRecipeActionsMenu();
     showToast(`Génération du ${format === 'pdf' ? 'PDF' : 'Word'}...`);
 
     try {
