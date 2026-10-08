@@ -92,7 +92,7 @@
   <div id="detailContent"></div>
 </div>
 
-<div id="cookingModeView" style="display:none;position:fixed;inset:0;overflow:hidden;background:var(--text-icon-accent-strong);color:var(--text-icon-on-primary);z-index:300;flex-direction:column;">
+<div id="cookingModeView" style="display:none;position:fixed;inset:0;overflow:hidden;background:var(--interaction-inverted);color:var(--text-icon-on-primary);z-index:300;flex-direction:column;">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:16px;padding-top:calc(16px + env(safe-area-inset-top));">
     <div>
       <p id="cookingRecipeTitle" style="font-family:'Inter',sans-serif;font-size:20px;line-height:120%;font-weight:600;margin:0 0 2px;"></p>
@@ -296,13 +296,13 @@
 </div>
 
 <div id="planOccurrenceSheet" style="display:none;position:fixed;inset:0;z-index:400;align-items:flex-end;">
-  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.4);" onclick="closePlanOccurrenceSheet()"></div>
-  <div style="position:relative;width:100%;background:var(--surface-high);border-radius:var(--corner-radius-xlarge) var(--corner-radius-xlarge) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));">
+  <div style="position:absolute;inset:0;background:var(--overlay-default);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);" onclick="closePlanOccurrenceSheet()"></div>
+  <div style="position:relative;width:100%;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));">
     <div class="detail-sheet-handle"></div>
     <h2 id="planOccurrenceTitle" style="margin-bottom:var(--gap-vertical-section);"></h2>
     <div id="planOccurrenceMealTypes" style="display:flex;gap:8px;margin-bottom:20px;"></div>
     <p class="text-body" id="planOccurrenceServingsLabel" style="margin:0 0 12px;">Pour combien de personnes ?</p>
-    <div class="servings-stepper" style="margin-bottom:20px;">
+    <div class="servings-stepper servings-stepper-lg" style="margin-bottom:20px;">
       <button type="button" class="servings-minus" id="planOccurrenceMinus"><i class="bi bi-dash"></i></button>
       <span class="servings-value" id="planOccurrenceValue">1</span>
       <button type="button" class="servings-plus" id="planOccurrencePlus"><i class="bi bi-plus"></i></button>
@@ -313,8 +313,8 @@
 </div>
 
 <div id="courseQtySheet" style="display:none;position:fixed;inset:0;z-index:400;align-items:flex-end;">
-  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.4);" onclick="closeCourseQtySheet()"></div>
-  <div style="position:relative;width:100%;background:var(--surface-high);border-radius:var(--corner-radius-xlarge) var(--corner-radius-xlarge) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));">
+  <div style="position:absolute;inset:0;background:var(--overlay-default);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);" onclick="closeCourseQtySheet()"></div>
+  <div style="position:relative;width:100%;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));">
     <div class="detail-sheet-handle"></div>
     <h2 id="courseQtyTitle" style="margin-bottom:var(--gap-vertical-section);"></h2>
     <label class="field-label">Quantité</label>
@@ -325,8 +325,8 @@
 </div>
 
 <div id="shareMenuModal" style="display:none;position:fixed;inset:0;z-index:400;align-items:flex-end;">
-  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.4);" onclick="closeShareMenu()"></div>
-  <div style="position:relative;width:100%;background:var(--surface-high);border-radius:var(--corner-radius-xlarge) var(--corner-radius-xlarge) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));">
+  <div style="position:absolute;inset:0;background:var(--overlay-default);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);" onclick="closeShareMenu()"></div>
+  <div style="position:relative;width:100%;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));">
     <div class="detail-sheet-handle"></div>
     <button type="button" class="settings-row" onclick="shareRecipeLink()"><span style="display:flex;align-items:center;gap:10px;"><i class="bi bi-share"></i> Partager le lien</span></button>
     <button type="button" class="settings-row" onclick="exportRecipeAs('pdf')"><span style="display:flex;align-items:center;gap:10px;"><i class="bi bi-file-earmark-pdf"></i> Exporter en PDF</span></button>

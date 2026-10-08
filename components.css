@@ -174,6 +174,23 @@
   font-size: 18px;
   display: flex; align-items: center; justify-content: center;
 }
+/* Variante grande, utilisée dans les bottom sheets (ajout au planning) —
+   mêmes proportions que la maquette Figma, plus grande que le stepper
+   standard de la fiche recette. */
+.servings-stepper-lg { height: 86px; width: 100%; }
+.servings-stepper-lg .servings-minus,
+.servings-stepper-lg .servings-plus,
+.servings-stepper-lg .servings-value {
+  flex: 1;
+  width: auto;
+  height: 100%;
+  background: var(--surface-high);
+}
+.servings-stepper-lg .servings-minus,
+.servings-stepper-lg .servings-plus { font-size: 32px; }
+.servings-stepper-lg .servings-value { font-size: 40px; border-radius: var(--corner-radius-small); }
+.servings-stepper-lg .servings-minus { border-radius: 64px var(--corner-radius-small) var(--corner-radius-small) 64px; }
+.servings-stepper-lg .servings-plus { border-radius: var(--corner-radius-small) 64px 64px var(--corner-radius-small); }
 
 /* ---- Menu déroulant générique (photo, mode de portions...) ---- */
 .course-sort-menu {
@@ -259,7 +276,7 @@
 .settings-list {
   margin-bottom: var(--gap-vertical-section);
   background: var(--surface-high);
-  border-radius: var(--corner-radius-xlarge);
+  border-radius: var(--corner-radius-large);
   padding: 4px var(--padding-horizontal-default);
 }
 .settings-row {

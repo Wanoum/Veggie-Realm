@@ -46,6 +46,10 @@
   --interaction-primary: var(--green-700);
   --interaction-secondary: var(--green-200);
   --interaction-tertiary: var(--green-100);
+  --interaction-inverted: var(--green-800);
+  /* Voile derrière un bottom sheet : vert foncé semi-transparent (pas noir),
+     combiné à un flou — reprend la maquette Figma. */
+  --overlay-default: rgba(41, 59, 46, 0.55);
   --surface-high: var(--light-50);
   --surface-highest: var(--white);
   --surface-low: var(--light-200);
