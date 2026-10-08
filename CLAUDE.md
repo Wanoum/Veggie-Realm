@@ -16,10 +16,11 @@ Toujours utiliser les tokens CSS existants plutôt que des valeurs codées en du
 
 1. Vérifier la syntaxe JS : `node -e` qui charge chaque `<script>` de `index.html` via `new Function(...)`.
 2. Vérifier l'équilibre des accolades des 3 fichiers CSS (`tokens.css`, `components.css`, `pages.css`).
-3. `git add` des fichiers modifiés (jamais `-A`/`.` sans vérifier).
-4. Commit avec un message en français décrivant le *pourquoi*, terminé par le footer d'attribution.
-5. `git push -u origin main`.
-6. Résumer brièvement au user ce qui a changé et ce qui reste à tester sur son iPhone.
+3. Mettre à jour `APP_BUILD_TIME` dans `index.html` (date/heure actuelle) — affiché dans Compte, sert à distinguer "le correctif n'a pas marché" de "le téléphone n'a pas encore la dernière version" (la PWA iOS peut mettre du temps à rafraîchir).
+4. `git add` des fichiers modifiés (jamais `-A`/`.` sans vérifier).
+5. Commit avec un message en français décrivant le *pourquoi*, terminé par le footer d'attribution.
+6. `git push -u origin main`.
+7. Résumer brièvement au user ce qui a changé et ce qui reste à tester sur son iPhone — rappeler de vérifier `APP_BUILD_TIME` dans Compte si un comportement ne semble pas avoir changé.
 
 ## Backlog / idées pour plus tard
 
