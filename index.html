@@ -376,12 +376,14 @@
   window.addEventListener('orientationchange', setAppHeightVar);
   if (window.visualViewport) window.visualViewport.addEventListener('resize', setAppHeightVar);
 
-  // Horodatage du code affiché, mis à jour à la main à chaque commit (voir
-  // checklist dans CLAUDE.md) : affiché dans Compte, pour distinguer "le
-  // correctif n'a pas marché" de "le téléphone n'a pas encore la dernière
-  // version" (PWA iOS parfois lente à rafraîchir).
-  const APP_BUILD_TIME = '2026-10-08 23:25';
-  document.getElementById('appBuildTime').textContent = APP_BUILD_TIME;
+  // Horodatage affiché dans Compte, pour distinguer "le correctif n'a pas
+  // marché" de "le téléphone n'a pas encore la dernière version" (PWA iOS
+  // parfois lente à rafraîchir).
+  // Donné par le navigateur lui-même (date de dernière modification du
+  // fichier servi, pas l'heure actuelle) : fiable et toujours à jour sans
+  // qu'on ait à y penser, contrairement à une valeur tapée à la main qui
+  // peut être oubliée ou mal recopiée.
+  document.getElementById('appBuildTime').textContent = document.lastModified;
 
   // Échappe le HTML avant injection dans le DOM. Nécessaire car titres, notes,
   // ingrédients, étapes et pseudos peuvent provenir d'une recette importée
