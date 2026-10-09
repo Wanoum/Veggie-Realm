@@ -1630,16 +1630,18 @@
     document.body.style.top = '0';
     document.body.style.left = '0';
     document.body.style.right = '0';
-    // Pas de overflow:hidden sur <html> ici : body en position fixed suffit
-    // déjà à bloquer le scroll, et <html> ayant height:100% (tokens.css),
-    // ajouter overflow:hidden dessus risque de rogner de quelques pixels tout
-    // élément position:fixed en-dessous si cette hauteur à 100% est calculée
-    // avant que Safari ait fini de stabiliser le vrai viewport — explication
-    // plausible du bottom sheet jamais tout à fait calé en bas.
-    // Piste non essayée jusqu'ici : #bottomNav restait affiché (z-index 100)
-    // derrière un sheet (z-index 400) sur l'écran Courses — le masquer
-    // pendant l'ouverture élimine cette variable, qu'elle soit la cause
-    // réelle ou non.
+    // Bug de rendu iOS identifié via l'inspecteur Safari distant : quand le
+    // document fait EXACTEMENT la hauteur du viewport (rien à faire défiler —
+    // ce que body en position:fixed provoque), Safari saute parfois le rendu
+    // de la toute dernière bande sous l'indicateur d'accueil en PWA
+    // standalone. Confirmé en testant en direct différentes valeurs : rendre
+    // <html> légèrement plus grand que le viewport (donc à nouveau "quelque
+    // chose à faire défiler") force un rendu correct de cette bande. Marge
+    // proportionnelle à env(safe-area-inset-bottom) plutôt qu'un pixel fixe
+    // arbitraire lié à un seul appareil ; overflow:hidden pour que ce surplus
+    // ne devienne pas un espace réellement scrollable par l'utilisateur.
+    document.documentElement.style.minHeight = 'calc(100% + (4 * env(safe-area-inset-bottom)))';
+    document.documentElement.style.overflow = 'hidden';
     const nav = document.getElementById('bottomNav');
     bottomNavDisplayBeforeLock = nav.style.display;
     nav.style.display = 'none';
@@ -1652,6 +1654,8 @@
       document.getElementById('bottomNav').style.display = bottomNavDisplayBeforeLock;
       bottomNavDisplayBeforeLock = null;
     }
+    document.documentElement.style.minHeight = '';
+    document.documentElement.style.overflow = '';
     document.body.style.position = '';
     document.body.style.top = '';
     document.body.style.left = '';
