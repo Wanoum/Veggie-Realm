@@ -21,21 +21,13 @@ Toujours utiliser les tokens CSS existants plutôt que des valeurs codées en du
 5. `git push -u origin main`.
 6. Résumer brièvement au user ce qui a changé et ce qui reste à tester sur son iPhone — rappeler de vérifier la "Version du ..." dans Compte (= `document.lastModified`, automatique) si un comportement ne semble pas avoir changé, pour écarter un souci de cache PWA avant de creuser plus loin.
 
-## Bug en pause (mis de côté par l'utilisateur)
+## Bug résolu : bottom sheet non calé en bas
 
-- **Bottom sheet pas calé en bas** (PWA installée sur iPhone uniquement — pas reproductible en Safari onglet ni en émulation desktop) : un bandeau reste visible sous le panneau d'un bottom sheet (`planOccurrenceSheet`, `courseQtySheet`, `shareMenuModal`/`recipeActionsMenu`), comme si le panneau n'atteignait pas le vrai bas de l'écran. **10 pistes essayées, aucune n'a changé le résultat visuellement** (confirmé identique à chaque fois par capture d'écran, y compris après une réinstallation complète de la PWA pour écarter tout cache) :
-  1. Retrait de `backdrop-filter` (suspecté avec `position:fixed`).
-  2. `min-height:-webkit-fill-available`.
-  3. Hauteur mesurée en JS (`--app-height` via `visualViewport.height`/`innerHeight`) avec re-mesures différées (rAF, +300ms, `load`, `pageshow`, `resize`).
-  4. Repli CSS en `100dvh` au lieu de `100vh`.
-  5. Retrait de `document.documentElement.style.overflow = 'hidden'` posé par `lockBackgroundScroll()`.
-  6. Panneau en `position:fixed;bottom:0` directement au lieu d'un alignement flex dans un conteneur englobant.
-  7. Décalage négatif `bottom:calc(-1 * env(safe-area-inset-bottom))` sur voile + panneau.
-  8. Retrait de l'imbrication `position:fixed` dans `position:fixed`.
-  9. Masquage de `#bottomNav` pendant l'ouverture du sheet (restait affiché derrière, bien qu'à un z-index inférieur).
-  10. Correction d'une règle de cache (`vercel.json`) qui ne ciblait que `/index.html` et jamais `/` (le vrai `start_url` du manifest) — écartée comme cause après réinstallation complète de la PWA donnant un résultat identique.
+Un bandeau restait visible sous le panneau d'un bottom sheet (`planOccurrenceSheet`, `courseQtySheet`, `shareMenuModal`/`recipeActionsMenu`) en PWA installée sur iPhone (pas reproductible en Safari onglet ni en émulation desktop). 10 pistes de positionnement CSS/JS n'ont eu aucun effet (backdrop-filter, `-webkit-fill-available`, hauteur mesurée en JS, `100dvh`, retrait de `overflow:hidden`, panneau en `position:fixed` direct, décalage `safe-area-inset-bottom`, retrait de l'imbrication `position:fixed`, masquage de `#bottomNav`, correction d'une règle de cache) — toutes écartées après confirmation par capture d'écran et même réinstallation complète de la PWA.
 
-  **Diagnostic en direct sur l'appareil (mesures exactes, pas une estimation sur capture)** : `panel.bottom` mesuré via `getBoundingClientRect()` est **strictement égal** à `window.innerHeight` (812.0 / 812, écart de 0.0px) — le panneau touche donc bien, programmatiquement, le vrai bas du viewport. Le bug n'est très probablement **pas un problème de positionnement CSS** mais un voile système qu'iOS applique discrètement derrière l'indicateur d'accueil sur les appareils à Face ID (pour garder l'indicateur lisible), visible surtout par contraste avec un fond clair (le vert citron du sheet) — hors de portée du CSS de la page puisqu'il n'en fait pas partie. **En attente de confirmation utilisateur** : vérifier si la bande est visible à l'œil nu en direct (pas seulement sur capture d'écran) et si d'autres apps système (Réglages, Messages...) montrent la même bande discrète sur un panneau similaire.
+**Cause réelle**, trouvée via l'inspecteur Safari distant (Mac connecté à l'iPhone par câble, Réglages > Safari > Avancé > Inspecteur web, puis Safari Mac > menu Développement > nom de l'iPhone) : quand le document fait *exactement* la hauteur du viewport (aucun contenu à faire défiler — ce que `body` en `position:fixed` provoque pendant `lockBackgroundScroll()`), Safari saute le rendu de la bande sous l'indicateur d'accueil, même si tous les calculs de layout (`getBoundingClientRect()`, `innerHeight`, etc.) sont par ailleurs parfaitement exacts. Confirmé en testant plusieurs valeurs en direct dans l'inspecteur avant de déployer quoi que ce soit (évite de deviner à l'aveugle en prod). **Fix** (`lockBackgroundScroll`/`unlockBackgroundScroll`) : pendant qu'un sheet est ouvert, `<html>` passe à `min-height: calc(100% + (4 * env(safe-area-inset-bottom)))` + `overflow: hidden` — juste assez de contenu "à faire défiler" pour forcer un rendu correct, sans que ce surplus devienne un espace réellement scrollable par l'utilisateur. Retiré au déverrouillage.
+
+Au passage, trouvé dans la console de l'inspecteur : `loadUserDefaultServings` échoue avec une 403 (`GRANT SELECT ON public.profiles TO authenticated` manquant) — à corriger (une ligne SQL à exécuter dans Supabase), la préférence de variante par défaut (`default_variant_label`) ne se charge donc jamais actuellement.
 
 ## Backlog / idées pour plus tard
 
