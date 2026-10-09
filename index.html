@@ -309,6 +309,7 @@
       <button type="button" class="servings-plus" id="planOccurrencePlus"><i class="bi bi-plus"></i></button>
     </div>
     <button type="button" class="primary-btn" style="width:100%;margin-top:0;" onclick="savePlanOccurrenceSheet()"><i class="bi bi-check-lg"></i> Enregistrer</button>
+    <button type="button" class="secondary-btn" style="width:100%;" onclick="markOccurrenceCooked()"><i class="bi bi-check2-circle"></i> Marquer comme cuisiné</button>
     <button type="button" style="display:block;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetPlanOccurrenceSheet()">Retirer la recette</button>
   </div>
 </div>
@@ -3077,6 +3078,47 @@
     closePlanOccurrenceSheet();
     renderPlanningRecipes();
     showToast('Retiré du planning');
+  }
+
+  // Marque une occurrence précise comme cuisinée : quitte le planning (même
+  // effet que la retirer) et alimente le même compteur "Cuisiné Nx" que le
+  // cook mode (un seul signal, pas un mode "à cuisiner" séparé). Se pose par
+  // occurrence (le type de repas actuellement affiché dans le sheet), pas
+  // par recette entière, pour les recettes à plusieurs repas. Le filet de
+  // sécurité contre une erreur de clic est le bouton "Annuler" du toast, pas
+  // une confirmation bloquante.
+  async function markOccurrenceCooked() {
+    const st = planSheetState;
+    if (!st) return;
+    const mealType = st.isMulti ? st.selectedType : (st.tags[0] || null);
+    const occ = findOccurrence(st.recipeId, mealType, '');
+    if (!occ) { showToast('Rien à marquer pour ce repas'); return; }
+    const recipeId = st.recipeId;
+    const restore = { mealType, servings: occ.servings, count: occ.count };
+
+    await deleteMealPlanOccurrence(occ.id);
+    let engagementEventId = null;
+    const { data, error } = await sb.from('recipe_engagement_events')
+      .insert({ recipe_id: recipeId, user_id: currentUser.id, event_type: 'cook_mode_completed' })
+      .select().single();
+    if (!error && data) {
+      engagementEventId = data.id;
+      cookCounts[recipeId] = (cookCounts[recipeId] || 0) + 1;
+    }
+
+    closePlanOccurrenceSheet();
+    renderPlanningRecipes();
+    showToast('Marqué comme cuisiné', {
+      actionLabel: 'Annuler',
+      onAction: async () => {
+        await upsertMealPlanOccurrence(recipeId, restore.mealType, '', restore.servings, restore.count);
+        if (engagementEventId) {
+          await sb.from('recipe_engagement_events').delete().eq('id', engagementEventId);
+          cookCounts[recipeId] = Math.max(0, (cookCounts[recipeId] || 1) - 1);
+        }
+        renderPlanningRecipes();
+      }
+    });
   }
 
   // ---- Bottom sheet d'édition manuelle d'une quantité de la liste de courses ----
