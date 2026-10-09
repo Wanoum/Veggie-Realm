@@ -202,6 +202,14 @@
     <textarea id="stepEntryInput" class="steps-inline-input" rows="1" placeholder="Décrire l'étape à effectuer"></textarea>
   </div>
 
+  <!-- Étape 5 : variantes (optionnel) -->
+  <div id="wizardStep5" class="wizard-step" style="display:none;">
+    <h1 style="margin-bottom:8px;">Variantes</h1>
+    <p class="text-small" style="color:var(--text-icon-secondary);margin-bottom:var(--gap-vertical-section);">Optionnel — une variante garde la même fiche, juste des ingrédients (et éventuellement des étapes) différents.</p>
+    <div id="variantsListContainer"></div>
+    <button type="button" class="secondary-btn" style="width:100%;" onclick="addVariantRow()"><i class="bi bi-plus-lg"></i> Ajouter une variante</button>
+  </div>
+
   <p id="formError" style="color:var(--text-icon-error);font-size:14px;"></p>
 </div>
 
@@ -425,6 +433,12 @@
   let recipesLoaded = false;
   let currentServings = {};
   let userDefaultServings = 4;
+  // Variante préférée, mémorisée par compte et appliquée par défaut sur
+  // n'importe quelle fiche qui a une variante portant ce même libellé.
+  let userDefaultVariantLabel = '';
+  // Variante actuellement affichée sur LA fiche recette ouverte (pas une
+  // préférence de compte) : '' = originale.
+  let selectedVariantLabel = '';
   let cookCounts = {}; // recipe_id -> nombre de fois où le cook mode a été mené jusqu'au bout
   let formServingMode = 'portion';
 
@@ -578,6 +592,40 @@
   // "servings" porte ce nombre de pièces produites en mode "à la pièce",
   // exactement comme il porte le nombre de portions en mode "portions".
   function getRecipeBase(r) { return r.servings || (isPieceMode(r) ? 1 : 4); }
+
+  // ---- Variantes : même fiche recette, ingrédients/étapes alternatifs ----
+  function getActiveVariant(r) {
+    if (!selectedVariantLabel) return null;
+    return (r.variants || []).find(v => v.label === selectedVariantLabel) || null;
+  }
+
+  // Vue "effective" de la recette pour l'affichage/le cook mode : reprend les
+  // ingrédients de la variante sélectionnée, et ses étapes si elle en a
+  // (sinon celles de l'originale — convention : variante sans étapes propres
+  // = mêmes étapes que l'originale).
+  function effectiveRecipeView(r) {
+    const variant = getActiveVariant(r);
+    if (!variant) return r;
+    return {
+      ...r,
+      ingredients: (variant.ingredients && variant.ingredients.length) ? variant.ingredients : r.ingredients,
+      steps: (variant.steps && variant.steps.length) ? variant.steps : r.steps
+    };
+  }
+
+  async function setUserDefaultVariantLabel(label) {
+    userDefaultVariantLabel = label;
+    try { await sb.from('profiles').update({ default_variant_label: label || null }).eq('id', currentUser.id); }
+    catch (e) { console.error('setUserDefaultVariantLabel', e); }
+  }
+
+  // Sélectionne la version affichée sur la fiche (appelé par le sélecteur
+  // "Version") : mémorisée par compte, pas seulement pour cette recette.
+  function selectVariant(i, label) {
+    selectedVariantLabel = label || '';
+    setUserDefaultVariantLabel(selectedVariantLabel);
+    renderDetail(i);
+  }
   // Portions (ou pièces) par repas pour cette recette : reprend la valeur
   // mémorisée sur sa fiche, sinon le défaut du profil (1 pour une recette
   // à la pièce, tant qu'elle n'a jamais été ajustée).
@@ -645,6 +693,9 @@
     const savedServings = loadRecipeServings()[r.id];
     const defaultServings = isPieceMode(r) ? 1 : userDefaultServings;
     currentServings[i] = savedServings != null ? savedServings : defaultServings;
+    // Reprend la variante préférée du compte si cette recette en a une portant
+    // ce libellé, sinon retombe sur l'originale.
+    selectedVariantLabel = (r.variants || []).some(v => v.label === userDefaultVariantLabel) ? userDefaultVariantLabel : '';
     // hideAllViews() cache tout, y compris planningView : sans ça, une
     // fiche recette ouverte depuis le planning laissait le planning visible
     // en dessous (repris tel quel plus loin dans le wizard d'édition, faute
@@ -661,11 +712,12 @@
 
   function renderDetail(i) {
     const r = recipes[i];
+    const rView = effectiveRecipeView(r);
     const base = getRecipeBase(r);
     const s = currentServings[i];
     const metaPills = buildMetaPills(r);
 
-    const ingredientsHtml = orderIngredientsByAppearance(r).map(ing => {
+    const ingredientsHtml = orderIngredientsByAppearance(rView).map(ing => {
       const q = ing.quantity != null ? (ing.quantity * s / base) : null;
       const qDisplay = q != null ? formatQuantityFr(q) : '';
       return `
@@ -675,11 +727,19 @@
       </div>`;
     }).join('');
 
-    const stepsHtml = (r.steps && r.steps.length > 0)
-      ? '<h2>Étapes</h2><ol>' + r.steps.map(st => `<li>${escapeHtml(st)}</li>`).join('') + '</ol>'
+    const stepsHtml = (rView.steps && rView.steps.length > 0)
+      ? '<h2>Étapes</h2><ol>' + rView.steps.map(st => `<li>${escapeHtml(st)}</li>`).join('') + '</ol>'
       : '';
 
-    const hasSteps = r.steps && r.steps.length > 0;
+    const hasSteps = rView.steps && rView.steps.length > 0;
+
+    const variantsHtml = (r.variants && r.variants.length > 0) ? `
+      <p class="text-body-medium" style="margin:0 0 8px;">Version</p>
+      <div id="variantSelector" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--gap-vertical-section);">
+        <button type="button" class="filter-chip ${!selectedVariantLabel ? 'active' : ''}" data-select-variant="">Originale</button>
+        ${r.variants.map(v => `<button type="button" class="filter-chip ${selectedVariantLabel === v.label ? 'active' : ''}" data-select-variant="${escapeHtml(v.label)}">${escapeHtml(v.label)}</button>`).join('')}
+      </div>
+    ` : '';
 
     document.getElementById('detailContent').innerHTML = `
       <div class="detail-photo">
@@ -708,6 +768,7 @@
           </div>
         </div>
 
+        ${variantsHtml}
         <h2>Ingrédients</h2>
         ${ingredientsHtml}
         ${r.notes ? `<div class="notice">${escapeHtml(r.notes)}</div>` : ''}
@@ -718,9 +779,16 @@
 
       <div class="detail-footer fixed-action-footer">
         <button type="button" class="secondary-btn btn-square" style="margin-top:0;" onclick="addCurrentRecipeToPlanning('${r.id}')"><i class="bi bi-calendar-plus" style="font-size:20px;"></i></button>
-        ${hasSteps ? `<button type="button" class="primary-btn" style="margin-top:0;" onclick="openCookingMode(recipes[${i}], ${s})">Cook mode</button>` : ''}
+        ${hasSteps ? `<button type="button" class="primary-btn" style="margin-top:0;" onclick="openCookingMode(effectiveRecipeView(recipes[${i}]), ${s})">Cook mode</button>` : ''}
       </div>
     `;
+
+    const variantSelectorEl = document.getElementById('variantSelector');
+    if (variantSelectorEl) {
+      variantSelectorEl.querySelectorAll('[data-select-variant]').forEach(btn => {
+        btn.onclick = () => selectVariant(i, btn.dataset.selectVariant);
+      });
+    }
   }
 
   // Recette possédée ou partagée : clic sur le panier depuis sa fiche. Une
@@ -1042,7 +1110,7 @@
   function goToWizardStep(step) {
     wizardStep = step;
     window.scrollTo(0, 0);
-    for (let s = 1; s <= 4; s++) {
+    for (let s = 1; s <= 5; s++) {
       // L'étape 1 est en flex (les deux gros encarts se partagent l'écran restant) ;
       // les autres restent en block, réglées via .style.display et non le CSS
       // externe puisque le style inline l'emporterait de toute façon.
@@ -1053,12 +1121,13 @@
 
     document.getElementById('bottomNav').style.display = (step === 1) ? 'flex' : 'none';
     document.getElementById('wizardFooter').style.display = (step === 1) ? 'none' : 'flex';
-    document.getElementById('wizardNextBtn').innerHTML = (step === 4)
+    document.getElementById('wizardNextBtn').innerHTML = (step === 5)
       ? '<i class="bi bi-check-lg"></i> Enregistrer la recette'
       : '<i class="bi bi-arrow-right"></i> Suivant';
     document.getElementById('formError').textContent = '';
 
     if (step === 3) renderIngRows();
+    if (step === 5) renderVariantsList();
     if (step === 2) {
       autoResizeTextarea(document.getElementById('f_notes'));
       autoResizeTextarea(document.getElementById('f_title'));
@@ -1266,7 +1335,7 @@
   }
 
   document.getElementById('wizardNextBtn').onclick = () => {
-    if (wizardStep < 4) {
+    if (wizardStep < 5) {
       if (wizardStep === 1) return; // on attend un choix explicite (nouvelle recette / import)
       goToWizardStep(wizardStep + 1);
     } else {
@@ -1279,7 +1348,7 @@
   // Sauvegarde continue du brouillon : toute frappe dans les étapes du
   // formulaire (délégation, un seul listener par étape) et tout passage en
   // arrière-plan (l'app peut être redémarrée par iOS au retour).
-  ['wizardStep2', 'wizardStep3', 'wizardStep4'].forEach(id => {
+  ['wizardStep2', 'wizardStep3', 'wizardStep4', 'wizardStep5'].forEach(id => {
     document.getElementById(id).addEventListener('input', () => saveWizardDraft());
   });
   document.addEventListener('visibilitychange', () => {
@@ -1817,6 +1886,90 @@
   let ingRows = [];
   let editingId = null;
 
+  // ---- Variantes (optionnel, étape 5 du formulaire) ----
+  // Une entrée par variante : {label, ingredientsText, sameSteps, stepsText}.
+  // ingredientsText/stepsText restent du texte brut (une ligne par
+  // ingrédient/étape) jusqu'à l'enregistrement, où ils sont parsés avec les
+  // mêmes fonctions que les ingrédients/étapes de la recette originale —
+  // plus simple qu'une édition ligne par ligne comme ingRows/stepRows, qui
+  // demanderait de dupliquer tout ce système par variante.
+  let variantRows = [];
+
+  function addVariantRow() {
+    variantRows.push({ label: '', ingredientsText: '', sameSteps: true, stepsText: '' });
+    renderVariantsList();
+  }
+
+  function renderVariantsList() {
+    const container = document.getElementById('variantsListContainer');
+    container.innerHTML = variantRows.map((v, idx) => `
+      <div style="border:1px solid var(--border-default);border-radius:var(--corner-radius-default);padding:var(--padding-horizontal-default);margin-bottom:var(--gap-default);">
+        <input class="field-input" style="margin-bottom:var(--gap-default);" placeholder="Nom de la variante (ex : Sans gluten)" data-variant-idx="${idx}" data-variant-field="label" value="${escapeHtml(v.label)}" />
+        <label class="field-label">Ingrédients (un par ligne)</label>
+        <textarea class="field-input" style="min-height:80px;margin-bottom:var(--gap-default);" data-variant-idx="${idx}" data-variant-field="ingredientsText" placeholder="ex : 200 g farine sans gluten">${escapeHtml(v.ingredientsText)}</textarea>
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:var(--gap-default);">
+          <input type="checkbox" data-variant-idx="${idx}" data-variant-field="sameSteps" ${v.sameSteps ? 'checked' : ''} />
+          <span class="text-small">Mêmes étapes que l'originale</span>
+        </label>
+        <div style="display:${v.sameSteps ? 'none' : 'block'};">
+          <label class="field-label">Étapes (une par ligne)</label>
+          <textarea class="field-input" style="min-height:80px;margin-bottom:var(--gap-default);" data-variant-idx="${idx}" data-variant-field="stepsText" placeholder="ex : Mélanger la farine sans gluten et l'eau">${escapeHtml(v.stepsText)}</textarea>
+        </div>
+        <button type="button" class="secondary-btn" style="width:100%;color:var(--text-icon-error);" data-remove-variant="${idx}"><i class="bi bi-trash"></i> Supprimer la variante</button>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('[data-variant-field]').forEach(el => {
+      const handler = (e) => {
+        const idx = Number(e.target.dataset.variantIdx), field = e.target.dataset.variantField;
+        variantRows[idx][field] = field === 'sameSteps' ? e.target.checked : e.target.value;
+        if (field === 'sameSteps') renderVariantsList();
+      };
+      el.oninput = handler;
+      el.onchange = handler;
+    });
+    container.querySelectorAll('[data-remove-variant]').forEach(btn => {
+      btn.onclick = (e) => {
+        variantRows.splice(Number(e.currentTarget.dataset.removeVariant), 1);
+        renderVariantsList();
+      };
+    });
+  }
+
+  // Même pipeline de parsing que les ingrédients de la recette originale
+  // (quantité/unité + canonicalisation du nom), appliqué ligne par ligne au
+  // texte brut saisi pour une variante.
+  function parseIngredientTextBlock(text) {
+    return text.split(/\r\n|\r|\n/)
+      .map(parseIngredientLine)
+      .filter(row => row && row.name && row.name.trim())
+      .map(row => {
+        const { quantity, unit } = parseQtyUnit(row.qtyUnitText);
+        return { name: canonicalizeIngredientName(row.name), quantity, unit };
+      });
+  }
+
+  // Inverse de buildVariantsPayload : reconstruit une ligne éditable (texte
+  // brut) à partir d'une variante stockée en base, pour l'édition.
+  function variantToRow(v) {
+    const ingredientsText = (v.ingredients || []).map(ing => {
+      const qtyUnit = [ing.quantity, ing.unit].filter(x => x != null && x !== '').join(' ');
+      return [qtyUnit, ing.name].filter(Boolean).join(' ').trim();
+    }).join('\n');
+    const hasSteps = v.steps && v.steps.length > 0;
+    return { label: v.label || '', ingredientsText, sameSteps: !hasSteps, stepsText: hasSteps ? v.steps.join('\n') : '' };
+  }
+
+  function buildVariantsPayload() {
+    return variantRows
+      .filter(v => v.label.trim())
+      .map(v => ({
+        label: v.label.trim(),
+        ingredients: parseIngredientTextBlock(v.ingredientsText),
+        steps: v.sameSteps ? [] : v.stepsText.split(/\r\n|\r|\n/).map(s => s.trim()).filter(Boolean)
+      }));
+  }
+
   function editCurrentRecipe() {
     const r = recipes[currentDetailIndex];
     editingId = r.id;
@@ -1843,6 +1996,8 @@
     stepRows = [...(r.steps || [])];
     renderStepsList();
     renderIngRows();
+    variantRows = (r.variants || []).map(variantToRow);
+    renderVariantsList();
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('formView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
@@ -2621,6 +2776,8 @@
     document.getElementById('formError').textContent = '';
     ingRows = [{ qtyUnitText: '', name: '' }];
     renderIngRows();
+    variantRows = [];
+    renderVariantsList();
   }
 
   // ---- Brouillon du formulaire (ajout ou édition) : conservé si on quitte
@@ -2645,6 +2802,7 @@
       ingRows,
       stepRows,
       stepEntry: document.getElementById('stepEntryInput').value,
+      variantRows,
       importedSourceUrl
     };
   }
@@ -2681,6 +2839,8 @@
     stepRows = Array.isArray(data.stepRows) ? data.stepRows : [];
     document.getElementById('stepEntryInput').value = data.stepEntry || '';
     renderStepsList();
+    variantRows = Array.isArray(data.variantRows) ? data.variantRows : [];
+    renderVariantsList();
     importedSourceUrl = data.importedSourceUrl || null;
     validateWizardStep();
   }
@@ -2724,7 +2884,8 @@
       notes: document.getElementById('f_notes').value.trim() || null,
       source_url: importedSourceUrl,
       ingredients,
-      steps
+      steps,
+      variants: buildVariantsPayload()
     };
 
     const nextBtn = document.getElementById('wizardNextBtn');
@@ -3657,9 +3818,10 @@
   }
 
   async function loadUserDefaultServings() {
-    const { data, error } = await sb.from('profiles').select('default_servings').eq('id', currentUser.id).maybeSingle();
+    const { data, error } = await sb.from('profiles').select('default_servings, default_variant_label').eq('id', currentUser.id).maybeSingle();
     if (error) { console.error('loadUserDefaultServings a échoué (droit de lecture manquant ?)', error); return; }
     userDefaultServings = data?.default_servings || 4;
+    userDefaultVariantLabel = data?.default_variant_label || '';
   }
 
   function setAuthMode(mode) {
