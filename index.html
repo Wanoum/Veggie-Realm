@@ -305,8 +305,8 @@
 </div>
 
 <div id="planOccurrenceSheet" style="display:none;">
-  <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;" onclick="closePlanOccurrenceSheet()"></div>
-  <div id="planOccurrencePanel" style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
+  <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;transform:translateZ(0);-webkit-backface-visibility:hidden;" onclick="closePlanOccurrenceSheet()"></div>
+  <div id="planOccurrencePanel" style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;transform:translateZ(0);-webkit-backface-visibility:hidden;">
     <div class="detail-sheet-handle"></div>
     <h2 id="planOccurrenceTitle" style="margin-bottom:var(--gap-vertical-section);"></h2>
     <div id="planOccurrenceMealTypes" style="display:flex;gap:8px;margin-bottom:20px;"></div>
@@ -323,8 +323,8 @@
 </div>
 
 <div id="courseQtySheet" style="display:none;">
-  <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;" onclick="closeCourseQtySheet()"></div>
-  <div style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
+  <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;transform:translateZ(0);-webkit-backface-visibility:hidden;" onclick="closeCourseQtySheet()"></div>
+  <div style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;transform:translateZ(0);-webkit-backface-visibility:hidden;">
     <div class="detail-sheet-handle"></div>
     <h2 id="courseQtyTitle" style="margin-bottom:var(--gap-vertical-section);"></h2>
     <div id="courseQtyStepperWrap" style="display:none;">
@@ -344,8 +344,8 @@
 </div>
 
 <div id="recipeActionsMenu" style="display:none;">
-  <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;" onclick="closeRecipeActionsMenu()"></div>
-  <div style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
+  <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;transform:translateZ(0);-webkit-backface-visibility:hidden;" onclick="closeRecipeActionsMenu()"></div>
+  <div style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;transform:translateZ(0);-webkit-backface-visibility:hidden;">
     <div class="detail-sheet-handle"></div>
     <button type="button" class="settings-row" onclick="shareRecipeLink()"><span style="display:flex;align-items:center;gap:10px;"><i class="bi bi-share"></i> Partager le lien</span></button>
     <button type="button" class="settings-row" onclick="exportRecipeAs('pdf')"><span style="display:flex;align-items:center;gap:10px;"><i class="bi bi-file-earmark-pdf"></i> Exporter en PDF</span></button>
