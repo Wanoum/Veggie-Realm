@@ -1618,6 +1618,11 @@
   // les cas d'usage actuels, donc pas besoin de compenser un décalage de
   // scroll à restaurer).
   let bodyScrollLockCount = 0;
+  // Valeur de #bottomNav.style.display juste avant le premier verrouillage,
+  // pour la restaurer telle quelle au déverrouillage complet (elle peut déjà
+  // être 'none' selon l'écran — ex: fiche recette — donc jamais forcée à
+  // 'flex' aveuglément).
+  let bottomNavDisplayBeforeLock = null;
   function lockBackgroundScroll() {
     bodyScrollLockCount++;
     if (bodyScrollLockCount > 1) return;
@@ -1631,11 +1636,22 @@
     // élément position:fixed en-dessous si cette hauteur à 100% est calculée
     // avant que Safari ait fini de stabiliser le vrai viewport — explication
     // plausible du bottom sheet jamais tout à fait calé en bas.
+    // Piste non essayée jusqu'ici : #bottomNav restait affiché (z-index 100)
+    // derrière un sheet (z-index 400) sur l'écran Courses — le masquer
+    // pendant l'ouverture élimine cette variable, qu'elle soit la cause
+    // réelle ou non.
+    const nav = document.getElementById('bottomNav');
+    bottomNavDisplayBeforeLock = nav.style.display;
+    nav.style.display = 'none';
   }
 
   function unlockBackgroundScroll() {
     bodyScrollLockCount = Math.max(0, bodyScrollLockCount - 1);
     if (bodyScrollLockCount > 0) return;
+    if (bottomNavDisplayBeforeLock !== null) {
+      document.getElementById('bottomNav').style.display = bottomNavDisplayBeforeLock;
+      bottomNavDisplayBeforeLock = null;
+    }
     document.body.style.position = '';
     document.body.style.top = '';
     document.body.style.left = '';
