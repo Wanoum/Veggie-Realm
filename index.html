@@ -440,6 +440,40 @@
   // préférence de compte) : '' = originale.
   let selectedVariantLabel = '';
   let cookCounts = {}; // recipe_id -> nombre de fois où le cook mode a été mené jusqu'au bout
+
+  // ---- Visuels de remplacement pour les recettes sans photo ----
+  // Liste récupérée de /api/card-images (lit le contenu réel de src/ côté
+  // serveur) plutôt que codée en dur ici : ajouter ou retirer un fichier
+  // src/card-small-*.svg ou src/card-big-*.svg suffit, sans toucher au code.
+  let cardImages = { small: [], big: [] };
+
+  async function loadCardImages() {
+    try {
+      const res = await fetch('/api/card-images');
+      if (!res.ok) return;
+      cardImages = await res.json();
+    } catch (e) { console.error('loadCardImages', e); }
+  }
+
+  // Choix déterministe (même recette = toujours le même visuel, pas un
+  // nouveau tirage à chaque rendu) mais varié d'une recette à l'autre.
+  function pickCardImage(id, size) {
+    const list = cardImages[size];
+    if (!list || list.length === 0) return null;
+    const key = String(id || '');
+    let hash = 0;
+    for (let c = 0; c < key.length; c++) hash = (hash * 31 + key.charCodeAt(c)) >>> 0;
+    return `src/${list[hash % list.length]}`;
+  }
+
+  // Bloc <img>/icône pour une recette sans photo, à la place de l'icône
+  // générique bi-image — mêmes attributs (classes, style) que l'appelant
+  // passait à la div .photo-empty d'origine.
+  function emptyPhotoHtml(id, size, divStyle) {
+    const src = pickCardImage(id, size);
+    if (src) return `<img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;" />`;
+    return `<div class="photo-empty" style="${divStyle || ''}"><i class="bi bi-image"></i></div>`;
+  }
   let formServingMode = 'portion';
 
   async function loadRecipes() {
@@ -551,8 +585,8 @@
       <div class="card-v2" onclick="openRecipeDetail(${i})">
         <div class="card-v2-photo">
           ${safeUrl(r.photo_url)
-            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML='<div class=&quot;photo-empty&quot; style=&quot;background:var(--grey-700);&quot;><i class=&quot;bi bi-image&quot; style=&quot;color:var(--text-icon-on-primary);&quot;></i></div>'" />`
-            : '<div class="photo-empty" style="background:var(--grey-700);"><i class="bi bi-image" style="color:var(--text-icon-on-primary);"></i></div>'}
+            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML=emptyPhotoHtml('${r.id}','big','background:var(--grey-700);')" />`
+            : emptyPhotoHtml(r.id, 'big', 'background:var(--grey-700);')}
         </div>
         <div class="card-v2-textwrap">
           <!-- Flou d'arrière-plan progressif désactivé pour le moment (voir progressiveBlurLayersHtml, commentée plus haut) -->
@@ -745,7 +779,7 @@
       <div class="detail-photo">
         ${safeUrl(r.photo_url)
           ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.querySelector('img').style.display='none'" />`
-          : '<div class="photo-empty"><i class="bi bi-image" style="font-size:48px;"></i></div>'}
+          : emptyPhotoHtml(r.id, 'big')}
         <button class="icon-btn icon-btn-lg" style="position:absolute;top:calc(18px + env(safe-area-inset-top));left:18px;" onclick="goBackFromDetail()"><i class="bi bi-arrow-left icon"></i></button>
         <div style="position:absolute;top:calc(18px + env(safe-area-inset-top));right:18px;">
           <button class="icon-btn icon-btn-lg" onclick="openRecipeActionsMenu(${i})"><i class="bi bi-three-dots-vertical icon"></i></button>
@@ -1391,7 +1425,7 @@
             <div style="width:72px;height:72px;border-radius:var(--corner-radius-large);overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;">
               ${safeUrl(r.photo_url)
                 ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
-                : '<i class="bi bi-image" style="font-size:16px;color:var(--text-icon-secondary);"></i>'}
+                : emptyPhotoHtml(r.id, 'small')}
             </div>
             <div class="plan-recipe-name">${escapeHtml(r.title)}</div>
           </div>
@@ -3055,7 +3089,7 @@
               <div style="width:72px;height:72px;border-radius:var(--corner-radius-large);overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;" onclick="${thumbOnclick}">
                 ${safeUrl(r.photo_url)
                   ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
-                  : '<i class="bi bi-image" style="font-size:16px;color:var(--text-icon-secondary);"></i>'}
+                  : emptyPhotoHtml(r.id, 'small')}
               </div>
               <div>
                 <div class="plan-recipe-name">${escapeHtml(r.title)}</div>
@@ -3085,7 +3119,7 @@
             <div style="width:72px;height:72px;border-radius:var(--corner-radius-large);overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;">
               ${safeUrl(r.photo_url)
                 ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
-                : '<i class="bi bi-image" style="font-size:16px;color:var(--text-icon-secondary);"></i>'}
+                : emptyPhotoHtml(r.id, 'small')}
             </div>
             <div class="plan-recipe-name">${escapeHtml(r.title)}</div>
           </div>
@@ -3784,7 +3818,7 @@
     else showHome();
 
     loadMealPlan();
-    await Promise.all([loadRecipes(), loadUserDefaultServings(), loadCookCounts()]);
+    await Promise.all([loadRecipes(), loadUserDefaultServings(), loadCookCounts(), loadCardImages()]);
     renderList();
     ensureProfile();
 
@@ -3954,7 +3988,7 @@
       <div class="detail-photo">
         ${safeUrl(r.photo_url)
           ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.querySelector('img').style.display='none'" />`
-          : '<div class="photo-empty"><i class="bi bi-image" style="font-size:48px;"></i></div>'}
+          : emptyPhotoHtml(r.id, 'big')}
         ${currentUser ? `<button class="icon-btn icon-btn-lg" style="position:absolute;top:calc(18px + env(safe-area-inset-top));left:18px;" onclick="goBackFromSharedRecipe()"><i class="bi bi-arrow-left icon"></i></button>` : ''}
         ${(currentUser && !isOwnRecipe) ? `
           <button class="icon-btn icon-btn-lg" style="position:absolute;top:calc(18px + env(safe-area-inset-top));right:18px;" onclick="toggleSavedRecipe('${r.id}')" id="saveSharedBtn" data-saved="${isSaved}">
@@ -4069,6 +4103,7 @@
 
   const sharedToken = new URLSearchParams(location.search).get('recipe');
   if (sharedToken) {
+    loadCardImages();
     loadSharedRecipe(sharedToken);
   } else {
     sb.auth.getSession().then(({ data: { session } }) => {

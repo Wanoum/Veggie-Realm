@@ -2,6 +2,9 @@
   "functions": {
     "api/export-recipe.js": {
       "includeFiles": "Krylon.otf"
+    },
+    "api/card-images.js": {
+      "includeFiles": "src/card-*.svg"
     }
   },
   "headers": [
