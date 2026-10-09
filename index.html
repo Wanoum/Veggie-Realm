@@ -911,12 +911,53 @@
     }
   }
 
+  // Mots trop courants pour identifier un ingrédient à eux seuls (articles,
+  // prépositions...) — ignorés quand on compare le premier mot significatif
+  // d'un nom d'ingrédient à ceux d'une étape.
+  const INGREDIENT_STOPWORDS = new Set(['de', 'du', 'des', 'la', 'le', 'les', 'un', 'une', 'et', 'au', 'aux', 'a', 'd', 'l']);
+
+  // Un mot d'étape "matche" un mot de nom d'ingrédient si, une fois
+  // normalisés et débarrassés d'un éventuel pluriel simple, ils sont
+  // identiques — même logique que canonicalizeIngredientName.
+  function significantStepWords(text) {
+    return normalize(text)
+      .split(/[^a-z0-9]+/)
+      .filter(Boolean)
+      .filter(w => w.length > 1 && !INGREDIENT_STOPWORDS.has(w))
+      .map(w => w.replace(/s$/, ''));
+  }
+
   function ingredientChipsForStep(stepText) {
     if (!cookingRecipe) return '';
     const base = getRecipeBase(cookingRecipe);
     const target = cookingServings || base;
     const normalizedStep = normalize(stepText);
-    const matches = (cookingRecipe.ingredients || []).filter(ing => normalizedStep.includes(normalize(ing.name)));
+    const stepWords = new Set(significantStepWords(stepText));
+    const ingredients = cookingRecipe.ingredients || [];
+
+    // Le nom complet est présent tel quel dans l'étape : le cas le plus
+    // fiable, garde la précision pour les noms composés ("poivron rouge"
+    // vs "poivron vert").
+    const exactMatches = ingredients.filter(ing => normalizedStep.includes(normalize(ing.name)));
+    const exactHeadWords = new Set(exactMatches.map(ing => significantStepWords(ing.name)[0]).filter(Boolean));
+
+    const matches = ingredients.filter(ing => {
+      if (exactMatches.includes(ing)) return true;
+      const nameWords = significantStepWords(ing.name);
+      if (nameWords.length === 0) return false;
+      // Un autre ingrédient au nom plus précis et partageant ce même
+      // premier mot a déjà matché exactement (ex: "poivron rouge" cité
+      // explicitement) : ne pas aussi proposer "poivron vert" en plus.
+      if (exactHeadWords.has(nameWords[0])) return false;
+      // Sinon, le premier mot significatif suffit (en général le nom
+      // générique de l'ingrédient, les mots suivants étant des précisions —
+      // "crème fraîche", "oignon jaune"...) : une étape qui dit juste
+      // "ajoute la crème" doit quand même faire apparaître "crème fraîche".
+      // Gère aussi le pluriel dans un sens comme dans l'autre ("oignons"
+      // dans l'étape pour un ingrédient nommé "oignon", et inversement).
+      return stepWords.has(nameWords[0]);
+    });
+
     return matches.map(ing => {
       const q = ing.quantity != null ? (ing.quantity * target / base) : null;
       const qDisplay = q != null ? formatQuantityFr(q) : '';
