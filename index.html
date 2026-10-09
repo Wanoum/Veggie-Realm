@@ -309,7 +309,7 @@
       <button type="button" class="servings-plus" id="planOccurrencePlus"><i class="bi bi-plus"></i></button>
     </div>
     <button type="button" class="primary-btn" style="width:100%;margin-top:0;" onclick="savePlanOccurrenceSheet()"><i class="bi bi-check-lg"></i> Enregistrer</button>
-    <button type="button" class="secondary-btn" style="width:100%;" onclick="markOccurrenceCooked()"><i class="bi bi-check2-circle"></i> Marquer comme cuisiné</button>
+    <button type="button" class="secondary-btn" id="planOccurrenceCookedBtn" style="width:100%;display:none;" onclick="markOccurrenceCooked()"><i class="bi bi-check2-circle"></i> Marquer comme cuisiné</button>
     <button type="button" style="display:block;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetPlanOccurrenceSheet()">Retirer la recette</button>
   </div>
 </div>
@@ -3025,6 +3025,13 @@
       document.getElementById('planOccurrenceServingsLabel').textContent = 'Pour combien de personnes ?';
     }
     document.getElementById('planOccurrenceValue').textContent = currentSheetServings();
+    // "Marquer comme cuisiné" n'a de sens que pour un repas déjà planifié et
+    // enregistré — pas pour une recette encore dans les Suggestions, qu'on
+    // est seulement en train d'ajouter (aucune occurrence existante pour ce
+    // type de repas précis).
+    const mealType = st.isMulti ? st.selectedType : (st.tags[0] || null);
+    const hasExistingOccurrence = !!findOccurrence(st.recipeId, mealType, '');
+    document.getElementById('planOccurrenceCookedBtn').style.display = hasExistingOccurrence ? 'flex' : 'none';
   }
 
   document.getElementById('planOccurrenceMinus').onclick = () => setSheetServings(currentSheetServings() - 1);
