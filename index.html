@@ -3192,36 +3192,6 @@
     renderPlanOccurrenceSheet();
     document.getElementById('planOccurrenceSheet').style.display = 'flex';
     lockBackgroundScroll();
-    // Diagnostic temporaire (voir CLAUDE.md, bug du bottom sheet) : 9 pistes
-    // CSS/JS sans le moindre effet observé, cache écarté (réinstall complète
-    // identique) — on a besoin de vrais chiffres mesurés sur l'appareil
-    // plutôt que de continuer à deviner. À retirer une fois le bug identifié.
-    setTimeout(debugSheetMetrics, 150);
-  }
-
-  function debugSheetMetrics() {
-    const panel = document.getElementById('planOccurrencePanel');
-    const rect = panel ? panel.getBoundingClientRect() : null;
-    const probe = document.createElement('div');
-    probe.style.cssText = 'position:fixed;bottom:0;left:0;width:0;height:0;padding-bottom:env(safe-area-inset-bottom);visibility:hidden;';
-    document.body.appendChild(probe);
-    const safeAreaBottom = getComputedStyle(probe).paddingBottom;
-    probe.remove();
-    const lines = [
-      `innerHeight: ${window.innerHeight}`,
-      `visualViewport.height: ${window.visualViewport ? window.visualViewport.height : 'n/a'}`,
-      `visualViewport.offsetTop: ${window.visualViewport ? window.visualViewport.offsetTop : 'n/a'}`,
-      `documentElement.clientHeight: ${document.documentElement.clientHeight}`,
-      `body.clientHeight: ${document.body.clientHeight}`,
-      `safe-area-inset-bottom: ${safeAreaBottom}`,
-      `panel.top: ${rect ? rect.top.toFixed(1) : 'n/a'}`,
-      `panel.bottom: ${rect ? rect.bottom.toFixed(1) : 'n/a'}`,
-      `panel.height: ${rect ? rect.height.toFixed(1) : 'n/a'}`,
-      `espace sous le panneau: ${rect ? (window.innerHeight - rect.bottom).toFixed(1) : 'n/a'}`,
-      `devicePixelRatio: ${window.devicePixelRatio}`,
-      `standalone: ${window.navigator.standalone}`
-    ];
-    alert(lines.join('\n'));
   }
 
   function currentSheetServings() {

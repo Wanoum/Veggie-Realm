@@ -23,17 +23,19 @@ Toujours utiliser les tokens CSS existants plutôt que des valeurs codées en du
 
 ## Bug en pause (mis de côté par l'utilisateur)
 
-- **Bottom sheet pas calé en bas** (PWA installée sur iPhone uniquement — pas reproductible en Safari onglet ni en émulation desktop) : un bandeau de fond de page (cream, `--surface-high`/`--light-50` ou `--light-150`) reste visible sous le panneau d'un bottom sheet (`planOccurrenceSheet`, `courseQtySheet`, `shareMenuModal`), comme si le panneau n'atteignait pas le vrai bas de l'écran. **8 pistes essayées, aucune n'a changé le résultat** (confirmé identique à chaque fois par capture d'écran) :
+- **Bottom sheet pas calé en bas** (PWA installée sur iPhone uniquement — pas reproductible en Safari onglet ni en émulation desktop) : un bandeau reste visible sous le panneau d'un bottom sheet (`planOccurrenceSheet`, `courseQtySheet`, `shareMenuModal`/`recipeActionsMenu`), comme si le panneau n'atteignait pas le vrai bas de l'écran. **10 pistes essayées, aucune n'a changé le résultat visuellement** (confirmé identique à chaque fois par capture d'écran, y compris après une réinstallation complète de la PWA pour écarter tout cache) :
   1. Retrait de `backdrop-filter` (suspecté avec `position:fixed`).
   2. `min-height:-webkit-fill-available`.
   3. Hauteur mesurée en JS (`--app-height` via `visualViewport.height`/`innerHeight`) avec re-mesures différées (rAF, +300ms, `load`, `pageshow`, `resize`).
   4. Repli CSS en `100dvh` au lieu de `100vh`.
-  5. Retrait de `document.documentElement.style.overflow = 'hidden'` posé par `lockBackgroundScroll()` (hypothèse : rognait les éléments fixed en-dessous).
+  5. Retrait de `document.documentElement.style.overflow = 'hidden'` posé par `lockBackgroundScroll()`.
   6. Panneau en `position:fixed;bottom:0` directement au lieu d'un alignement flex dans un conteneur englobant.
-  7. Décalage négatif `bottom:calc(-1 * env(safe-area-inset-bottom))` sur voile + panneau (hypothèse zone de sécurité/indicateur d'accueil — la mesure de l'espace sur capture correspondait à peu près à cette valeur, mais le correctif n'a rien changé, donc écarté).
-  8. Retrait de l'imbrication `position:fixed` dans `position:fixed` (voile + panneau étaient enfants d'un conteneur englobant lui-même `position:fixed;inset:0` — hypothèse d'un bug WebKit de calcul relatif à l'ancêtre plutôt qu'au viewport ; `#bottomNav`, structurellement différent — fixed direct, sans wrapper — n'a lui jamais ce problème).
-  
-  Piste non explorée pour la prochaine fois : `#bottomNav` reste affiché (`display:flex`) derrière les sheets, qui ont pourtant un z-index supérieur (400 vs 100) — vérifier si un ancêtre crée un contexte d'empilement qui invalide cette comparaison, ou simplement masquer `#bottomNav` à l'ouverture d'un sheet (via `lockBackgroundScroll`/`unlockBackgroundScroll`, déjà appelés par les 3 sheets concernés) pour éliminer la variable au lieu de continuer à deviner sur le positionnement du sheet lui-même.
+  7. Décalage négatif `bottom:calc(-1 * env(safe-area-inset-bottom))` sur voile + panneau.
+  8. Retrait de l'imbrication `position:fixed` dans `position:fixed`.
+  9. Masquage de `#bottomNav` pendant l'ouverture du sheet (restait affiché derrière, bien qu'à un z-index inférieur).
+  10. Correction d'une règle de cache (`vercel.json`) qui ne ciblait que `/index.html` et jamais `/` (le vrai `start_url` du manifest) — écartée comme cause après réinstallation complète de la PWA donnant un résultat identique.
+
+  **Diagnostic en direct sur l'appareil (mesures exactes, pas une estimation sur capture)** : `panel.bottom` mesuré via `getBoundingClientRect()` est **strictement égal** à `window.innerHeight` (812.0 / 812, écart de 0.0px) — le panneau touche donc bien, programmatiquement, le vrai bas du viewport. Le bug n'est très probablement **pas un problème de positionnement CSS** mais un voile système qu'iOS applique discrètement derrière l'indicateur d'accueil sur les appareils à Face ID (pour garder l'indicateur lisible), visible surtout par contraste avec un fond clair (le vert citron du sheet) — hors de portée du CSS de la page puisqu'il n'en fait pas partie. **En attente de confirmation utilisateur** : vérifier si la bande est visible à l'œil nu en direct (pas seulement sur capture d'écran) et si d'autres apps système (Réglages, Messages...) montrent la même bande discrète sur un panneau similaire.
 
 ## Backlog / idées pour plus tard
 
