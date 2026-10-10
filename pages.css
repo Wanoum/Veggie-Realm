@@ -281,12 +281,13 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   min-height: 1.6em;
 }
 .step-row-remove {
-  background: none;
+  background: rgba(162, 34, 5, 0.12);
   border: none;
+  border-radius: var(--corner-radius-round);
   color: var(--text-icon-error);
   font-size: 18px;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
