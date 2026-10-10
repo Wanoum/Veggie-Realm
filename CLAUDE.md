@@ -31,6 +31,32 @@ Un bandeau restait visible sous le panneau d'un bottom sheet (`planOccurrenceShe
 
 Au passage, trouvé dans la console de l'inspecteur : `loadUserDefaultServings` échoue avec une 403 (`GRANT SELECT ON public.profiles TO authenticated` manquant) — à corriger (une ligne SQL à exécuter dans Supabase), la préférence de variante par défaut (`default_variant_label`) ne se charge donc jamais actuellement.
 
+## Feedback d'audit (agent Figma, sur les écrans à jour) — gardé pour plus tard, pas encore traité
+
+Trois priorités selon l'agent (plus susceptibles de provoquer une vraie erreur qu'une différence visuelle) : clarifier Ajouter/Enregistrer, préciser la portée de "Retirer", synchroniser les quantités avec le mode cuisine.
+
+1. **"Ajouter" vs "Enregistrer" ne correspond pas toujours au contexte** dans le sheet de planning — pas clair si on modifie une occurrence existante ou si on en crée une nouvelle. Stabiliser deux états distincts :
+   | Situation | Titre | Bouton |
+   |---|---|---|
+   | Nouvelle occurrence | "Ajouter un repas" | Ajouter |
+   | Occurrence existante | "Modifier ce repas" | Enregistrer |
+
+   Même si la recette est déjà planifiée, ajouter un autre déjeuner reste un ajout, pas une modification.
+
+2. **Portée de "Retirer la recette" ambiguë** : retirer seulement le repas actuellement affiché, ou aussi les autres occurrences de la même recette ? Choisir explicitement entre "Retirer ce repas" et "Retirer tous les repas de cette recette" ; un éventuel dialogue de confirmation doit reprendre exactement cette portée.
+
+3. **Incohérence des quantités entre la fiche et le mode cuisine** (constatée sur les maquettes, mais révèle une vraie règle à poser) : le mode cuisine doit reprendre le nombre de personnes choisi et adapter aussi les quantités écrites *dans le texte des étapes*, pas seulement celles de la liste d'ingrédients.
+
+4. **Sélecteurs à choix unique vs multiple, traités de façon similaire visuellement** (catégories de rayon, types de repas à l'ajout, type de repas d'un repas prévu) alors que la logique diffère : un repas prévu a un seul type, une recette peut convenir à plusieurs types. Pour la sélection multiple : ajouter une coche sur les options sélectionnées + une indication "Plusieurs choix possibles". Le sélecteur à choix unique actuel est bon tel quel.
+
+5. **Le soulignement est utilisé pour plusieurs comportements différents** (ouvrir un réglage, naviguer, peut-être une 3e action pour "Mettre à jour l'application") — affaiblit la convention. Réserver le soulignement à la navigation ; garder "valeur + chevron" pour les réglages, et bouton texte non souligné pour une action secondaire.
+
+6. **Mode cuisine : manque de repères.** Étapes précédente/suivante trop atténuées, aucun indicateur de progression visible. Prévoir au minimum : "Étape 2 sur 5", un moyen identifiable d'avancer (même si le geste principal reste le swipe), et une distinction claire entre une quantité informative et une quantité ajustable.
+
+**Deux comportements à confirmer** (pas vérifiables sur les maquettes seules) :
+- Fermer un formulaire de création : ne pas perdre silencieusement une recette en cours — prévoir un brouillon ou une confirmation si nécessaire (déjà en partie couvert par le système de brouillon de session existant, à vérifier que ça couvre bien ce cas).
+- Changer le nombre de personnes par défaut (réglage de compte) : doit s'appliquer aux *prochains* ajouts, pas rétroactivement aux repas déjà prévus.
+
 ## Backlog / idées pour plus tard
 
 - **Audit visuel** : parcourir l'app et unifier avec les tokens CSS existants (repérer les valeurs codées en dur restantes).
