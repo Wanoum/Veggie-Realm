@@ -113,6 +113,30 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   width: 40px;
   height: 32px;
 }
+.add-variant-card {
+  width: 100%;
+  background: var(--surface-lowest);
+  border: none;
+  border-radius: var(--corner-radius-large);
+  padding: 20px var(--padding-horizontal-default);
+  margin-top: var(--gap-default);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+.add-variant-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--corner-radius-round);
+  background: var(--surface-high);
+  color: var(--text-icon-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
 .step-item textarea {
   width: 100%;
   padding: 10px 12px;

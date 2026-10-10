@@ -202,7 +202,11 @@
     <textarea id="stepEntryInput" class="steps-inline-input" rows="1" placeholder="Décrire l'étape à effectuer"></textarea>
 
     <div id="variantsListContainer" style="margin-top:var(--gap-vertical-section);"></div>
-    <button type="button" class="secondary-btn" style="width:100%;" onclick="addVariantRow()"><i class="bi bi-plus-lg"></i> Ajouter une variante</button>
+    <button type="button" class="add-variant-card" onclick="addVariantRow()">
+      <span class="add-variant-card-icon"><i class="bi bi-plus-lg"></i></span>
+      <span class="text-body-medium">Ajouter une variante</span>
+      <span class="text-small" style="color:var(--text-icon-secondary);">La même recette avec des ingrédients ou étapes différents pour une version sans gluten, vegan…</span>
+    </button>
   </div>
 
   <p id="formError" style="color:var(--text-icon-error);font-size:14px;"></p>
