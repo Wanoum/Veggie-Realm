@@ -243,6 +243,7 @@
     <button type="button" id="logoutBtn" class="icon-btn icon-btn-ghost" style="color:var(--text-icon-error);"><i class="bi bi-box-arrow-right" style="font-size:24px;"></i></button>
   </div>
   <div>
+    <p class="text-small-medium" style="color:var(--text-icon-secondary);margin:0 0 8px;">Profil</p>
     <div class="settings-list">
       <button type="button" class="settings-row" onclick="openAccountEdit('email')">
         <span>Email</span>
@@ -258,13 +259,40 @@
         <span>Mot de passe</span>
         <i class="bi bi-chevron-right"></i>
       </button>
+    </div>
+
+    <p class="text-small-medium" style="color:var(--text-icon-secondary);margin:0 0 8px;">Repas</p>
+    <div class="settings-list">
       <button type="button" class="settings-row" onclick="openAccountEdit('default_servings')">
         <span>Personnes par défaut</span>
         <span class="settings-row-value" id="account_default_servings_value"></span>
         <i class="bi bi-chevron-right"></i>
       </button>
+      <button type="button" class="settings-row" onclick="openAccountEdit('default_variant_label')">
+        <span>Variante préférée</span>
+        <span class="settings-row-value" id="account_default_variant_value"></span>
+        <i class="bi bi-chevron-right"></i>
+      </button>
+      <button type="button" class="settings-row" onclick="openAccountEdit('recipe_display')">
+        <span>Affichage recettes</span>
+        <i class="bi bi-chevron-right"></i>
+      </button>
     </div>
+
+    <p class="text-small-medium" style="color:var(--text-icon-secondary);margin:0 0 8px;">Application</p>
+    <div class="settings-list">
+      <button type="button" class="settings-row" onclick="openAccountEdit('language')">
+        <span>Langue</span>
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+
     <p class="text-small" style="color:var(--text-icon-secondary);text-align:center;margin-top:16px;">Version du <span id="appBuildTime"></span></p>
+    <p style="text-align:center;margin-top:4px;">
+      <button type="button" onclick="location.reload()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);">
+        <i class="bi bi-arrow-repeat"></i> Mettre à jour l'application
+      </button>
+    </p>
   </div>
 </div>
 
@@ -1492,6 +1520,7 @@
     accountProfileCache = profile || {};
     document.getElementById('account_display_name_value').textContent = accountProfileCache.display_name || '—';
     document.getElementById('account_default_servings_value').textContent = `${accountProfileCache.default_servings || 4} personnes`;
+    document.getElementById('account_default_variant_value').textContent = userDefaultVariantLabel || 'Originale';
   }
 
   document.getElementById('navAccount').onclick = showAccount;
@@ -1531,11 +1560,21 @@
         const el = document.getElementById('accountEdit_servingsValue');
         el.textContent = Number(el.textContent) + 1;
       };
+    } else if (field === 'default_variant_label') {
+      titleEl.textContent = 'Variante préférée';
+      contentEl.innerHTML = `
+        <p class="text-body" style="color:var(--text-icon-secondary);margin:0 0 16px;">Quand une recette a une variante portant ce libellé, elle est proposée par défaut à l'ouverture de la fiche.</p>
+        <input id="accountEdit_variantLabel" class="field-input" placeholder="Ex. Sans gluten (laisse vide pour l'originale)" value="${escapeHtml(userDefaultVariantLabel || '')}" />
+      `;
+    } else if (field === 'recipe_display' || field === 'language') {
+      titleEl.textContent = field === 'recipe_display' ? 'Affichage recettes' : 'Langue';
+      contentEl.innerHTML = `<p class="text-body" style="color:var(--text-icon-secondary);">Pas encore disponible.</p>`;
     }
 
     const saveBtn = document.getElementById('accountEditSaveBtn');
-    saveBtn.classList.toggle('disabled-look', field === 'email');
-    saveBtn.onclick = field === 'email'
+    const notYetAvailable = field === 'email' || field === 'recipe_display' || field === 'language';
+    saveBtn.classList.toggle('disabled-look', notYetAvailable);
+    saveBtn.onclick = notYetAvailable
       ? () => showToast("Cette fonctionnalité n'est pas encore disponible")
       : () => saveAccountEdit(field);
     document.getElementById('accountView').style.display = 'none';
@@ -1570,6 +1609,9 @@
       const { error } = await sb.from('profiles').update({ default_servings: value }).eq('id', currentUser.id);
       if (error) { errEl.textContent = error.message; return; }
       userDefaultServings = value;
+    } else if (field === 'default_variant_label') {
+      const label = document.getElementById('accountEdit_variantLabel').value.trim();
+      await setUserDefaultVariantLabel(label);
     }
 
     closeAccountEdit();
