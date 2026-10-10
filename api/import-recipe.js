@@ -267,7 +267,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // Cet endpoint fait une requête serveur vers une URL externe ; sans
 // authentification, n'importe qui sur internet peut l'appeler comme
 // "fetcher" HTTP gratuit hébergé sur ce compte Vercel. On exige donc un
-// utilisateur Veggie Realm connecté.
+// utilisateur Blou Mint connecté.
 async function assertAuthenticated(req) {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;

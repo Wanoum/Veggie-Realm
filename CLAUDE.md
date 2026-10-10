@@ -1,4 +1,6 @@
-# Veggie Realm
+# Blou Mint
+
+*(anciennement "Veggie Realm" — renommé, voir historique git si besoin de contexte sur l'ancien nom)*
 
 App de recettes/planning de repas en français (PWA), Supabase + Vercel (déploiement auto sur push `main`). Pas d'environnement de dev local : tout se teste en direct sur iPhone (PWA installée via Safari). Toujours committer et pousser directement sur `main`.
 
@@ -37,7 +39,7 @@ Au passage, trouvé dans la console de l'inspecteur : `loadUserDefaultServings` 
 - **Import Instagram (réel/post)** : tenté et retiré (voir historique git, commit "Retire l'import Instagram") — Instagram ne sert pas la légende (og:description) à une requête serveur, mur anti-bot pour les IPs de datacenter. Le copier-coller manuel (titre + collage dans les champs ingrédients/étapes déjà auto-parsés) reste la solution la plus fiable et la moins chère à maintenir. Pistes de contournement identifiées mais pas retenues pour l'instant, chacune avec un coût réel :
   - Proxy résidentiel / service tiers payant (Apify, RapidAPI...) : contournerait le blocage, mais coût récurrent + dépendance fragile + zone grise niveau CGU Instagram.
   - API officielle Meta : ne résout pas le cas d'usage (accès seulement aux comptes ayant autorisé l'app via OAuth, pas à un post random d'un tiers).
-  - Extension de partage native iOS ("Partager → Veggie Realm" depuis l'app Instagram, qui fournirait le texte elle-même) : la piste la plus propre, mais impossible en PWA pure — demanderait de passer à une vraie app native (Capacitor ou équivalent), un chantier bien plus lourd qu'une fonctionnalité.
+  - Extension de partage native iOS ("Partager → Blou Mint" depuis l'app Instagram, qui fournirait le texte elle-même) : la piste la plus propre, mais impossible en PWA pure — demanderait de passer à une vraie app native (Capacitor ou équivalent), un chantier bien plus lourd qu'une fonctionnalité.
   À reconsidérer seulement si l'app change de nature (budget scraping, ou passage en app native).
 - **Recherche d'image automatique à l'import** (si aucune photo trouvée sur la page source) — idée soulevée, pas retenue pour l'instant : demande une API de recherche d'images (coût récurrent, dépendance externe fragile), même constat que l'import Instagram. Proposer un choix entre 2-3 images améliorerait l'UX mais ne change rien au coût/complexité. À reconsidérer seulement si le contexte budget/priorités change.
 - **"Déjà à la maison" / garde-manger persistant** : explicitement écarté — pas le but de l'app (trop de maintenance, contraire à l'objectif de simplicité). La correction manuelle de quantité dans la liste de courses (texte libre, propre à la session, voir `courseQtySheet`/`COURSES_QTY_OVERRIDE_KEY`) reste la seule façon de dire "j'en ai déjà", sans suivi dans le temps.
