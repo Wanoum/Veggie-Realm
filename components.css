@@ -29,6 +29,22 @@
 .icon-btn-ghost { border: none; background: none; }
 .icon { font-size: 20px; line-height: 1; color: var(--text-icon-default); }
 
+/* ---- Pastille d'action colorée (icône seule, fond teinté arrondi) ----
+   Un seul composant, décliné en 2 variantes de couleur : danger (supprimer)
+   et accent (modifier/ajouter) — utilisé aussi bien pour une icône dans une
+   liste (ingrédients, étapes) que pour l'action d'une carte (repas prévus,
+   suggestions). */
+.icon-pill-btn {
+  border: none;
+  border-radius: var(--corner-radius-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.icon-pill-btn-danger { background: rgba(162, 34, 5, 0.12); color: var(--text-icon-error); }
+.icon-pill-btn-accent { background: var(--interaction-secondary); color: var(--text-icon-accent); }
+
 .secondary-btn {
   width: 100%;
   height: var(--height-default);

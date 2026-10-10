@@ -2512,7 +2512,7 @@
       <div class="row-item" data-idx="${idx}">
         <span class="ing-display-qty" data-edit-ing="${idx}">${escapeHtml(row.qtyUnitText)}</span>
         <span class="ing-display-name" data-edit-ing="${idx}">${escapeHtml(row.name)}</span>
-        <button type="button" class="remove-row" data-remove-ing="${idx}"><i class="bi bi-x-lg"></i></button>
+        <button type="button" class="remove-row icon-pill-btn icon-pill-btn-danger" data-remove-ing="${idx}"><i class="bi bi-trash"></i></button>
       </div>`;
     }).join('');
 
@@ -2596,7 +2596,7 @@
       <div class="step-row" data-idx="${idx}">
         <span class="step-drag-handle" data-drag-idx="${idx}"><i class="bi bi-grip-vertical"></i></span>
         <span class="step-row-text">${escapeHtml(text)}</span>
-        <button type="button" class="step-row-remove" data-remove-step="${idx}"><i class="bi bi-trash"></i></button>
+        <button type="button" class="step-row-remove icon-pill-btn icon-pill-btn-danger" data-remove-step="${idx}"><i class="bi bi-trash"></i></button>
       </div>
     `).join('');
 
@@ -3226,7 +3226,7 @@
                 <div class="text-small" style="color:var(--text-icon-secondary);">${recap}</div>
               </div>
             </div>
-            <button type="button" class="icon-btn icon-btn-ghost" style="color:var(--text-icon-accent);" data-edit-plan="${r.id}"><i class="bi bi-pencil-fill" style="font-size:24px;"></i></button>
+            <button type="button" class="icon-pill-btn icon-pill-btn-accent plan-card-action-btn" data-edit-plan="${r.id}"><i class="bi bi-pencil-fill"></i></button>
           </div>
         `;
       }).join('');
@@ -3253,7 +3253,7 @@
             </div>
             <div class="plan-recipe-name">${escapeHtml(r.title)}</div>
           </div>
-          <button type="button" class="icon-btn icon-btn-ghost" style="color:var(--text-icon-accent);" data-add-plan="${r.id}"><i class="bi bi-plus-circle-fill" style="font-size:24px;"></i></button>
+          <button type="button" class="icon-pill-btn icon-pill-btn-accent plan-card-action-btn" data-add-plan="${r.id}"><i class="bi bi-plus-lg"></i></button>
         </div>
       `;
     }).join('');
