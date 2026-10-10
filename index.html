@@ -383,6 +383,15 @@
   </div>
 </div>
 
+<div id="variantPickerSheet" style="display:none;">
+  <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;" onclick="closeVariantPickerSheet()"></div>
+  <div style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
+    <div class="detail-sheet-handle"></div>
+    <p class="text-body-medium" style="margin:0 0 4px;">Version</p>
+    <div id="variantPickerList"></div>
+  </div>
+</div>
+
 <div id="toast" class="toast">
   <span class="toast-message" id="toastMessage"></span>
   <button type="button" class="toast-action" id="toastAction"></button>
@@ -688,6 +697,29 @@
     setUserDefaultVariantLabel(selectedVariantLabel);
     renderDetail(i);
   }
+
+  function openVariantPickerSheet(i) {
+    const r = recipes[i];
+    const listEl = document.getElementById('variantPickerList');
+    const rows = [{ label: '', name: 'Originale' }, ...r.variants.map(v => ({ label: v.label, name: v.label }))];
+    listEl.innerHTML = rows.map(row => `
+      <button type="button" class="settings-row" data-pick-variant="${escapeHtml(row.label)}">
+        <span>${escapeHtml(row.name)}</span>
+        ${selectedVariantLabel === row.label ? '<i class="bi bi-check-lg"></i>' : ''}
+      </button>
+    `).join('');
+    listEl.querySelectorAll('[data-pick-variant]').forEach(btn => {
+      btn.onclick = () => { selectVariant(i, btn.dataset.pickVariant); closeVariantPickerSheet(); };
+    });
+    document.getElementById('variantPickerSheet').style.display = 'flex';
+    lockBackgroundScroll();
+  }
+
+  function closeVariantPickerSheet() {
+    const wasOpen = document.getElementById('variantPickerSheet').style.display !== 'none';
+    document.getElementById('variantPickerSheet').style.display = 'none';
+    if (wasOpen) unlockBackgroundScroll();
+  }
   // Portions (ou pièces) par repas pour cette recette : reprend la valeur
   // mémorisée sur sa fiche, sinon le défaut du profil (1 pour une recette
   // à la pièce, tant qu'elle n'a jamais été ajustée).
@@ -795,13 +827,15 @@
 
     const hasSteps = rView.steps && rView.steps.length > 0;
 
-    const variantsHtml = (r.variants && r.variants.length > 0) ? `
-      <p class="text-body-medium" style="margin:0 0 8px;">Version</p>
-      <div id="variantSelector" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--gap-vertical-section);">
-        <button type="button" class="filter-chip ${!selectedVariantLabel ? 'active' : ''}" data-select-variant="">Originale</button>
-        ${r.variants.map(v => `<button type="button" class="filter-chip ${selectedVariantLabel === v.label ? 'active' : ''}" data-select-variant="${escapeHtml(v.label)}">${escapeHtml(v.label)}</button>`).join('')}
+    const hasVariants = r.variants && r.variants.length > 0;
+    const ingredientsHeaderHtml = hasVariants ? `
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <h2 style="margin:0;">Ingrédients</h2>
+        <button type="button" onclick="openVariantPickerSheet(${i})" style="background:none;border:none;padding:0;display:flex;align-items:center;gap:2px;font-family:'Inter',sans-serif;font-size:16px;color:var(--text-icon-accent);">
+          <span style="text-decoration:underline;">Version : ${escapeHtml(selectedVariantLabel || 'Originale')}</span> <i class="bi bi-chevron-down"></i>
+        </button>
       </div>
-    ` : '';
+    ` : '<h2>Ingrédients</h2>';
 
     document.getElementById('detailContent').innerHTML = `
       <div class="detail-photo">
@@ -830,8 +864,7 @@
           </div>
         </div>
 
-        ${variantsHtml}
-        <h2>Ingrédients</h2>
+        ${ingredientsHeaderHtml}
         ${ingredientsHtml}
         ${r.notes ? `<div class="notice">${escapeHtml(r.notes)}</div>` : ''}
         ${stepsHtml}
@@ -844,13 +877,6 @@
         ${hasSteps ? `<button type="button" class="primary-btn" style="margin-top:0;" onclick="openCookingMode(effectiveRecipeView(recipes[${i}]), ${s})">Cook mode</button>` : ''}
       </div>
     `;
-
-    const variantSelectorEl = document.getElementById('variantSelector');
-    if (variantSelectorEl) {
-      variantSelectorEl.querySelectorAll('[data-select-variant]').forEach(btn => {
-        btn.onclick = () => selectVariant(i, btn.dataset.selectVariant);
-      });
-    }
   }
 
   // Recette possédée ou partagée : clic sur le panier depuis sa fiche. Une
@@ -1797,6 +1823,7 @@
   enableSheetDragToClose('recipeActionsMenu', closeRecipeActionsMenu);
   enableSheetDragToClose('planOccurrenceSheet', closePlanOccurrenceSheet);
   enableSheetDragToClose('courseQtySheet', closeCourseQtySheet);
+  enableSheetDragToClose('variantPickerSheet', closeVariantPickerSheet);
 
   (function setupEdgeSwipeBack() {
     const EDGE_ZONE = 24; // px depuis le bord gauche où le geste doit démarrer
