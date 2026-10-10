@@ -195,18 +195,13 @@
     <div id="f_ingredients" style="position:relative;"></div>
   </div>
 
-  <!-- Étape 4 : étapes -->
+  <!-- Étape 4 : étapes + variantes (optionnel) -->
   <div id="wizardStep4" class="wizard-step" style="display:none;">
     <h1 style="margin-bottom:var(--gap-vertical-section);">Étapes</h1>
     <div id="stepsListContainer"></div>
     <textarea id="stepEntryInput" class="steps-inline-input" rows="1" placeholder="Décrire l'étape à effectuer"></textarea>
-  </div>
 
-  <!-- Étape 5 : variantes (optionnel) -->
-  <div id="wizardStep5" class="wizard-step" style="display:none;">
-    <h1 style="margin-bottom:8px;">Variantes</h1>
-    <p class="text-small" style="color:var(--text-icon-secondary);margin-bottom:var(--gap-vertical-section);">Optionnel — une variante garde la même fiche, juste des ingrédients (et éventuellement des étapes) différents.</p>
-    <div id="variantsListContainer"></div>
+    <div id="variantsListContainer" style="margin-top:var(--gap-vertical-section);"></div>
     <button type="button" class="secondary-btn" style="width:100%;" onclick="addVariantRow()"><i class="bi bi-plus-lg"></i> Ajouter une variante</button>
   </div>
 
@@ -1228,7 +1223,7 @@
     document.getElementById('formTitle').textContent = editingId ? "Modifier la recette" : "Nouvelle recette";
     if (!editingId) document.getElementById('navAdd').classList.add('active');
     applyWizardDraft(draft);
-    goToWizardStep(draft.step && draft.step >= 2 ? draft.step : (editingId ? 2 : 1));
+    goToWizardStep(draft.step && draft.step >= 2 ? Math.min(draft.step, 4) : (editingId ? 2 : 1));
     sessionStorage.setItem('lastView', 'form');
   }
 
@@ -1239,7 +1234,7 @@
   function goToWizardStep(step) {
     wizardStep = step;
     window.scrollTo(0, 0);
-    for (let s = 1; s <= 5; s++) {
+    for (let s = 1; s <= 4; s++) {
       // L'étape 1 est en flex (les deux gros encarts se partagent l'écran restant) ;
       // les autres restent en block, réglées via .style.display et non le CSS
       // externe puisque le style inline l'emporterait de toute façon.
@@ -1250,13 +1245,13 @@
 
     document.getElementById('bottomNav').style.display = (step === 1) ? 'flex' : 'none';
     document.getElementById('wizardFooter').style.display = (step === 1) ? 'none' : 'flex';
-    document.getElementById('wizardNextBtn').innerHTML = (step === 5)
+    document.getElementById('wizardNextBtn').innerHTML = (step === 4)
       ? '<i class="bi bi-check-lg"></i> Enregistrer la recette'
       : '<i class="bi bi-arrow-right"></i> Suivant';
     document.getElementById('formError').textContent = '';
 
     if (step === 3) renderIngRows();
-    if (step === 5) renderVariantsList();
+    if (step === 4) renderVariantsList();
     if (step === 2) {
       autoResizeTextarea(document.getElementById('f_notes'));
       autoResizeTextarea(document.getElementById('f_title'));
@@ -1464,7 +1459,7 @@
   }
 
   document.getElementById('wizardNextBtn').onclick = () => {
-    if (wizardStep < 5) {
+    if (wizardStep < 4) {
       if (wizardStep === 1) return; // on attend un choix explicite (nouvelle recette / import)
       goToWizardStep(wizardStep + 1);
     } else {
@@ -1477,7 +1472,7 @@
   // Sauvegarde continue du brouillon : toute frappe dans les étapes du
   // formulaire (délégation, un seul listener par étape) et tout passage en
   // arrière-plan (l'app peut être redémarrée par iOS au retour).
-  ['wizardStep2', 'wizardStep3', 'wizardStep4', 'wizardStep5'].forEach(id => {
+  ['wizardStep2', 'wizardStep3', 'wizardStep4'].forEach(id => {
     document.getElementById(id).addEventListener('input', () => saveWizardDraft());
   });
   document.addEventListener('visibilitychange', () => {
