@@ -208,6 +208,24 @@
 .servings-stepper-lg .servings-minus { border-radius: 64px var(--corner-radius-small) var(--corner-radius-small) 64px; }
 .servings-stepper-lg .servings-plus { border-radius: var(--corner-radius-small) 64px 64px var(--corner-radius-small); }
 
+/* ---- Champ "sélection" plat, sans bordure (dropdown dans un bottom sheet) ----
+   Même traitement que les chips/stepper du sheet (fond plein, pas de
+   bordure) plutôt que .field-input (bordé) — pour que tous les éléments
+   cliquables d'un même sheet se ressemblent, au lieu de mélanger les deux
+   styles de la fiche recette (bordé) et du sheet (plat). */
+.sheet-select-field {
+  width: 100%;
+  height: var(--height-default);
+  padding: 0 var(--padding-horizontal-default);
+  border: none;
+  border-radius: var(--corner-radius-default);
+  background: var(--interaction-tertiary);
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  line-height: 120%;
+  color: var(--text-icon-default);
+}
+
 /* ---- Menu déroulant générique (photo, mode de portions...) ---- */
 .course-sort-menu {
   position: absolute;
