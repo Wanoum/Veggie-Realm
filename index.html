@@ -2200,8 +2200,8 @@
 
   function createVersionForCurrentRecipe() {
     const r = recipes[currentDetailIndex];
-    creatingVariantFor = r;
     resetForm();
+    creatingVariantFor = r;
     document.getElementById('f_title').placeholder = 'Nom de la version';
     selectedMealTypes = [...(r.tags || [])].filter(t => MEAL_TYPES.includes(t));
     renderMealTypeToggles();
