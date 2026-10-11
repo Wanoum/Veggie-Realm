@@ -201,12 +201,14 @@
     <div id="stepsListContainer"></div>
     <textarea id="stepEntryInput" class="steps-inline-input" rows="1" placeholder="Décrire l'étape à effectuer"></textarea>
 
-    <div id="variantsListContainer" style="margin-top:var(--gap-vertical-section);"></div>
-    <button type="button" class="add-variant-card" onclick="addVariantRow()">
-      <span class="add-variant-card-icon"><i class="bi bi-plus-lg"></i></span>
-      <span class="text-body-medium">Ajouter une variante</span>
-      <span class="text-small" style="color:var(--text-icon-secondary);">La même recette avec des ingrédients ou étapes différents pour une version sans gluten, vegan…</span>
-    </button>
+    <div id="variantsSection" style="display:none;margin-top:var(--gap-vertical-section);">
+      <div id="variantsListContainer"></div>
+      <button type="button" class="add-variant-card" onclick="addVariantRow()">
+        <span class="add-variant-card-icon"><i class="bi bi-plus-lg"></i></span>
+        <span class="text-body-medium">Ajouter une version</span>
+        <span class="text-small" style="color:var(--text-icon-secondary);">La même recette avec des ingrédients ou étapes différents pour une version sans gluten, vegan…</span>
+      </button>
+    </div>
   </div>
 
   <p id="formError" style="color:var(--text-icon-error);font-size:14px;"></p>
@@ -268,7 +270,7 @@
         <i class="bi bi-chevron-right"></i>
       </button>
       <button type="button" class="settings-row" onclick="openAccountEdit('default_variant_label')">
-        <span>Variante préférée</span>
+        <span>Version préférée</span>
         <span class="settings-row-value" id="account_default_variant_value"></span>
         <i class="bi bi-chevron-right"></i>
       </button>
@@ -702,16 +704,24 @@
   function openVariantPickerSheet(i) {
     const r = recipes[i];
     const listEl = document.getElementById('variantPickerList');
-    const rows = [{ label: '', name: 'Originale' }, ...r.variants.map(v => ({ label: v.label, name: v.label }))];
+    const rows = [{ label: '', name: 'Base' }, ...r.variants.map(v => ({ label: v.label, name: v.label }))];
     listEl.innerHTML = rows.map(row => `
       <button type="button" class="settings-row" data-pick-variant="${escapeHtml(row.label)}">
         <span>${escapeHtml(row.name)}</span>
         ${selectedVariantLabel === row.label ? '<i class="bi bi-check-lg"></i>' : ''}
       </button>
-    `).join('');
+    `).join('') + `
+      <button type="button" class="settings-row" style="color:var(--text-icon-accent);" data-create-variant>
+        <span><i class="bi bi-plus-circle-fill"></i> Créer une version</span>
+      </button>
+    `;
     listEl.querySelectorAll('[data-pick-variant]').forEach(btn => {
       btn.onclick = () => { selectVariant(i, btn.dataset.pickVariant); closeVariantPickerSheet(); };
     });
+    listEl.querySelector('[data-create-variant]').onclick = () => {
+      closeVariantPickerSheet();
+      createVersionForCurrentRecipe();
+    };
     document.getElementById('variantPickerSheet').style.display = 'flex';
     lockBackgroundScroll();
   }
@@ -829,14 +839,24 @@
     const hasSteps = rView.steps && rView.steps.length > 0;
 
     const hasVariants = r.variants && r.variants.length > 0;
+    // Pas de variante : l'espace normalement pris par le sélecteur de
+    // version sert à faire découvrir la fonctionnalité, plutôt que de la
+    // cacher uniquement dans un menu.
     const ingredientsHeaderHtml = hasVariants ? `
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <h2 style="margin:0;">Ingrédients</h2>
         <button type="button" onclick="openVariantPickerSheet(${i})" style="background:none;border:none;padding:0;display:flex;align-items:center;gap:2px;font-family:'Inter',sans-serif;font-size:16px;color:var(--text-icon-accent);">
-          <span style="text-decoration:underline;">Version : ${escapeHtml(selectedVariantLabel || 'Originale')}</span> <i class="bi bi-chevron-down"></i>
+          <span style="text-decoration:underline;">Version : ${escapeHtml(selectedVariantLabel || 'Base')}</span> <i class="bi bi-chevron-down"></i>
         </button>
       </div>
-    ` : '<h2>Ingrédients</h2>';
+    ` : `
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <h2 style="margin:0;">Ingrédients</h2>
+        <button type="button" onclick="createVersionForCurrentRecipe()" style="background:none;border:none;padding:0;display:flex;align-items:center;gap:4px;font-family:'Inter',sans-serif;font-size:16px;color:var(--text-icon-accent);">
+          <i class="bi bi-plus-circle-fill"></i> <span style="text-decoration:underline;">Créer une version</span>
+        </button>
+      </div>
+    `;
 
     document.getElementById('detailContent').innerHTML = `
       <div class="detail-photo">
@@ -1257,7 +1277,14 @@
     document.getElementById('formError').textContent = '';
 
     if (step === 3) renderIngRows();
-    if (step === 4) renderVariantsList();
+    if (step === 4) {
+      // Créer des versions n'a de sens que pour une recette déjà enregistrée
+      // (sinon on mélange "créer la recette" et "créer une version" dans un
+      // même parcours non sauvegardé) : la section reste masquée tant qu'on
+      // n'est pas en édition.
+      document.getElementById('variantsSection').style.display = editingId ? 'block' : 'none';
+      renderVariantsList();
+    }
     if (step === 2) {
       autoResizeTextarea(document.getElementById('f_notes'));
       autoResizeTextarea(document.getElementById('f_title'));
@@ -1285,6 +1312,18 @@
   }
 
   function wizardGoBack() {
+    // Entrée directe sur l'étape Versions (depuis "Créer une version" sur la
+    // fiche) : reculer quitte vers la fiche, pas vers l'étape Ingrédients de
+    // la recette de base qui n'a rien à faire dans ce parcours.
+    if (wizardVariantOnlyEntry && wizardStep === 4) {
+      const idx = currentDetailIndex;
+      wizardVariantOnlyEntry = false;
+      discardAbandonedUploads();
+      resetForm();
+      clearWizardDraft();
+      showDetail(idx);
+      return;
+    }
     // En édition, le wizard démarre directement à l'étape 2 (pas d'étape
     // Source) : reculer depuis l'étape 2 doit donc quitter vers la fiche
     // recette plutôt que d'atterrir sur l'étape 1 (choix nouvelle recette/
@@ -1547,7 +1586,7 @@
     accountProfileCache = profile || {};
     document.getElementById('account_display_name_value').textContent = accountProfileCache.display_name || '—';
     document.getElementById('account_default_servings_value').textContent = `${accountProfileCache.default_servings || 4} personnes`;
-    document.getElementById('account_default_variant_value').textContent = userDefaultVariantLabel || 'Originale';
+    document.getElementById('account_default_variant_value').textContent = userDefaultVariantLabel || 'Base';
   }
 
   document.getElementById('navAccount').onclick = showAccount;
@@ -1588,10 +1627,10 @@
         el.textContent = Number(el.textContent) + 1;
       };
     } else if (field === 'default_variant_label') {
-      titleEl.textContent = 'Variante préférée';
+      titleEl.textContent = 'Version préférée';
       contentEl.innerHTML = `
-        <p class="text-body" style="color:var(--text-icon-secondary);margin:0 0 16px;">Quand une recette a une variante portant ce libellé, elle est proposée par défaut à l'ouverture de la fiche.</p>
-        <input id="accountEdit_variantLabel" class="field-input" placeholder="Ex. Sans gluten (laisse vide pour l'originale)" value="${escapeHtml(userDefaultVariantLabel || '')}" />
+        <p class="text-body" style="color:var(--text-icon-secondary);margin:0 0 16px;">Quand une recette a une version portant ce libellé, elle est proposée par défaut à l'ouverture de la fiche.</p>
+        <input id="accountEdit_variantLabel" class="field-input" placeholder="Ex. Sans gluten (laisse vide pour la version Base)" value="${escapeHtml(userDefaultVariantLabel || '')}" />
       `;
     } else if (field === 'recipe_display' || field === 'language') {
       titleEl.textContent = field === 'recipe_display' ? 'Affichage recettes' : 'Langue';
@@ -2081,7 +2120,7 @@
     const container = document.getElementById('variantsListContainer');
     container.innerHTML = variantRows.map((v, idx) => `
       <div style="border:1px solid var(--border-default);border-radius:var(--corner-radius-default);padding:var(--padding-horizontal-default);margin-bottom:var(--gap-default);">
-        <input class="field-input" style="margin-bottom:var(--gap-default);" placeholder="Nom de la variante (ex : Sans gluten)" data-variant-idx="${idx}" data-variant-field="label" value="${escapeHtml(v.label)}" />
+        <input class="field-input" style="margin-bottom:var(--gap-default);" placeholder="Nom de la version (ex : Sans gluten)" data-variant-idx="${idx}" data-variant-field="label" value="${escapeHtml(v.label)}" />
         <label class="field-label">Ingrédients (un par ligne)</label>
         <textarea class="field-input" style="min-height:80px;margin-bottom:var(--gap-default);" data-variant-idx="${idx}" data-variant-field="ingredientsText" placeholder="ex : 200 g farine sans gluten">${escapeHtml(v.ingredientsText)}</textarea>
         <label class="field-label">Étapes (une par ligne)</label>
@@ -2090,7 +2129,7 @@
           <input class="field-input" type="number" placeholder="Temps de cuisson" style="flex:1;" data-variant-idx="${idx}" data-variant-field="cookTimeText" value="${escapeHtml(v.cookTimeText)}" />
           <input class="field-input" type="number" placeholder="Température °C" style="flex:1;" data-variant-idx="${idx}" data-variant-field="ovenTempText" value="${escapeHtml(v.ovenTempText)}" />
         </div>
-        <button type="button" class="secondary-btn" style="width:100%;color:var(--text-icon-error);" data-remove-variant="${idx}"><i class="bi bi-trash"></i> Supprimer la variante</button>
+        <button type="button" class="secondary-btn" style="width:100%;color:var(--text-icon-error);" data-remove-variant="${idx}"><i class="bi bi-trash"></i> Supprimer la version</button>
       </div>
     `).join('');
 
@@ -2151,7 +2190,19 @@
       }));
   }
 
-  function editCurrentRecipe() {
+  // true quand on a sauté directement à l'étape Versions (depuis la fiche,
+  // via "Créer une version") plutôt que de passer par tout le formulaire
+  // d'édition : "retour" doit alors quitter vers la fiche, pas atterrir sur
+  // l'étape Ingrédients de la recette de base.
+  let wizardVariantOnlyEntry = false;
+
+  function createVersionForCurrentRecipe() {
+    editCurrentRecipe(4);
+    wizardVariantOnlyEntry = true;
+    addVariantRow();
+  }
+
+  function editCurrentRecipe(targetStep) {
     const r = recipes[currentDetailIndex];
     editingId = r.id;
     currentSessionUploadPath = null;
@@ -2182,7 +2233,7 @@
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('formView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
-    goToWizardStep(2);
+    goToWizardStep(targetStep || 2);
     // Sans ça, un redémarrage de la page en cours d'édition restaurerait la
     // fiche recette (dernière vue avant l'édition) plutôt que le formulaire.
     sessionStorage.setItem('lastView', 'form');
@@ -2932,6 +2983,7 @@
 
   function resetForm() {
     editingId = null;
+    wizardVariantOnlyEntry = false;
     currentSessionUploadPath = null;
     originalPhotoUrlForSession = null;
     currentSessionSourceUploadPath = null;
