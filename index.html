@@ -282,7 +282,7 @@
         <span class="field-input-suffix">°C</span>
       </div>
 
-      <textarea id="f_notes" class="field-input" style="min-height:var(--height-default);padding:var(--padding-vertical-control) var(--padding-horizontal-default);resize:none;overflow-y:hidden;" placeholder="Tapez ici vos remarques, par exemple : Attention aux mélange des œufs avec le chocolat chaud !" oninput="autoResizeTextarea(this)"></textarea>
+      <textarea id="f_notes" class="field-input" rows="3" style="min-height:var(--height-default);padding:var(--padding-vertical-control) var(--padding-horizontal-default);resize:none;overflow-y:hidden;" placeholder="Tapez ici vos remarques, par exemple : Attention aux mélange des œufs avec le chocolat chaud !" oninput="autoResizeTextarea(this)"></textarea>
     </div>
   </div>
 
@@ -3468,7 +3468,7 @@
     document.getElementById('f_notes').style.display = '';
     selectedMealTypes = [];
     renderMealTypeToggles();
-    document.getElementById('f_servings').value = '';
+    document.getElementById('f_servings').value = userDefaultServings;
     document.getElementById('f_servings').disabled = false;
     document.getElementById('f_servingModeBtn').disabled = false;
     setFormServingMode('portion');
