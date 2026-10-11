@@ -1820,18 +1820,30 @@
     const errEl = document.getElementById('accountEditError');
     errEl.textContent = '';
 
+    const saveBtn = document.getElementById('accountEditSaveBtn');
+    // Tant qu'aucune modification n'a été apportée, "Enregistrer" reste
+    // désactivé (pas seulement grisé façon "pas encore disponible" — ici
+    // vraiment non cliquable) : évite un enregistrement qui ne change rien.
+    let getCurrentValue = null;
+    let initialValue = null;
+
     if (field === 'email') {
       titleEl.textContent = 'Email';
       contentEl.innerHTML = `<input class="field-input" value="${escapeHtml(currentUser.email)}" readonly />`;
     } else if (field === 'display_name') {
       titleEl.textContent = 'Pseudo';
-      contentEl.innerHTML = `<input id="accountEdit_displayName" class="field-input" placeholder="Ton pseudo" value="${escapeHtml(accountProfileCache.display_name || '')}" />`;
+      initialValue = accountProfileCache.display_name || '';
+      contentEl.innerHTML = `<input id="accountEdit_displayName" class="field-input" placeholder="Ton pseudo" value="${escapeHtml(initialValue)}" />`;
+      getCurrentValue = () => document.getElementById('accountEdit_displayName').value;
     } else if (field === 'password') {
       titleEl.textContent = 'Mot de passe';
+      initialValue = '';
       contentEl.innerHTML = `<input id="accountEdit_password" class="field-input" type="password" placeholder="Nouveau mot de passe" autocomplete="new-password" />`;
+      getCurrentValue = () => document.getElementById('accountEdit_password').value;
     } else if (field === 'default_servings') {
       titleEl.textContent = 'Personnes par défaut';
       const current = accountProfileCache.default_servings || 4;
+      initialValue = current;
       contentEl.innerHTML = `
         <p class="text-body" style="color:var(--text-icon-secondary);margin:0 0 16px;">Utilisé pour préremplir le nombre de personnes à la création d'une recette.</p>
         <div class="servings-stepper servings-stepper-lg servings-stepper-tertiary">
@@ -1840,31 +1852,45 @@
           <button type="button" class="servings-plus" id="accountEdit_servingsPlus"><svg class="icon-svg"><use href="#icon-plus-outline"/></svg></button>
         </div>
       `;
+      getCurrentValue = () => Number(document.getElementById('accountEdit_servingsValue').textContent);
       document.getElementById('accountEdit_servingsMinus').onclick = () => {
         const el = document.getElementById('accountEdit_servingsValue');
         el.textContent = Math.max(1, Number(el.textContent) - 1);
+        updateAccountEditSaveState();
       };
       document.getElementById('accountEdit_servingsPlus').onclick = () => {
         const el = document.getElementById('accountEdit_servingsValue');
         el.textContent = Number(el.textContent) + 1;
+        updateAccountEditSaveState();
       };
     } else if (field === 'default_variant_label') {
       titleEl.textContent = 'Version préférée';
+      initialValue = userDefaultVariantLabel || '';
       contentEl.innerHTML = `
         <p class="text-body" style="color:var(--text-icon-secondary);margin:0 0 16px;">Quand une recette a une version portant ce libellé, elle est proposée par défaut à l'ouverture de la fiche.</p>
-        <input id="accountEdit_variantLabel" class="field-input" placeholder="Ex. Sans gluten (laisse vide pour la version Base)" value="${escapeHtml(userDefaultVariantLabel || '')}" />
+        <input id="accountEdit_variantLabel" class="field-input" placeholder="Ex. Sans gluten (laisse vide pour la version Base)" value="${escapeHtml(initialValue)}" />
       `;
+      getCurrentValue = () => document.getElementById('accountEdit_variantLabel').value;
     } else if (field === 'recipe_display' || field === 'language') {
       titleEl.textContent = field === 'recipe_display' ? 'Affichage recettes' : 'Langue';
       contentEl.innerHTML = `<p class="text-body" style="color:var(--text-icon-secondary);">Pas encore disponible.</p>`;
     }
 
-    const saveBtn = document.getElementById('accountEditSaveBtn');
     const notYetAvailable = field === 'email' || field === 'recipe_display' || field === 'language';
+    window.updateAccountEditSaveState = () => {
+      // Jamais vraiment "disabled" ici : le bouton doit rester cliquable
+      // pour afficher le toast "pas encore disponible".
+      if (notYetAvailable) { saveBtn.disabled = false; return; }
+      saveBtn.disabled = getCurrentValue ? getCurrentValue() === initialValue : false;
+    };
     saveBtn.classList.toggle('disabled-look', notYetAvailable);
     saveBtn.onclick = notYetAvailable
       ? () => showToast("Cette fonctionnalité n'est pas encore disponible")
       : () => saveAccountEdit(field);
+    if (getCurrentValue) {
+      contentEl.addEventListener('input', updateAccountEditSaveState);
+    }
+    updateAccountEditSaveState();
     document.getElementById('accountView').style.display = 'none';
     document.getElementById('accountEditView').style.display = 'block';
     animatePageEnter(document.getElementById('accountEditView'));
