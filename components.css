@@ -294,6 +294,23 @@
   gap: 8px;
   padding: 4px 8px;
   z-index: 90;
+  /* Bordure pleine en haut/bas de .glass-surface remplacée par un anneau à
+     dégradé radial (pleine au centre, qui s'estompe vers les côtés gauche/
+     droit) — même effet que le dégradé observé dans Figma sur une forme
+     allongée, qu'une bordure CSS classique ne peut pas reproduire. */
+  border: none;
+}
+.floating-search::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(ellipse 60% 100% at center, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 .floating-search i { font-size: 18px; color: var(--text-icon-default); flex-shrink: 0; }
 .floating-search input {
