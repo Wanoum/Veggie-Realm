@@ -339,6 +339,14 @@
     <div class="detail-sheet-handle"></div>
     <h2 id="planOccurrenceTitle" style="margin-bottom:var(--gap-vertical-section);"></h2>
     <div id="planOccurrenceMealTypes" style="display:flex;gap:8px;margin-bottom:20px;"></div>
+    <div id="planOccurrenceVariantWrap" style="display:none;margin-bottom:20px;position:relative;">
+      <label class="field-label">Version</label>
+      <button type="button" id="planOccurrenceVariantBtn" class="field-input" style="width:100%;display:flex;align-items:center;justify-content:space-between;" onclick="togglePlanOccurrenceVariantMenu()">
+        <span id="planOccurrenceVariantLabel">Base</span>
+        <i class="bi bi-chevron-down"></i>
+      </button>
+      <div id="planOccurrenceVariantMenu" class="course-sort-menu" style="display:none;"></div>
+    </div>
     <p class="text-body" id="planOccurrenceServingsLabel" style="margin:0 0 12px;">Pour combien de personnes ?</p>
     <div class="servings-stepper servings-stepper-lg" style="margin-bottom:20px;">
       <button type="button" class="servings-minus" id="planOccurrenceMinus"><i class="bi bi-dash"></i></button>
@@ -3106,6 +3114,8 @@
     if (menu && menu.style.display !== 'none' && !e.target.closest('#photoDropZone')) menu.style.display = 'none';
     const servingMenu = document.getElementById('f_servingModeMenu');
     if (servingMenu && servingMenu.style.display !== 'none' && !e.target.closest('#f_servingModeWrap')) servingMenu.style.display = 'none';
+    const variantMenu = document.getElementById('planOccurrenceVariantMenu');
+    if (variantMenu && variantMenu.style.display !== 'none' && !e.target.closest('#planOccurrenceVariantWrap')) variantMenu.style.display = 'none';
   });
 
   async function pastePhotoFromClipboard() {
@@ -3495,6 +3505,10 @@
     const isMulti = tags.length > 1;
     const servingsByType = {};
     const countByType = {};
+    const variantByType = {};
+    // Par défaut, reprend la version actuellement affichée sur la fiche
+    // (selectedVariantLabel) quand aucune occurrence n'existe encore pour ce
+    // repas — cohérent avec "ce que je suis en train de regarder".
     if (isMulti) {
       // 0 si pas d'occurrence pour ce repas — qu'elle n'ait jamais existé ou
       // qu'elle vienne d'être mise à 0 (et donc supprimée) : on affiche
@@ -3505,6 +3519,7 @@
         const occ = existing.find(o => o.mealType === t);
         servingsByType[t] = occ ? occ.servings : 0;
         countByType[t] = occ ? occ.count : 1;
+        variantByType[t] = occ ? (occ.variantLabel || '') : (selectedVariantLabel || '');
       });
     }
     // Un seul repas sélectionné à la fois (sélection simple, pas de puces
@@ -3519,8 +3534,10 @@
       selectedType: isMulti ? (existingType || tags[0]) : null,
       servingsByType,
       countByType,
+      variantByType,
       singleServings: !isMulti ? (existing[0]?.servings ?? getServingsPerOccurrence(r)) : null,
-      singleCount: !isMulti ? (existing[0]?.count ?? 1) : null
+      singleCount: !isMulti ? (existing[0]?.count ?? 1) : null,
+      singleVariantLabel: !isMulti ? (existing[0]?.variantLabel || selectedVariantLabel || '') : null
     };
     renderPlanOccurrenceSheet();
     document.getElementById('planOccurrenceSheet').style.display = 'flex';
@@ -3546,6 +3563,24 @@
     document.getElementById('planOccurrenceValue').textContent = clamped;
   }
 
+  function currentSheetVariantLabel() {
+    if (!planSheetState) return '';
+    return planSheetState.isMulti ? (planSheetState.variantByType[planSheetState.selectedType] || '') : (planSheetState.singleVariantLabel || '');
+  }
+
+  function setSheetVariantLabel(label) {
+    if (!planSheetState) return;
+    if (planSheetState.isMulti) planSheetState.variantByType[planSheetState.selectedType] = label;
+    else planSheetState.singleVariantLabel = label;
+    document.getElementById('planOccurrenceVariantLabel').textContent = label || 'Base';
+    document.getElementById('planOccurrenceVariantMenu').style.display = 'none';
+  }
+
+  function togglePlanOccurrenceVariantMenu() {
+    const menu = document.getElementById('planOccurrenceVariantMenu');
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  }
+
   function renderPlanOccurrenceSheet() {
     const st = planSheetState;
     const r = allRecipesForPlanning().find(x => x.id === st.recipeId);
@@ -3569,12 +3604,30 @@
       document.getElementById('planOccurrenceServingsLabel').textContent = 'Pour combien de personnes ?';
     }
     document.getElementById('planOccurrenceValue').textContent = currentSheetServings();
+
+    const variantWrap = document.getElementById('planOccurrenceVariantWrap');
+    if (r.variants && r.variants.length > 0) {
+      variantWrap.style.display = 'block';
+      const currentLabel = currentSheetVariantLabel();
+      document.getElementById('planOccurrenceVariantLabel').textContent = currentLabel || 'Base';
+      const options = [{ label: '', name: 'Base' }, ...r.variants.map(v => ({ label: v.label, name: v.label }))];
+      const menu = document.getElementById('planOccurrenceVariantMenu');
+      menu.innerHTML = options.map(opt => `
+        <button type="button" class="course-sort-menu-item text-body ${currentLabel === opt.label ? 'active' : ''}" data-set-variant="${escapeHtml(opt.label)}"><span>${escapeHtml(opt.name)}</span><i class="bi bi-check-lg course-sort-menu-check"></i></button>
+      `).join('');
+      menu.querySelectorAll('[data-set-variant]').forEach(btn => {
+        btn.onclick = () => setSheetVariantLabel(btn.dataset.setVariant);
+      });
+    } else {
+      variantWrap.style.display = 'none';
+    }
+
     // "Marquer comme cuisiné" n'a de sens que pour un repas déjà planifié et
     // enregistré — pas pour une recette encore dans les Suggestions, qu'on
     // est seulement en train d'ajouter (aucune occurrence existante pour ce
     // type de repas précis).
     const mealType = st.isMulti ? st.selectedType : (st.tags[0] || null);
-    const hasExistingOccurrence = !!findOccurrence(st.recipeId, mealType, '');
+    const hasExistingOccurrence = !!findOccurrence(st.recipeId, mealType, currentSheetVariantLabel());
     document.getElementById('planOccurrenceCookedBtn').style.display = hasExistingOccurrence ? 'flex' : 'none';
   }
 
@@ -3599,17 +3652,30 @@
       // changement fait sur déjeuner.
       for (const t of st.tags) {
         const servings = st.servingsByType[t] || 0;
-        const existing = findOccurrence(st.recipeId, t, '');
+        const variantLabel = st.variantByType[t] || '';
+        // Une seule occurrence par type de repas, quelle que soit la version :
+        // si la version a changé depuis l'ouverture du sheet, on retire
+        // l'ancienne au lieu d'en laisser une en double (clé d'unicité
+        // incluant variant_label, un simple upsert ne l'écraserait pas).
+        const existingForType = getOccurrences(st.recipeId).find(o => (o.mealType || '') === (t || ''));
         if (servings <= 0) {
-          if (existing) await deleteMealPlanOccurrence(existing.id);
+          if (existingForType) await deleteMealPlanOccurrence(existingForType.id);
         } else {
-          const ok = await upsertMealPlanOccurrence(st.recipeId, t, '', servings, st.countByType[t] || 1);
+          if (existingForType && (existingForType.variantLabel || '') !== variantLabel) {
+            await deleteMealPlanOccurrence(existingForType.id);
+          }
+          const ok = await upsertMealPlanOccurrence(st.recipeId, t, variantLabel, servings, st.countByType[t] || 1);
           if (!ok) allOk = false;
         }
       }
     } else {
       const t = st.tags[0] || null;
-      const ok = await upsertMealPlanOccurrence(st.recipeId, t, '', st.singleServings || 1, st.singleCount || 1);
+      const variantLabel = st.singleVariantLabel || '';
+      const existingForType = getOccurrences(st.recipeId).find(o => (o.mealType || '') === (t || ''));
+      if (existingForType && (existingForType.variantLabel || '') !== variantLabel) {
+        await deleteMealPlanOccurrence(existingForType.id);
+      }
+      const ok = await upsertMealPlanOccurrence(st.recipeId, t, variantLabel, st.singleServings || 1, st.singleCount || 1);
       if (!ok) allOk = false;
     }
     closePlanOccurrenceSheet();
@@ -3642,10 +3708,10 @@
     const st = planSheetState;
     if (!st) return;
     const mealType = st.isMulti ? st.selectedType : (st.tags[0] || null);
-    const occ = findOccurrence(st.recipeId, mealType, '');
+    const occ = findOccurrence(st.recipeId, mealType, currentSheetVariantLabel());
     if (!occ) { showToast('Rien à marquer pour ce repas'); return; }
     const recipeId = st.recipeId;
-    const restore = { mealType, servings: occ.servings, count: occ.count };
+    const restore = { mealType, variantLabel: occ.variantLabel || '', servings: occ.servings, count: occ.count };
 
     await deleteMealPlanOccurrence(occ.id);
     let engagementEventId = null;
@@ -3662,7 +3728,7 @@
     showToast('Marqué comme cuisiné', {
       actionLabel: 'Annuler',
       onAction: async () => {
-        await upsertMealPlanOccurrence(recipeId, restore.mealType, '', restore.servings, restore.count);
+        await upsertMealPlanOccurrence(recipeId, restore.mealType, restore.variantLabel, restore.servings, restore.count);
         if (engagementEventId) {
           await sb.from('recipe_engagement_events').delete().eq('id', engagementEventId);
           cookCounts[recipeId] = Math.max(0, (cookCounts[recipeId] || 1) - 1);
