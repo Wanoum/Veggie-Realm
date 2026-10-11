@@ -2017,11 +2017,28 @@
 
     function beginLiveDrag() {
       viewEl.style.position = 'fixed';
-      viewEl.style.inset = '0';
       viewEl.style.zIndex = '295';
       if (activeView.hasPhoto) {
+        // Fiche recette / recette partagée : déjà en plein-bleed (marges
+        // négatives qui annulent le padding du body), inset:0 ne change donc
+        // rien à son rendu normal.
+        viewEl.style.inset = '0';
         photoEl = viewEl.querySelector('.detail-photo');
         if (photoEl) photoEl.style.position = 'absolute';
+      } else {
+        // Page "normale" qui tient son padding du body (pas de marges
+        // négatives) : inset:0 l'ignorerait complètement et collerait son
+        // contenu aux bords de l'écran, sous la status bar. On capture donc
+        // sa position/largeur réelles juste avant de passer en fixed, pour
+        // les reproduire à l'identique.
+        const rect = viewEl.getBoundingClientRect();
+        viewEl.style.top = rect.top + 'px';
+        viewEl.style.left = rect.left + 'px';
+        viewEl.style.width = rect.width + 'px';
+        // Fond plein pour ne rien laisser transparaître derrière pendant le
+        // drag (ces pages n'ont pas de fond propre, elles comptent sur celui
+        // du body).
+        viewEl.style.background = getComputedStyle(document.body).backgroundColor;
       }
       revealEl = activeView.reveal ? document.getElementById(activeView.reveal) : null;
       if (revealEl) revealEl.style.display = 'block';
@@ -2041,6 +2058,10 @@
       // position:fixed résiduel la prochaine fois qu'elle est affichée.
       viewEl.style.position = '';
       viewEl.style.inset = '';
+      viewEl.style.top = '';
+      viewEl.style.left = '';
+      viewEl.style.width = '';
+      viewEl.style.background = '';
       viewEl.style.zIndex = '';
       if (photoEl) photoEl.style.position = '';
       scrimEl.style.display = 'none';
