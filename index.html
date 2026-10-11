@@ -217,11 +217,11 @@
 
 <div id="recipeSearchBar" class="floating-search glass-surface" style="display:none;">
   <i class="bi bi-search"></i>
-  <input id="recipeSearchInput" placeholder="Recherche" size="9" oninput="handleRecipeSearchInput()" />
+  <input id="recipeSearchInput" placeholder="Recherche" size="7" oninput="handleRecipeSearchInput()" />
 </div>
 <div id="planSearchBar" class="floating-search glass-surface" style="display:none;">
   <i class="bi bi-search"></i>
-  <input id="planSearchInput" placeholder="Recherche" size="9" oninput="handlePlanSearchInput()" />
+  <input id="planSearchInput" placeholder="Recherche" size="7" oninput="handlePlanSearchInput()" />
 </div>
 
 <nav id="bottomNav" style="display:none;">
@@ -374,7 +374,7 @@
       <span class="servings-value" id="planOccurrenceValue">1</span>
       <button type="button" class="servings-plus" id="planOccurrencePlus"><i class="bi bi-plus"></i></button>
     </div>
-    <button type="button" class="primary-btn" style="width:100%;margin-top:0;" onclick="savePlanOccurrenceSheet()"><i class="bi bi-check-lg"></i> Enregistrer</button>
+    <button type="button" id="planOccurrenceSaveBtn" class="primary-btn" style="width:100%;margin-top:0;" onclick="savePlanOccurrenceSheet()"><i class="bi bi-check-lg"></i> Enregistrer</button>
     <button type="button" class="secondary-btn" id="planOccurrenceCookedBtn" style="width:100%;display:none;" onclick="markOccurrenceCooked()"><i class="bi bi-check2-circle"></i> Marquer comme cuisiné</button>
     <button type="button" style="display:flex;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetPlanOccurrenceSheet()"><i class="bi bi-x-lg" style="text-decoration:none;"></i> Retirer la recette</button>
   </div>
@@ -972,15 +972,20 @@
   function addCurrentRecipeToPlanning(recipeId) {
     const r = allRecipesForPlanning().find(x => x.id === recipeId);
     if (!r) return;
+    // Reprend le nombre de personnes actuellement affiché sur la fiche
+    // (celui qu'on vient de regarder/ajuster), pas une valeur mémorisée à
+    // part — seulement si on part bien de la fiche de cette même recette.
+    const preferredServings = (recipes[currentDetailIndex] && recipes[currentDetailIndex].id === recipeId)
+      ? currentServings[currentDetailIndex] : null;
     const tags = recipeMealTypeTags(r);
     if (tags.length > 1) {
-      openPlanOccurrenceSheet(recipeId);
+      openPlanOccurrenceSheet(recipeId, preferredServings);
       return;
     }
     const mealType = tags[0] || null;
     const existing = findOccurrence(recipeId, mealType, '');
     const newCount = (existing?.count || 0) + 1;
-    const servings = existing?.servings ?? getServingsPerOccurrence(r);
+    const servings = existing?.servings ?? preferredServings ?? getServingsPerOccurrence(r);
     upsertMealPlanOccurrence(recipeId, mealType, '', servings, newCount).then(() => {
       showToast('Ajouté au planning');
       if (document.getElementById('planningView').style.display !== 'none') renderPlanningRecipes();
@@ -3518,7 +3523,7 @@
   // ---- Bottom sheet d'ajout/édition d'une occurrence de planning ----
   let planSheetState = null;
 
-  function openPlanOccurrenceSheet(recipeId) {
+  function openPlanOccurrenceSheet(recipeId, preferredServings) {
     const r = allRecipesForPlanning().find(x => x.id === recipeId);
     if (!r) return;
     const tags = recipeMealTypeTags(r);
@@ -3529,34 +3534,41 @@
     const variantByType = {};
     // Par défaut, reprend la version actuellement affichée sur la fiche
     // (selectedVariantLabel) quand aucune occurrence n'existe encore pour ce
-    // repas — cohérent avec "ce que je suis en train de regarder".
-    if (isMulti) {
-      // 0 si pas d'occurrence pour ce repas — qu'elle n'ait jamais existé ou
-      // qu'elle vienne d'être mise à 0 (et donc supprimée) : on affiche
-      // toujours exactement ce qui est enregistré, jamais une valeur par
-      // défaut qui donnerait l'impression qu'une modification n'a pas été
-      // prise en compte.
-      tags.forEach(t => {
-        const occ = existing.find(o => o.mealType === t);
-        servingsByType[t] = occ ? occ.servings : 0;
-        countByType[t] = occ ? occ.count : 1;
-        variantByType[t] = occ ? (occ.variantLabel || '') : (selectedVariantLabel || '');
-      });
-    }
+    // repas — cohérent avec "ce que je suis en train de regarder". Pareil
+    // pour le nombre de personnes (preferredServings, passé par l'appelant
+    // quand on vient de la fiche recette) : uniquement pour une NOUVELLE
+    // occurrence, jamais pour écraser une quantité déjà planifiée.
     // Un seul repas sélectionné à la fois (sélection simple, pas de puces
     // multi-sélectionnables) : plus clair sur ce qui est actuellement choisi.
     // Si la recette a déjà une occurrence, on l'affiche par défaut ; sinon le
     // premier repas possible.
     const existingType = existing.map(o => o.mealType).find(t => tags.includes(t));
+    const initialSelectedType = isMulti ? (existingType || tags[0]) : null;
+    if (isMulti) {
+      // 0 si pas d'occurrence pour ce repas — qu'elle n'ait jamais existé ou
+      // qu'elle vienne d'être mise à 0 (et donc supprimée) : on affiche
+      // toujours exactement ce qui est enregistré, jamais une valeur par
+      // défaut qui donnerait l'impression qu'une modification n'a pas été
+      // prise en compte. preferredServings ne s'applique qu'au repas
+      // sélectionné par défaut, pas à tous — sinon enregistrer sans rien
+      // toucher ajouterait la recette à tous les repas d'un coup.
+      tags.forEach(t => {
+        const occ = existing.find(o => o.mealType === t);
+        const defaultServings = (t === initialSelectedType && preferredServings != null) ? preferredServings : 0;
+        servingsByType[t] = occ ? occ.servings : defaultServings;
+        countByType[t] = occ ? occ.count : 1;
+        variantByType[t] = occ ? (occ.variantLabel || '') : (selectedVariantLabel || '');
+      });
+    }
     planSheetState = {
       recipeId,
       tags,
       isMulti,
-      selectedType: isMulti ? (existingType || tags[0]) : null,
+      selectedType: initialSelectedType,
       servingsByType,
       countByType,
       variantByType,
-      singleServings: !isMulti ? (existing[0]?.servings ?? getServingsPerOccurrence(r)) : null,
+      singleServings: !isMulti ? (existing[0]?.servings ?? preferredServings ?? getServingsPerOccurrence(r)) : null,
       singleCount: !isMulti ? (existing[0]?.count ?? 1) : null,
       singleVariantLabel: !isMulti ? (existing[0]?.variantLabel || selectedVariantLabel || '') : null
     };
@@ -3650,6 +3662,12 @@
     const mealType = st.isMulti ? st.selectedType : (st.tags[0] || null);
     const hasExistingOccurrence = !!findOccurrence(st.recipeId, mealType, currentSheetVariantLabel());
     document.getElementById('planOccurrenceCookedBtn').style.display = hasExistingOccurrence ? 'flex' : 'none';
+    // Ajouter (nouvelle occurrence) vs Enregistrer (occurrence déjà
+    // planifiée qu'on modifie) : le libellé générique "Enregistrer" ne
+    // disait pas clairement ce que faisait le bouton.
+    document.getElementById('planOccurrenceSaveBtn').innerHTML = hasExistingOccurrence
+      ? '<i class="bi bi-check-lg"></i> Enregistrer le repas prévu'
+      : '<i class="bi bi-check-lg"></i> Ajouter au repas prévu';
   }
 
   document.getElementById('planOccurrenceMinus').onclick = () => setSheetServings(currentSheetServings() - 1);
