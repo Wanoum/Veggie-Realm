@@ -30,16 +30,33 @@
 .icon { font-size: 20px; line-height: 1; color: var(--text-icon-default); }
 
 /* ---- Effet "verre" (glass) ----
-   Repris de l'effet Figma (fond blanc translucide + flou + bordure blanche
-   pleine) pour les éléments flottants au-dessus d'une photo ou d'un titre :
-   la recherche flottante et les boutons icône seule concernés. Sur un fond
-   de couleur plate (sans rien à flouter derrière), le flou ne fait rien de
-   visible — le fond/la bordure suffisent déjà à l'effet recherché. */
+   Repris de l'effet Figma (fond blanc translucide + flou) pour les éléments
+   flottants au-dessus d'une photo ou d'un titre : la recherche flottante et
+   les boutons icône seule concernés. Sur un fond de couleur plate (sans
+   rien à flouter derrière), le flou ne fait rien de visible — le fond/la
+   bordure suffisent déjà à l'effet recherché.
+   La bordure n'est pas une ligne pleine classique : CSS ne sait pas estomper
+   une bordure différemment par côté, donc un anneau en dégradé radial (via
+   pseudo-élément + masque) simule le même rendu "pleine au centre, qui
+   s'estompe vers les bords" que Figma. */
 .glass-surface {
+  position: relative;
   background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  border: none;
   backdrop-filter: blur(18px) saturate(180%);
   -webkit-backdrop-filter: blur(18px) saturate(180%);
+}
+.glass-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(ellipse 70% 100% at center, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 /* ---- Pastille d'action colorée (icône seule, fond teinté arrondi) ----
@@ -286,7 +303,7 @@
 .floating-search {
   position: fixed;
   left: var(--padding-horizontal-app);
-  right: var(--padding-horizontal-app);
+  width: fit-content;
   bottom: calc(var(--height-default) + 12px + env(safe-area-inset-bottom) + 8px);
   border-radius: var(--corner-radius-round);
   display: flex;
@@ -294,12 +311,9 @@
   gap: 8px;
   padding: 4px 8px;
   z-index: 90;
-  /* Bordure pleine en haut/bas de .glass-surface remplacée par un anneau à
-     dégradé radial (pleine au centre, qui s'estompe vers les côtés gauche/
-     droit) — même effet que le dégradé observé dans Figma sur une forme
-     allongée, qu'une bordure CSS classique ne peut pas reproduire. */
-  border: none;
 }
+/* Ellipse plus étirée que le ::before générique de .glass-surface — la
+   pilule est beaucoup plus large que haute, le dégradé doit s'étirer pareil. */
 .floating-search::before {
   content: '';
   position: absolute;
@@ -314,8 +328,7 @@
 }
 .floating-search i { font-size: 18px; color: var(--text-icon-default); flex-shrink: 0; }
 .floating-search input {
-  flex: 1;
-  min-width: 0;
+  width: 90px;
   border: none;
   background: none;
   font-family: 'Inter', sans-serif;
@@ -323,7 +336,7 @@
   color: var(--text-icon-default);
 }
 .floating-search input:focus { outline: none; }
-.floating-search input::placeholder { color: var(--text-icon-secondary); }
+.floating-search input::placeholder { color: var(--text-icon-default); }
 
 /* ---- Champs de formulaire ---- */
 .field-label { display:block; font-size:14px; color:var(--text-icon-secondary); margin:14px 0 4px; }
