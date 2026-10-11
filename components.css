@@ -666,6 +666,10 @@
 /* ---- Toast (confirmation courte, ex: "Recette enregistrée") ---- */
 .toast {
   position: fixed;
+  /* Sous les bottom sheets et dialogues (z-index 400+) : sinon un toast
+     affiché pendant qu'un sheet est ouvert passe par-dessus et cache ses
+     boutons d'action. */
+  z-index: 390;
   left: 50%;
   /* Même dégagement de la nav fixe que le padding bas du body
      (var(--height-default) + son padding vertical de 6px/6px), plus 8px
