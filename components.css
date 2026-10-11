@@ -68,7 +68,7 @@
   width: 40px;
   height: 24px;
   border: none;
-  border-radius: var(--corner-radius-default);
+  border-radius: var(--corner-radius-round);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -417,7 +417,7 @@
   font-family: 'Inter', sans-serif;
   font-size: 18px;
   line-height: 120%;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--text-icon-default);
   text-align: left;
 }

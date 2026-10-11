@@ -244,21 +244,19 @@
 </nav>
 
 <div id="accountView" style="display:none;">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
     <h1 style="margin:0;">Compte</h1>
     <button type="button" id="logoutBtn" class="icon-btn icon-btn-ghost" style="color:var(--text-icon-error);"><i class="bi bi-box-arrow-right" style="font-size:24px;"></i></button>
   </div>
+  <p class="text-small" style="color:var(--text-icon-secondary);margin:0 0 var(--gap-vertical-section);">Version du <span id="appBuildTime"></span></p>
   <div>
-    <p class="text-small-medium" style="color:var(--text-icon-secondary);margin:0 0 8px;">Profil</p>
     <div class="settings-list">
       <button type="button" class="settings-row" onclick="openAccountEdit('email')">
         <span>Email</span>
-        <span class="settings-row-value" id="account_email_value"></span>
         <i class="bi bi-chevron-right"></i>
       </button>
       <button type="button" class="settings-row" onclick="openAccountEdit('display_name')">
         <span>Pseudo</span>
-        <span class="settings-row-value" id="account_display_name_value"></span>
         <i class="bi bi-chevron-right"></i>
       </button>
       <button type="button" class="settings-row" onclick="openAccountEdit('password')">
@@ -267,16 +265,13 @@
       </button>
     </div>
 
-    <p class="text-small-medium" style="color:var(--text-icon-secondary);margin:0 0 8px;">Repas</p>
     <div class="settings-list">
       <button type="button" class="settings-row" onclick="openAccountEdit('default_servings')">
         <span>Personnes par défaut</span>
-        <span class="settings-row-value" id="account_default_servings_value"></span>
         <i class="bi bi-chevron-right"></i>
       </button>
       <button type="button" class="settings-row" onclick="openAccountEdit('default_variant_label')">
         <span>Version préférée</span>
-        <span class="settings-row-value" id="account_default_variant_value"></span>
         <i class="bi bi-chevron-right"></i>
       </button>
       <button type="button" class="settings-row" onclick="openAccountEdit('recipe_display')">
@@ -285,16 +280,18 @@
       </button>
     </div>
 
-    <p class="text-small-medium" style="color:var(--text-icon-secondary);margin:0 0 8px;">Application</p>
     <div class="settings-list">
       <button type="button" class="settings-row" onclick="openAccountEdit('language')">
         <span>Langue</span>
         <i class="bi bi-chevron-right"></i>
       </button>
+      <button type="button" class="settings-row" onclick="location.reload()">
+        <span>Mise à jour</span>
+        <i class="bi bi-chevron-right"></i>
+      </button>
     </div>
 
-    <p class="text-small" style="color:var(--text-icon-secondary);text-align:center;margin-top:16px;">Version du <span id="appBuildTime"></span></p>
-    <p style="text-align:center;margin-top:4px;">
+    <p style="text-align:center;margin-top:16px;">
       <button type="button" onclick="location.reload()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;">
         <i class="bi bi-arrow-repeat"></i> Mettre à jour l'application
       </button>
@@ -1653,13 +1650,8 @@
     updateNavIcons();
     sessionStorage.setItem('lastView', 'account');
 
-    document.getElementById('account_email_value').textContent = currentUser ? currentUser.email : '';
-
     const { data: profile } = await sb.from('profiles').select('display_name, default_servings').eq('id', currentUser.id).maybeSingle();
     accountProfileCache = profile || {};
-    document.getElementById('account_display_name_value').textContent = accountProfileCache.display_name || '—';
-    document.getElementById('account_default_servings_value').textContent = `${accountProfileCache.default_servings || 4} personnes`;
-    document.getElementById('account_default_variant_value').textContent = userDefaultVariantLabel || 'Base';
   }
 
   document.getElementById('navAccount').onclick = showAccount;
