@@ -110,6 +110,22 @@
 
 /* ---- Base / reset ---- */
 * { box-sizing: border-box; touch-action: manipulation; }
+/* Icônes SVG (src/icons/, sprite injecté juste après <body>, voir
+   <symbol id="icon-...">) : dimensionnées en 1em comme l'étaient les icônes
+   Bootstrap Icons qu'elles remplacent, pour que tout style="font-size:Npx"
+   déjà posé sur l'élément continue de fonctionner sans rien changer. La
+   couleur suit currentColor exactement pareil (les SVG sources utilisent
+   stroke="currentColor"/fill="currentColor"). */
+.icon-svg {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  vertical-align: -0.125em;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+}
+.icon-svg use { color: inherit; }
 input, select, textarea, button { outline: none; }
 /* Safari iOS applique son propre rendu natif aux <button> (dont le bleu
    système) tant que -webkit-appearance n'est pas désactivé — même quand une
