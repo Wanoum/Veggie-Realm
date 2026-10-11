@@ -266,6 +266,11 @@
 }
 .servings-stepper-lg .servings-minus { border-radius: 64px var(--corner-radius-small) var(--corner-radius-small) 64px; }
 .servings-stepper-lg .servings-plus { border-radius: var(--corner-radius-small) 64px 64px var(--corner-radius-small); }
+/* Courses > corriger une quantité : la valeur possédée (gros chiffre) et la
+   quantité cible ("/besoin unité", plus petite) doivent partager la même
+   ligne de base plutôt que d'être centrées verticalement l'une sur l'autre. */
+#courseQtyValue { align-items: baseline; }
+.course-qty-target { color: var(--text-icon-secondary); }
 
 /* ---- Champ "sélection" plat, sans bordure (dropdown dans un bottom sheet) ----
    Même traitement que les chips/stepper du sheet (fond plein, pas de

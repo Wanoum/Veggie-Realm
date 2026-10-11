@@ -482,6 +482,7 @@
     <div class="detail-sheet-handle"></div>
     <h2 id="courseQtyTitle" style="margin-bottom:var(--gap-vertical-section);"></h2>
     <div id="courseQtyStepperWrap" style="display:none;">
+      <label class="field-label">Quantité</label>
       <div class="servings-stepper servings-stepper-lg">
         <button type="button" class="servings-minus" id="courseQtyMinus"><svg class="icon-svg"><use href="#icon-minus-outline"/></svg></button>
         <span class="servings-value" id="courseQtyValue">0</span>
@@ -4043,9 +4044,7 @@
     const hasNumeric = qtyValue != null && qtyValue !== '';
     courseQtySheetMode = hasNumeric ? 'stepper' : 'text';
     courseQtySheetUnit = qtyUnit || '';
-    document.getElementById('courseQtyTitle').textContent = hasNumeric
-      ? `Combien de ${displayName} as-tu déjà chez toi ?`
-      : displayName;
+    document.getElementById('courseQtyTitle').textContent = displayName;
     document.getElementById('courseQtyStepperWrap').style.display = hasNumeric ? 'block' : 'none';
     document.getElementById('courseQtyInputWrap').style.display = hasNumeric ? 'none' : 'block';
     if (hasNumeric) {
@@ -4073,7 +4072,11 @@
     const clamped = Math.max(0, Math.min(courseQtySheetNeeded, v));
     const valueEl = document.getElementById('courseQtyValue');
     valueEl.dataset.rawValue = clamped;
-    valueEl.textContent = `${formatQuantityFr(clamped)}/${formatQuantityFr(courseQtySheetNeeded)}${courseQtySheetUnit ? ' ' + courseQtySheetUnit : ''}`;
+    // Le chiffre qu'on possède reste la grande valeur ; la quantité cible
+    // ("/besoin unité") est affichée plus petite, en style quantity-mono
+    // text-icon-secondary, alignée sur sa ligne de base.
+    const target = `/${formatQuantityFr(courseQtySheetNeeded)}${courseQtySheetUnit ? ' ' + courseQtySheetUnit : ''}`;
+    valueEl.innerHTML = `${escapeHtml(formatQuantityFr(clamped))}<span class="course-qty-target text-quantity-mono">${escapeHtml(target)}</span>`;
   }
 
   document.getElementById('courseQtyMinus').onclick = () => {
