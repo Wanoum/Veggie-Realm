@@ -1374,6 +1374,10 @@
     hideAllViews();
     document.getElementById('listView').style.display = 'block';
     document.getElementById('recipeSearchBar').style.display = 'flex';
+    // Tant que la barre est display:none, getBoundingClientRect() sur son
+    // contenu (y compris le miroir de mesure) renvoie toujours 0 : il faut
+    // remesurer une fois qu'elle est effectivement affichée.
+    sizeFloatingSearchInputs();
     document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('navHome').classList.add('active');
     updateNavIcons();
@@ -1697,6 +1701,7 @@
     hideAllViews();
     document.getElementById('planningView').style.display = 'block';
     document.getElementById('planSearchBar').style.display = 'flex';
+    sizeFloatingSearchInputs();
     document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('navPlanning').classList.add('active');
     updateNavIcons();
@@ -4452,6 +4457,7 @@
     document.getElementById('planningRecipesPanel').style.display = 'block';
     document.getElementById('planningCoursesPanel').style.display = 'none';
     document.getElementById('planSearchBar').style.display = 'flex';
+    sizeFloatingSearchInputs();
     setCoursesEditMode(false);
     updateCoursesMenuBtnIcon();
     renderPlanningRecipes();
