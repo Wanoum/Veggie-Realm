@@ -288,12 +288,11 @@
   left: var(--padding-horizontal-app);
   right: var(--padding-horizontal-app);
   bottom: calc(var(--height-default) + 12px + env(safe-area-inset-bottom) + 8px);
-  height: var(--height-default);
   border-radius: var(--corner-radius-round);
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 var(--padding-horizontal-default);
+  gap: 8px;
+  padding: 4px 8px;
   z-index: 90;
 }
 .floating-search i { font-size: 18px; color: var(--text-icon-default); flex-shrink: 0; }
