@@ -108,11 +108,6 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 }
 .row-item .ing-display-qty { flex: 0 0 90px; }
 .row-item .ing-display-name { flex: 1; min-width: 0; }
-.remove-row {
-  font-size: 18px;
-  width: 40px;
-  height: 32px;
-}
 .add-variant-card {
   width: 100%;
   background: var(--surface-lowest);
@@ -300,11 +295,6 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   overflow-y: hidden;
   min-height: 1.6em;
 }
-.step-row-remove {
-  font-size: 18px;
-  width: 40px;
-  height: 32px;
-}
 .steps-inline-input {
   width: 100%;
   min-height: calc(100dvh - 360px);
@@ -397,4 +387,3 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 }
 .plan-recipe-row .plan-recipe-name { font-size: 16px; font-weight: 500; }
 .plan-recipe-row .plan-recipe-tags { font-size: 14px; color: var(--text-icon-secondary); margin-top: 2px; }
-.plan-card-action-btn { width: 44px; height: 44px; font-size: 20px; }
