@@ -271,7 +271,7 @@
   width: 100%;
   height: var(--height-default);
   padding: 0 var(--padding-horizontal-default);
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--border-accent);
   border-radius: var(--corner-radius-default);
   font-family: 'Inter', sans-serif;
   font-size: 18px;
@@ -289,7 +289,7 @@
   gap: 10px;
   height: var(--height-default);
   padding: 0 var(--padding-horizontal-default);
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--border-accent);
   border-radius: var(--corner-radius-default);
   background: var(--surface-highest);
 }
