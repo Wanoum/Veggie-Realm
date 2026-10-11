@@ -188,10 +188,11 @@
   <!-- Étape 1 : source -->
   <div id="wizardStep1" class="wizard-step">
     <div class="wizard-url-card">
+      <img src="src/card-big-pattern.svg" alt="" class="wizard-url-card-bg" />
       <p class="wizard-url-card-title">Depuis un site web</p>
       <div style="display:flex;gap:8px;">
-        <input id="import_url" class="wizard-url-input" placeholder="Coller un lien" oninput="updateImportButtonState()" />
-        <button type="button" id="importFetchBtn" class="wizard-url-go-btn" onclick="performImport()" disabled><svg class="icon-svg"><use href="#icon-arrow-right-outline"/></svg></button>
+        <input id="import_url" class="field-input" style="flex:1;min-width:0;" placeholder="Coller un lien" oninput="updateImportButtonState()" />
+        <button type="button" id="importFetchBtn" class="secondary-btn btn-square" style="margin-top:0;" onclick="performImport()" disabled><svg class="icon-svg"><use href="#icon-arrow-right-outline"/></svg></button>
       </div>
       <p id="importStatus" class="wizard-url-status"></p>
     </div>
