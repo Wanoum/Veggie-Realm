@@ -418,6 +418,7 @@
   <div style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
     <div class="detail-sheet-handle"></div>
     <div id="variantPickerList"></div>
+    <button type="button" id="createVariantBtn" style="display:flex;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);"><i class="bi bi-plus-circle-fill"></i> <span style="text-decoration:underline;">Créer une version</span></button>
   </div>
 </div>
 
@@ -763,11 +764,7 @@
         </button>
         ${row.label ? `<button type="button" class="icon-pill-btn icon-pill-btn-danger" style="margin-left:10px;" data-delete-variant="${escapeHtml(row.label)}"><i class="bi bi-trash"></i></button>` : ''}
       </div>
-    `).join('') + `
-      <button type="button" class="settings-row" style="color:var(--text-icon-accent);" data-create-variant>
-        <span><i class="bi bi-plus-circle-fill"></i> Créer une version</span>
-      </button>
-    `;
+    `).join('');
     const wireRows = () => {
       listEl.innerHTML = renderRows();
       listEl.querySelectorAll('[data-pick-variant]').forEach(btn => {
@@ -783,12 +780,12 @@
           wireRows();
         };
       });
-      listEl.querySelector('[data-create-variant]').onclick = () => {
-        closeVariantPickerSheet();
-        createVersionForCurrentRecipe();
-      };
     };
     wireRows();
+    document.getElementById('createVariantBtn').onclick = () => {
+      closeVariantPickerSheet();
+      createVersionForCurrentRecipe();
+    };
     document.getElementById('variantPickerSheet').style.display = 'flex';
     lockBackgroundScroll();
   }
