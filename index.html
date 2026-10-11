@@ -75,7 +75,7 @@
   <div id="tagFilters" class="tag-filters"></div>
 
   <div id="savedRecipesSection" style="display:none;margin-bottom:20px;">
-    <button type="button" onclick="showSavedRecipes()" style="display:block;background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;">Recettes partagées avec toi</button>
+    <button type="button" onclick="showSavedRecipes()" style="display:flex;align-items:center;gap:4px;background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;">Recettes partagées <i class="bi bi-chevron-right" style="text-decoration:none;"></i></button>
   </div>
 
   <p class="count" id="count">Chargement...</p>
@@ -295,7 +295,7 @@
 
     <p class="text-small" style="color:var(--text-icon-secondary);text-align:center;margin-top:16px;">Version du <span id="appBuildTime"></span></p>
     <p style="text-align:center;margin-top:4px;">
-      <button type="button" onclick="location.reload()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;">
+      <button type="button" onclick="location.reload()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;">
         <i class="bi bi-arrow-repeat"></i> Mettre à jour l'application
       </button>
     </p>
@@ -334,7 +334,7 @@
 
   <div id="planningCoursesPanel" style="display:none;">
     <div id="coursesSortRow" style="display:none;margin-bottom:var(--gap-default);position:relative;">
-      <button type="button" id="coursesSortBtn" style="background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;display:flex;align-items:center;gap:4px;" onclick="toggleCoursesSortMenu()">
+      <button type="button" id="coursesSortBtn" style="background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;display:flex;align-items:center;gap:4px;" onclick="toggleCoursesSortMenu()">
         <span id="coursesSortLabel">Trier : Par rayon</span> <i class="bi bi-chevron-down" style="text-decoration:none;"></i>
       </button>
       <div id="coursesSortMenu" class="course-sort-menu" style="display:none;left:0;right:auto;">
@@ -376,7 +376,7 @@
     </div>
     <button type="button" class="primary-btn" style="width:100%;margin-top:0;" onclick="savePlanOccurrenceSheet()"><i class="bi bi-check-lg"></i> Enregistrer</button>
     <button type="button" class="secondary-btn" id="planOccurrenceCookedBtn" style="width:100%;display:none;" onclick="markOccurrenceCooked()"><i class="bi bi-check2-circle"></i> Marquer comme cuisiné</button>
-    <button type="button" style="display:block;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetPlanOccurrenceSheet()">Retirer la recette</button>
+    <button type="button" style="display:block;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetPlanOccurrenceSheet()">Retirer la recette</button>
   </div>
 </div>
 
@@ -397,7 +397,7 @@
       <input id="courseQtyInput" class="field-input" placeholder="ex: 500 g" />
     </div>
     <button type="button" class="primary-btn" style="width:100%;margin-top:16px;" onclick="saveCourseQtySheet()"><i class="bi bi-check-lg"></i> Enregistrer</button>
-    <button type="button" style="display:flex;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetCourseQtySheet()"><i class="bi bi-arrow-counterclockwise" style="text-decoration:none;"></i> Réinitialiser cette quantité</button>
+    <button type="button" style="display:flex;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetCourseQtySheet()"><i class="bi bi-arrow-counterclockwise" style="text-decoration:none;"></i> Réinitialiser cette quantité</button>
   </div>
 </div>
 
@@ -418,7 +418,7 @@
   <div style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
     <div class="detail-sheet-handle"></div>
     <div id="variantPickerList"></div>
-    <button type="button" id="createVariantBtn" style="display:flex;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);"><i class="bi bi-plus-circle-fill"></i> <span style="text-decoration:underline;">Créer une version</span></button>
+    <button type="button" id="createVariantBtn" style="display:flex;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);"><i class="bi bi-plus-circle-fill"></i> <span style="text-decoration:underline;">Créer une version</span></button>
   </div>
 </div>
 
@@ -909,14 +909,14 @@
     const ingredientsHeaderHtml = hasVariants ? `
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <h2 style="margin:0;">Ingrédients</h2>
-        <button type="button" onclick="openVariantPickerSheet(${i})" style="background:none;border:none;padding:0;display:flex;align-items:center;gap:2px;font-family:'Inter',sans-serif;font-size:16px;color:var(--text-icon-accent);">
+        <button type="button" onclick="openVariantPickerSheet(${i})" style="background:none;border:none;padding:0;display:flex;align-items:center;gap:2px;font-family:'Inter',sans-serif;font-size:16px;font-weight:500;color:var(--text-icon-accent);">
           <span style="text-decoration:underline;">Version : ${escapeHtml(selectedVariantLabel || 'Base')}</span> <i class="bi bi-chevron-down"></i>
         </button>
       </div>
     ` : `
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <h2 style="margin:0;">Ingrédients</h2>
-        <button type="button" onclick="createVersionForCurrentRecipe()" style="background:none;border:none;padding:0;display:flex;align-items:center;gap:4px;font-family:'Inter',sans-serif;font-size:16px;color:var(--text-icon-accent);">
+        <button type="button" onclick="createVersionForCurrentRecipe()" style="background:none;border:none;padding:0;display:flex;align-items:center;gap:4px;font-family:'Inter',sans-serif;font-size:16px;font-weight:500;color:var(--text-icon-accent);">
           <i class="bi bi-plus-circle-fill"></i> <span style="text-decoration:underline;">Créer une version</span>
         </button>
       </div>
