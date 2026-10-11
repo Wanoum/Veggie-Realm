@@ -805,7 +805,6 @@
     }
     cardsEl.innerHTML = filteredIndices.map(i => {
       const r = recipes[i];
-      const cookCount = cookCounts[r.id] || 0;
       return `
       <div class="card-v2" onclick="openRecipeDetail(${i})">
         <div class="card-v2-photo">
@@ -819,7 +818,6 @@
         </div>
         <div class="card-v2-content">
           <h3>${escapeHtml(r.title)}</h3>
-          ${cookCount > 0 ? `<span class="tag">${cookCountLabel(cookCount)}</span>` : ''}
         </div>
       </div>
     `;
@@ -994,13 +992,6 @@
     (data || []).forEach(row => { cookCounts[row.recipe_id] = (cookCounts[row.recipe_id] || 0) + 1; });
   }
 
-  // "10+" plutôt que "10" : le signal ne capte que les recettes cuisinées
-  // via le cook mode jusqu'à la dernière étape, donc c'est un plancher, pas
-  // un compte exact.
-  function cookCountLabel(n) {
-    return n === 1 ? 'Cuisiné 1x' : `Cuisiné ${n}+x`;
-  }
-
   // Point d'entrée pour une VRAIE navigation vers une fiche recette (clic
   // depuis l'accueil ou le planning) — distinct de showDetail() elle-même,
   // qui est aussi rappelée pour restaurer l'écran après un rechargement ou
@@ -1012,11 +1003,36 @@
     showDetail(i, returnView);
   }
 
-  function showDetail(i, returnView) {
+  // Précharge une image (photo distante ou motif local) avant de l'afficher,
+  // pour éviter le flash "fond blanc" le temps que l'image arrive pendant
+  // l'animation d'entrée de la fiche recette. Plafonné à 400ms : au-delà,
+  // on part quand même (réseau lent) plutôt que de bloquer la navigation.
+  function preloadImage(url, timeoutMs = 400) {
+    if (!url) return Promise.resolve();
+    return new Promise(resolve => {
+      let done = false;
+      const finish = () => { if (!done) { done = true; resolve(); } };
+      const img = new Image();
+      img.onload = finish;
+      img.onerror = finish;
+      img.src = url;
+      if (img.complete) finish();
+      setTimeout(finish, timeoutMs);
+    });
+  }
+
+  // Position de scroll de la liste (accueil ou planning) juste avant
+  // d'ouvrir une fiche recette, pour la restaurer telle quelle au retour
+  // (goBackFromDetail) plutôt que de toujours revenir tout en haut.
+  let scrollYBeforeDetail = 0;
+
+  async function showDetail(i, returnView) {
+    const r = recipes[i];
+    await preloadImage(safeUrl(r.photo_url) || pickCardImage(r.id, 'big'));
+    scrollYBeforeDetail = window.scrollY || document.documentElement.scrollTop || 0;
     window.scrollTo(0, 0);
     currentDetailIndex = i;
     detailReturnView = returnView || 'home';
-    const r = recipes[i];
     const savedServings = loadRecipeServings()[r.id];
     const defaultServings = isPieceMode(r) ? 1 : userDefaultServings;
     currentServings[i] = savedServings != null ? savedServings : defaultServings;
@@ -1028,11 +1044,21 @@
     // en dessous (repris tel quel plus loin dans le wizard d'édition, faute
     // de hauteur pour le masquer).
     hideAllViews();
-    document.getElementById('detailView').style.display = 'block';
+    const detailEl = document.getElementById('detailView');
+    // Remise à zéro défensive : detailView (contrairement à son contenu,
+    // entièrement reconstruit par renderDetail juste en dessous) persiste
+    // d'un affichage à l'autre, et pourrait en théorie garder une marge/
+    // position résiduelle d'une animation ou d'un geste de retour
+    // précédent — vu en pratique (marge visible autour de la photo).
+    detailEl.style.margin = '';
+    detailEl.style.position = '';
+    detailEl.style.transform = '';
+    detailEl.style.transition = '';
+    detailEl.style.display = 'block';
     document.getElementById('bottomNav').style.display = 'none';
     document.body.style.background = 'var(--surface-high)';
     renderDetail(i);
-    animatePageEnter(document.getElementById('detailView'));
+    animatePageEnter(detailEl);
     sessionStorage.setItem('lastView', 'detail');
     sessionStorage.setItem('lastDetailRecipeId', r.id);
     try { sessionStorage.setItem('lastDetailRecipeData', JSON.stringify(r)); } catch (e) { /* ignoré si trop volumineux */ }
@@ -1160,7 +1186,6 @@
   }
 
   function goBackFromDetail() {
-    window.scrollTo(0, 0);
     const detailEl = document.getElementById('detailView');
     detailEl.style.display = 'none';
     detailEl.style.transition = '';
@@ -1168,6 +1193,7 @@
     detailEl.style.opacity = '';
     detailEl.style.position = '';
     detailEl.style.inset = '';
+    detailEl.style.margin = '';
     detailEl.style.zIndex = '';
     document.getElementById('edgeSwipeScrim').style.display = 'none';
     document.getElementById('edgeSwipeScrim').style.opacity = '';
@@ -1179,6 +1205,10 @@
       document.getElementById('bottomNav').style.display = 'flex';
       sessionStorage.setItem('lastView', 'home');
     }
+    // Restaure la position de scroll de la liste d'où on venait, au lieu de
+    // toujours revenir tout en haut — après showPlanning() (qui scrolle lui-
+    // même en haut) pour que ce soit cette valeur qui l'emporte.
+    window.scrollTo(0, scrollYBeforeDetail);
     detailReturnView = 'home';
   }
 
