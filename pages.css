@@ -368,6 +368,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   border-radius: var(--corner-radius-small);
   padding: 2px 6px;
 }
+.course-item-edit { cursor: default; }
 .course-rayon-group { margin-bottom: 8px; }
 .course-rayon-header {
   width: 100%;

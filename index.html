@@ -311,7 +311,10 @@
 <div id="planningView" style="display:none;">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);">
     <h1 style="margin:0;">Courses</h1>
-    <button type="button" class="icon-btn" id="coursesResetBtn" style="color:var(--text-icon-accent);"><i class="bi bi-arrow-counterclockwise"></i></button>
+    <div style="display:flex;gap:8px;">
+      <button type="button" class="icon-btn" id="coursesEditBtn" style="display:none;color:var(--text-icon-accent);"><i class="bi bi-pencil"></i></button>
+      <button type="button" class="icon-btn" id="coursesResetBtn" style="color:var(--text-icon-accent);"><i class="bi bi-arrow-counterclockwise"></i></button>
+    </div>
   </div>
   <div class="subtabs">
     <button id="subtabRecipes" class="subtab-btn active">Repas prévus</button>
@@ -329,8 +332,22 @@
   </div>
 
   <div id="planningCoursesPanel" style="display:none;">
+    <div id="coursesSortRow" style="display:none;margin-bottom:var(--gap-default);position:relative;">
+      <button type="button" id="coursesSortBtn" style="background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;display:flex;align-items:center;gap:4px;" onclick="toggleCoursesSortMenu()">
+        <span id="coursesSortLabel">Trier : Par rayon</span> <i class="bi bi-chevron-down" style="text-decoration:none;"></i>
+      </button>
+      <div id="coursesSortMenu" class="course-sort-menu" style="display:none;left:0;right:auto;">
+        <button type="button" class="course-sort-menu-item text-body" data-sort-mode="rayon"><span>Par rayon</span><i class="bi bi-check-lg course-sort-menu-check"></i></button>
+        <button type="button" class="course-sort-menu-item text-body" data-sort-mode="recipe"><span>Par recette</span><i class="bi bi-check-lg course-sort-menu-check"></i></button>
+      </div>
+    </div>
     <div id="coursesList"></div>
   </div>
+</div>
+
+<div id="coursesEditFooter" class="fixed-action-footer" style="display:none;">
+  <button type="button" class="secondary-btn" style="margin-top:0;flex:1;" onclick="setCoursesEditMode(false)"><i class="bi bi-x-lg"></i> Annuler</button>
+  <button type="button" class="icon-pill-btn icon-pill-btn-accent" style="width:var(--height-default);height:var(--height-default);flex-shrink:0;" onclick="setCoursesEditMode(false)"><i class="bi bi-check-lg" style="font-size:20px;"></i></button>
 </div>
 
 <div id="planOccurrenceSheet" style="display:none;">
@@ -376,7 +393,7 @@
       <input id="courseQtyInput" class="field-input" placeholder="ex: 500 g" />
     </div>
     <button type="button" class="primary-btn" style="width:100%;margin-top:16px;" onclick="saveCourseQtySheet()"><i class="bi bi-check-lg"></i> Enregistrer</button>
-    <button type="button" style="display:block;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetCourseQtySheet()">Revenir au calcul automatique</button>
+    <button type="button" style="display:flex;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetCourseQtySheet()"><i class="bi bi-arrow-counterclockwise" style="text-decoration:none;"></i> Réinitialiser cette quantité</button>
   </div>
 </div>
 
@@ -3746,20 +3763,27 @@
   let courseQtySheetKey = null;
   let courseQtySheetMode = 'text'; // 'stepper' | 'text'
   let courseQtySheetUnit = '';
+  let courseQtySheetNeeded = 0;
 
   function openCourseQtySheet(key, displayName, computedQtyText, qtyValue, qtyUnit) {
     courseQtySheetKey = key;
-    document.getElementById('courseQtyTitle').textContent = displayName;
     const overrides = loadQtyOverrides();
     const hasNumeric = qtyValue != null && qtyValue !== '';
     courseQtySheetMode = hasNumeric ? 'stepper' : 'text';
     courseQtySheetUnit = qtyUnit || '';
+    document.getElementById('courseQtyTitle').textContent = hasNumeric
+      ? `Combien de ${displayName} as-tu déjà chez toi ?`
+      : displayName;
     document.getElementById('courseQtyStepperWrap').style.display = hasNumeric ? 'block' : 'none';
     document.getElementById('courseQtyInputWrap').style.display = hasNumeric ? 'none' : 'block';
     if (hasNumeric) {
+      courseQtySheetNeeded = parseFloat(qtyValue);
+      // "As-tu déjà chez toi" : le stepper porte ce qu'on a déjà (0 par
+      // défaut), pas le reste à acheter — déduit du reste à acheter stocké
+      // (needed - override) si une correction existe déjà.
       const overrideNum = overrides[key] != null ? parseFloat(overrides[key]) : NaN;
-      const startValue = !Number.isNaN(overrideNum) ? overrideNum : parseFloat(qtyValue);
-      setCourseQtyStepperValue(startValue);
+      const startHave = !Number.isNaN(overrideNum) ? Math.max(0, courseQtySheetNeeded - overrideNum) : 0;
+      setCourseQtyStepperValue(startHave);
     } else {
       document.getElementById('courseQtyInput').value = overrides[key] != null ? overrides[key] : computedQtyText;
     }
@@ -3774,10 +3798,10 @@
   }
 
   function setCourseQtyStepperValue(v) {
-    const clamped = Math.max(0, v);
+    const clamped = Math.max(0, Math.min(courseQtySheetNeeded, v));
     const valueEl = document.getElementById('courseQtyValue');
     valueEl.dataset.rawValue = clamped;
-    valueEl.textContent = `${formatQuantityFr(clamped)}${courseQtySheetUnit ? ' ' + courseQtySheetUnit : ''}`;
+    valueEl.textContent = `${formatQuantityFr(clamped)}/${formatQuantityFr(courseQtySheetNeeded)}${courseQtySheetUnit ? ' ' + courseQtySheetUnit : ''}`;
   }
 
   document.getElementById('courseQtyMinus').onclick = () => {
@@ -3800,8 +3824,12 @@
     if (!courseQtySheetKey) return;
     const overrides = loadQtyOverrides();
     if (courseQtySheetMode === 'stepper') {
-      const raw = parseFloat(document.getElementById('courseQtyValue').dataset.rawValue || '0');
-      overrides[courseQtySheetKey] = `${formatQuantityFr(raw)}${courseQtySheetUnit ? ' ' + courseQtySheetUnit : ''}`.trim();
+      const have = parseFloat(document.getElementById('courseQtyValue').dataset.rawValue || '0');
+      const remaining = Math.max(0, courseQtySheetNeeded - have);
+      // Rien chez soi = rien à corriger : on retombe sur le calcul
+      // automatique plutôt que de stocker une correction redondante.
+      if (have <= 0) delete overrides[courseQtySheetKey];
+      else overrides[courseQtySheetKey] = `${formatQuantityFr(remaining)}${courseQtySheetUnit ? ' ' + courseQtySheetUnit : ''}`.trim();
     } else {
       const value = document.getElementById('courseQtyInput').value.trim();
       if (value) overrides[courseQtySheetKey] = value; else delete overrides[courseQtySheetKey];
@@ -3897,6 +3925,39 @@
   const COURSES_QTY_OVERRIDE_KEY = 'veggieRealm.coursesQtyOverrides';
   let collapsedRayons = new Set();
   let courseRecheckTimeout = null;
+  // Mode édition de la liste : pour l'instant juste la mise en forme (poignée
+  // décorative, quantités non cliquables) — le vrai glisser-déposer entre
+  // rayons n'est pas encore câblé.
+  let coursesEditMode = false;
+  let coursesSortMode = 'rayon'; // 'rayon' | 'recipe'
+
+  function setCoursesEditMode(on) {
+    coursesEditMode = on;
+    document.getElementById('coursesEditFooter').style.display = on ? 'flex' : 'none';
+    document.getElementById('bottomNav').style.display = on ? 'none' : 'flex';
+    document.getElementById('coursesSortRow').style.display = on ? 'block' : 'none';
+    document.getElementById('coursesSortMenu').style.display = 'none';
+    renderCoursesList();
+  }
+
+  function toggleCoursesSortMenu() {
+    const menu = document.getElementById('coursesSortMenu');
+    if (menu.style.display === 'none') {
+      menu.querySelectorAll('[data-sort-mode]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.sortMode === coursesSortMode);
+      });
+    }
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  }
+
+  document.querySelectorAll('#coursesSortMenu [data-sort-mode]').forEach(btn => {
+    btn.onclick = () => {
+      coursesSortMode = btn.dataset.sortMode;
+      document.getElementById('coursesSortLabel').textContent = `Trier : ${btn.dataset.sortMode === 'rayon' ? 'Par rayon' : 'Par recette'}`;
+      document.getElementById('coursesSortMenu').style.display = 'none';
+      renderCoursesList();
+    };
+  });
 
   function loadCheckedCourses() {
     try { return JSON.parse(localStorage.getItem(COURSES_CHECKED_KEY)) || {}; } catch { return {}; }
@@ -3989,6 +4050,19 @@
 
     const renderItemRow = (item) => {
       const su = singleNumericUnit(item);
+      if (coursesEditMode) {
+        // Pas de case à cocher en mode édition : la poignée sert au
+        // réordonnancement/déplacement entre rayons — pas encore câblé, juste
+        // la mise en forme pour l'instant. Quantité visible pour le contexte
+        // mais non cliquable (pas encore modifiable depuis ce mode).
+        return `
+        <div class="course-item course-item-edit" data-course-row="${escapeHtml(item.key)}">
+          <span class="step-drag-handle"><i class="bi bi-grip-vertical"></i></span>
+          <span class="text-body course-item-name">${escapeHtml(item.displayName)}</span>
+          <span class="text-quantity-mono" style="opacity:0.3;">${displayQtyText(item)}</span>
+        </div>
+      `;
+      }
       return `
       <div class="course-item ${checked[item.key] ? 'checked' : ''}" data-course-row="${escapeHtml(item.key)}">
         <input type="checkbox" data-course-checkbox="${escapeHtml(item.key)}" ${checked[item.key] ? 'checked' : ''} tabindex="-1" />
@@ -4006,31 +4080,62 @@
     };
     const byName = (a, b) => a.displayName.localeCompare(b.displayName, 'fr');
 
-    // Toujours groupé par rayon (plus de choix de tri affiché à l'écran).
-    const byRayon = {};
-    items.forEach(item => {
-      (byRayon[item.rayon] = byRayon[item.rayon] || []).push(item);
-    });
-    const rayonOrder = [...RAYON_KEYWORDS.map(([r]) => r), RAYON_FALLBACK];
-    const bodyHtml = rayonOrder.filter(rayon => byRayon[rayon]?.length).map(rayon => {
-      const rayonItems = byRayon[rayon].sort(byCheckedThen(byName));
-      const checkedCount = rayonItems.filter(item => checked[item.key]).length;
-      const isCollapsed = collapsedRayons.has(rayon);
+    const renderGroup = (groupKey, groupLabel, groupItems) => {
+      const sortedItems = groupItems.sort(byCheckedThen(byName));
+      const checkedCount = sortedItems.filter(item => checked[item.key]).length;
+      const isCollapsed = collapsedRayons.has(groupKey);
       return `
         <div class="course-rayon-group">
-          <button type="button" class="course-rayon-header" data-rayon-toggle="${escapeHtml(rayon)}">
-            <span class="text-body" style="font-weight:500;color:var(--text-icon-default);">${escapeHtml(rayon)}</span>
+          <button type="button" class="course-rayon-header" data-rayon-toggle="${escapeHtml(groupKey)}">
+            <span class="text-body" style="font-weight:500;color:var(--text-icon-default);">${escapeHtml(groupLabel)}</span>
             <span style="display:flex;align-items:center;gap:8px;">
-              <span class="course-rayon-count text-quantity-mono">${checkedCount} de ${rayonItems.length}</span>
+              ${coursesEditMode ? '' : `<span class="course-rayon-count text-quantity-mono">${checkedCount} de ${sortedItems.length}</span>`}
               <i class="bi ${isCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'}" style="color:var(--text-icon-default);"></i>
             </span>
           </button>
           <div ${isCollapsed ? 'style="display:none;"' : ''}>
-            ${rayonItems.map(renderItemRow).join('')}
+            ${sortedItems.map(renderItemRow).join('')}
           </div>
         </div>
       `;
-    }).join('');
+    };
+
+    let bodyHtml;
+    if (coursesSortMode === 'recipe') {
+      // Regroupe par recette plutôt que par rayon : chaque recette liste ses
+      // propres ingrédients (quantités propres à cette recette, pas la somme
+      // toutes recettes confondues) — même clé d'ingrédient partagée pour
+      // que coche/correction restent cohérentes entre les deux vues.
+      const recipeGroups = [];
+      allRecipesForPlanning().forEach(r => {
+        const occs = getOccurrences(r.id);
+        if (occs.length === 0) return;
+        const base = getRecipeBase(r);
+        const totalUnits = occs.reduce((sum, o) => sum + (o.count || 1) * (o.servings || 1), 0);
+        const recipeAgg = {};
+        (r.ingredients || []).forEach(ing => {
+          if (!ing.name || !ing.name.trim()) return;
+          const nameKey = normalize(ing.name).replace(/s$/, '');
+          const unitKey = normalize(ing.unit);
+          const scaledQty = ing.quantity != null ? (ing.quantity * totalUnits / base) : null;
+          if (!recipeAgg[nameKey]) recipeAgg[nameKey] = { displayName: ing.name.trim(), rayon: categorizeIngredient(ing.name), units: {} };
+          if (!recipeAgg[nameKey].units[unitKey]) recipeAgg[nameKey].units[unitKey] = { label: ing.unit || '', quantity: scaledQty };
+          else if (scaledQty != null) recipeAgg[nameKey].units[unitKey].quantity = (recipeAgg[nameKey].units[unitKey].quantity || 0) + scaledQty;
+        });
+        const recipeItems = Object.entries(recipeAgg).map(([key, item]) => ({ key, ...item }));
+        if (recipeItems.length) recipeGroups.push({ key: `recipe:${r.id}`, title: r.title, items: recipeItems });
+      });
+      bodyHtml = recipeGroups.map(g => renderGroup(g.key, g.title, g.items)).join('');
+    } else {
+      const byRayon = {};
+      items.forEach(item => {
+        (byRayon[item.rayon] = byRayon[item.rayon] || []).push(item);
+      });
+      const rayonOrder = [...RAYON_KEYWORDS.map(([r]) => r), RAYON_FALLBACK];
+      bodyHtml = rayonOrder.filter(rayon => byRayon[rayon]?.length)
+        .map(rayon => renderGroup(rayon, rayon, byRayon[rayon]))
+        .join('');
+    }
 
     listEl.innerHTML = bodyHtml;
 
@@ -4041,14 +4146,16 @@
       };
     });
 
-    listEl.querySelectorAll('[data-course-row]').forEach(row => {
-      row.onclick = (e) => {
-        if (e.target.closest('[data-edit-qty]')) return;
-        const checkbox = row.querySelector('[data-course-checkbox]');
-        checkbox.checked = !checkbox.checked;
-        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-      };
-    });
+    if (!coursesEditMode) {
+      listEl.querySelectorAll('[data-course-row]').forEach(row => {
+        row.onclick = (e) => {
+          if (e.target.closest('[data-edit-qty]')) return;
+          const checkbox = row.querySelector('[data-course-checkbox]');
+          checkbox.checked = !checkbox.checked;
+          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+        };
+      });
+    }
 
     listEl.querySelectorAll('[data-rayon-toggle]').forEach(btn => {
       btn.onclick = () => {
@@ -4122,11 +4229,20 @@
     }
   };
 
+  document.getElementById('coursesEditBtn').onclick = () => setCoursesEditMode(!coursesEditMode);
+
+  document.addEventListener('click', (e) => {
+    const sortMenu = document.getElementById('coursesSortMenu');
+    if (sortMenu && sortMenu.style.display !== 'none' && !e.target.closest('#coursesSortRow')) sortMenu.style.display = 'none';
+  });
+
   document.getElementById('subtabRecipes').onclick = () => {
     document.getElementById('subtabRecipes').classList.add('active');
     document.getElementById('subtabCourses').classList.remove('active');
     document.getElementById('planningRecipesPanel').style.display = 'block';
     document.getElementById('planningCoursesPanel').style.display = 'none';
+    document.getElementById('coursesEditBtn').style.display = 'none';
+    setCoursesEditMode(false);
     renderPlanningRecipes();
   };
 
@@ -4135,6 +4251,7 @@
     document.getElementById('subtabRecipes').classList.remove('active');
     document.getElementById('planningCoursesPanel').style.display = 'block';
     document.getElementById('planningRecipesPanel').style.display = 'none';
+    document.getElementById('coursesEditBtn').style.display = 'flex';
     renderCoursesList();
   };
 
