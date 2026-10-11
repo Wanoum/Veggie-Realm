@@ -305,13 +305,14 @@
    prendre sa place dans le flux de la page. */
 .floating-search {
   position: fixed;
-  left: var(--padding-horizontal-app);
+  left: 50%;
+  transform: translateX(-50%);
   width: fit-content;
   bottom: calc(var(--height-default) + 12px + env(safe-area-inset-bottom) + 8px);
   border-radius: var(--corner-radius-round);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   padding: 4px 8px;
   z-index: 90;
 }
@@ -331,7 +332,6 @@
 }
 .floating-search i { font-size: 18px; color: var(--text-icon-default); flex-shrink: 0; }
 .floating-search input {
-  width: 90px;
   border: none;
   background: none;
   font-family: 'Inter', sans-serif;
