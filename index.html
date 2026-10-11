@@ -693,6 +693,24 @@
     catch (e) { console.error('setUserDefaultVariantLabel', e); }
   }
 
+  // Supprime une version sans toucher au reste de la recette (contrairement
+  // à "Supprimer la recette", qui efface tout). Pas encore câblée à un bouton
+  // — fonction prête, l'emplacement dans l'UI reste à designer.
+  async function deleteVariant(recipeId, label) {
+    const r = recipes.find(x => x.id === recipeId);
+    if (!r) return;
+    const updatedVariants = (r.variants || []).filter(v => v.label !== label);
+    const { error } = await sb.from('recipes').update({ variants: updatedVariants }).eq('id', recipeId);
+    if (error) { console.error('deleteVariant', error); return; }
+    r.variants = updatedVariants;
+    if (selectedVariantLabel === label) selectedVariantLabel = '';
+    if (userDefaultVariantLabel === label) await setUserDefaultVariantLabel('');
+    const idx = recipes.findIndex(x => x.id === recipeId);
+    if (idx === currentDetailIndex && document.getElementById('detailView').style.display !== 'none') {
+      renderDetail(idx);
+    }
+  }
+
   // Sélectionne la version affichée sur la fiche (appelé par le sélecteur
   // "Version") : mémorisée par compte, pas seulement pour cette recette.
   function selectVariant(i, label) {
