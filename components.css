@@ -29,6 +29,19 @@
 .icon-btn-ghost { border: none; background: none; }
 .icon { font-size: 20px; line-height: 1; color: var(--text-icon-default); }
 
+/* ---- Effet "verre" (glass) ----
+   Repris de l'effet Figma (fond blanc translucide + flou + bordure blanche
+   pleine) pour les éléments flottants au-dessus d'une photo ou d'un titre :
+   la recherche flottante et les boutons icône seule concernés. Sur un fond
+   de couleur plate (sans rien à flouter derrière), le flou ne fait rien de
+   visible — le fond/la bordure suffisent déjà à l'effet recherché. */
+.glass-surface {
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+}
+
 /* ---- Pastille d'action colorée (icône seule, fond teinté arrondi) ----
    Un seul composant, décliné en 2 variantes de couleur : danger (supprimer)
    et accent (modifier/ajouter) — utilisé aussi bien pour une icône dans une
@@ -244,7 +257,7 @@
 }
 .course-sort-menu-item {
   width: 100%;
-  min-height: 40px;
+  min-height: var(--height-default);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -264,6 +277,37 @@
   font-weight: 600;
 }
 .course-sort-menu-item.active .course-sort-menu-check { display: inline-flex; }
+
+/* ---- Recherche flottante ----
+   Composant unique réutilisé partout où il y a une recherche (accueil,
+   Repas prévus) : pilule en verre dépoli, fixée 8px au-dessus de la nav du
+   bas, pour flotter au-dessus du contenu qui défile derrière plutôt que de
+   prendre sa place dans le flux de la page. */
+.floating-search {
+  position: fixed;
+  left: var(--padding-horizontal-app);
+  right: var(--padding-horizontal-app);
+  bottom: calc(var(--height-default) + 12px + env(safe-area-inset-bottom) + 8px);
+  height: var(--height-default);
+  border-radius: var(--corner-radius-round);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 var(--padding-horizontal-default);
+  z-index: 90;
+}
+.floating-search i { font-size: 18px; color: var(--text-icon-default); flex-shrink: 0; }
+.floating-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  color: var(--text-icon-default);
+}
+.floating-search input:focus { outline: none; }
+.floating-search input::placeholder { color: var(--text-icon-secondary); }
 
 /* ---- Champs de formulaire ---- */
 .field-label { display:block; font-size:14px; color:var(--text-icon-secondary); margin:14px 0 4px; }
@@ -316,6 +360,7 @@
 }
 .settings-row {
   width: 100%;
+  min-height: var(--height-default);
   display: flex;
   align-items: center;
   justify-content: space-between;

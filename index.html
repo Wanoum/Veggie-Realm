@@ -72,10 +72,6 @@
 
 <div id="listView" style="display:none;">
   <h1>Blou Mint</h1>
-  <div class="field-input-icon" style="margin-bottom:12px;">
-    <i class="bi bi-search"></i>
-    <input id="recipeSearchInput" placeholder="Titre ou ingrédient..." oninput="handleRecipeSearchInput()" />
-  </div>
   <div id="tagFilters" class="tag-filters"></div>
 
   <div id="savedRecipesSection" style="display:none;margin-bottom:20px;">
@@ -219,6 +215,15 @@
   <button type="button" id="wizardNextBtn" class="primary-btn" style="margin-top:0;flex:1;"><i class="bi bi-arrow-right"></i> Suivant</button>
 </div>
 
+<div id="recipeSearchBar" class="floating-search glass-surface" style="display:none;">
+  <i class="bi bi-search"></i>
+  <input id="recipeSearchInput" placeholder="Titre ou ingrédient..." oninput="handleRecipeSearchInput()" />
+</div>
+<div id="planSearchBar" class="floating-search glass-surface" style="display:none;">
+  <i class="bi bi-search"></i>
+  <input id="planSearchInput" placeholder="Recette ou ingrédients" oninput="handlePlanSearchInput()" />
+</div>
+
 <nav id="bottomNav" style="display:none;">
   <button id="navHome" class="nav-btn active">
     <span class="nav-icon-wrap"><i class="bi bi-book nav-icon" data-outline="bi-book" data-filled="bi-book-fill"></i></span>
@@ -312,8 +317,8 @@
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);">
     <h1 style="margin:0;">Courses</h1>
     <div style="display:flex;gap:8px;">
-      <button type="button" class="icon-btn" id="coursesEditBtn" style="display:none;color:var(--text-icon-accent);"><i class="bi bi-pencil"></i></button>
-      <button type="button" class="icon-btn" id="coursesResetBtn" style="color:var(--text-icon-accent);"><i class="bi bi-arrow-counterclockwise"></i></button>
+      <button type="button" class="icon-btn glass-surface" id="coursesEditBtn" style="display:none;color:var(--text-icon-accent);"><i class="bi bi-pencil"></i></button>
+      <button type="button" class="icon-btn glass-surface" id="coursesResetBtn" style="color:var(--text-icon-accent);"><i class="bi bi-arrow-counterclockwise"></i></button>
     </div>
   </div>
   <div class="subtabs">
@@ -325,10 +330,6 @@
     <div id="plannedRecipeList"></div>
     <h2 style="margin-top:var(--gap-vertical-section);">Suggestions</h2>
     <div id="planSuggestionList"></div>
-    <div class="field-input-icon" style="margin-top:var(--gap-vertical-section);">
-      <i class="bi bi-search"></i>
-      <input id="planSearchInput" placeholder="Recette ou ingrédients" oninput="handlePlanSearchInput()" />
-    </div>
   </div>
 
   <div id="planningCoursesPanel" style="display:none;">
@@ -416,7 +417,6 @@
   <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;" onclick="closeVariantPickerSheet()"></div>
   <div style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
     <div class="detail-sheet-handle"></div>
-    <p class="text-body-medium" style="margin:0 0 4px;">Version</p>
     <div id="variantPickerList"></div>
   </div>
 </div>
@@ -930,9 +930,9 @@
         ${safeUrl(r.photo_url)
           ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.querySelector('img').style.display='none'" />`
           : emptyPhotoHtml(r.id, 'big')}
-        <button class="icon-btn icon-btn-lg" style="position:absolute;top:calc(18px + env(safe-area-inset-top));left:18px;" onclick="goBackFromDetail()"><i class="bi bi-arrow-left icon"></i></button>
+        <button class="icon-btn icon-btn-lg glass-surface" style="position:absolute;top:calc(18px + env(safe-area-inset-top));left:18px;" onclick="goBackFromDetail()"><i class="bi bi-arrow-left icon"></i></button>
         <div style="position:absolute;top:calc(18px + env(safe-area-inset-top));right:18px;">
-          <button class="icon-btn icon-btn-lg" onclick="openRecipeActionsMenu(${i})"><i class="bi bi-three-dots-vertical icon"></i></button>
+          <button class="icon-btn icon-btn-lg glass-surface" onclick="openRecipeActionsMenu(${i})"><i class="bi bi-three-dots-vertical icon"></i></button>
         </div>
       </div>
       <div class="detail-sheet">
@@ -1221,6 +1221,8 @@
     document.getElementById('sharedRecipeView').style.display = 'none';
     document.getElementById('savedRecipesView').style.display = 'none';
     document.getElementById('edgeSwipeScrim').style.display = 'none';
+    document.getElementById('recipeSearchBar').style.display = 'none';
+    document.getElementById('planSearchBar').style.display = 'none';
     document.getElementById('detailView').style.position = '';
     document.getElementById('detailView').style.inset = '';
     document.getElementById('detailView').style.transform = '';
@@ -1274,6 +1276,7 @@
     window.scrollTo(0, 0);
     hideAllViews();
     document.getElementById('listView').style.display = 'block';
+    document.getElementById('recipeSearchBar').style.display = 'flex';
     document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('navHome').classList.add('active');
     updateNavIcons();
@@ -1596,6 +1599,7 @@
     window.scrollTo(0, 0);
     hideAllViews();
     document.getElementById('planningView').style.display = 'block';
+    document.getElementById('planSearchBar').style.display = 'flex';
     document.getElementById('bottomNav').style.display = 'flex';
     document.getElementById('navPlanning').classList.add('active');
     updateNavIcons();
@@ -4244,6 +4248,7 @@
     document.getElementById('subtabCourses').classList.remove('active');
     document.getElementById('planningRecipesPanel').style.display = 'block';
     document.getElementById('planningCoursesPanel').style.display = 'none';
+    document.getElementById('planSearchBar').style.display = 'flex';
     document.getElementById('coursesEditBtn').style.display = 'none';
     setCoursesEditMode(false);
     renderPlanningRecipes();
@@ -4254,6 +4259,7 @@
     document.getElementById('subtabRecipes').classList.remove('active');
     document.getElementById('planningCoursesPanel').style.display = 'block';
     document.getElementById('planningRecipesPanel').style.display = 'none';
+    document.getElementById('planSearchBar').style.display = 'none';
     document.getElementById('coursesEditBtn').style.display = 'flex';
     renderCoursesList();
   };
@@ -4524,9 +4530,9 @@
         ${safeUrl(r.photo_url)
           ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.querySelector('img').style.display='none'" />`
           : emptyPhotoHtml(r.id, 'big')}
-        ${currentUser ? `<button class="icon-btn icon-btn-lg" style="position:absolute;top:calc(18px + env(safe-area-inset-top));left:18px;" onclick="goBackFromSharedRecipe()"><i class="bi bi-arrow-left icon"></i></button>` : ''}
+        ${currentUser ? `<button class="icon-btn icon-btn-lg glass-surface" style="position:absolute;top:calc(18px + env(safe-area-inset-top));left:18px;" onclick="goBackFromSharedRecipe()"><i class="bi bi-arrow-left icon"></i></button>` : ''}
         ${(currentUser && !isOwnRecipe) ? `
-          <button class="icon-btn icon-btn-lg" style="position:absolute;top:calc(18px + env(safe-area-inset-top));right:18px;" onclick="toggleSavedRecipe('${r.id}')" id="saveSharedBtn" data-saved="${isSaved}">
+          <button class="icon-btn icon-btn-lg glass-surface" style="position:absolute;top:calc(18px + env(safe-area-inset-top));right:18px;" onclick="toggleSavedRecipe('${r.id}')" id="saveSharedBtn" data-saved="${isSaved}">
             <i class="bi ${isSaved ? 'bi-bookmark-fill' : 'bi-bookmark'} icon" id="saveSharedIcon"></i>
           </button>` : ''}
       </div>
