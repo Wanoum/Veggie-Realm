@@ -4194,7 +4194,8 @@
     const hasNumeric = qtyValue != null && qtyValue !== '';
     courseQtySheetMode = hasNumeric ? 'stepper' : 'text';
     courseQtySheetUnit = qtyUnit || '';
-    document.getElementById('courseQtyTitle').textContent = displayName;
+    const capitalizedName = displayName ? displayName.charAt(0).toUpperCase() + displayName.slice(1) : displayName;
+    document.getElementById('courseQtyTitle').textContent = capitalizedName;
     document.getElementById('courseQtyStepperWrap').style.display = hasNumeric ? 'block' : 'none';
     document.getElementById('courseQtyInputWrap').style.display = hasNumeric ? 'none' : 'block';
     if (hasNumeric) {
@@ -4225,7 +4226,7 @@
     // Le chiffre qu'on possède reste la grande valeur ; la quantité cible
     // ("/besoin unité") est affichée plus petite, en style quantity-mono
     // text-icon-secondary, alignée sur sa ligne de base.
-    const target = `/${formatQuantityFr(courseQtySheetNeeded)}${courseQtySheetUnit ? ' ' + courseQtySheetUnit : ''}`;
+    const target = `/${formatQuantityFr(courseQtySheetNeeded)}${courseQtySheetUnit}`;
     valueEl.innerHTML = `${escapeHtml(formatQuantityFr(clamped))}<span class="course-qty-target text-quantity-mono">${escapeHtml(target)}</span>`;
   }
 
@@ -4254,7 +4255,7 @@
       // Rien chez soi = rien à corriger : on retombe sur le calcul
       // automatique plutôt que de stocker une correction redondante.
       if (have <= 0) delete overrides[courseQtySheetKey];
-      else overrides[courseQtySheetKey] = `${formatQuantityFr(remaining)}${courseQtySheetUnit ? ' ' + courseQtySheetUnit : ''}`.trim();
+      else overrides[courseQtySheetKey] = `${formatQuantityFr(remaining)}${courseQtySheetUnit}`.trim();
     } else {
       const value = document.getElementById('courseQtyInput').value.trim();
       if (value) overrides[courseQtySheetKey] = value; else delete overrides[courseQtySheetKey];
