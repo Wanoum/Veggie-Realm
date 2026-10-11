@@ -574,7 +574,7 @@
   background: var(--surface-lowest);
   display: flex; align-items: center; justify-content: center;
 }
-.photo-empty i { font-size: 32px; color: var(--text-icon-secondary); }
+.photo-empty i, .photo-empty svg { font-size: 32px; color: var(--text-icon-secondary); }
 .card h3 { margin: 0 0 6px; font-family: 'Inter', sans-serif; font-size: 18px; line-height: 120%; font-weight: 500; color: var(--text-icon-default); }
 .card-thumb { display: none; }
 
