@@ -157,8 +157,8 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   flex-direction: column;
   justify-content: flex-end;
   background: var(--interaction-inverted);
-  /* Mêmes valeurs que les cards de l'accueil (.card-v2) : 32/8/8/32. */
-  border-radius: var(--corner-radius-xlarge) var(--corner-radius-default) var(--corner-radius-default) var(--corner-radius-xlarge);
+  /* Mêmes valeurs que les cards de l'accueil (.card-v2) : 32/8/32/8. */
+  border-radius: var(--corner-radius-xlarge) var(--corner-radius-default) var(--corner-radius-xlarge) var(--corner-radius-default);
   padding: 0 var(--padding-horizontal-contained) 16px;
   margin: var(--gap-vertical-section) 0 20px;
 }
