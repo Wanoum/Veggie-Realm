@@ -387,6 +387,10 @@
      — jamais visible en pratique puisque ce script tourne en synchrone au
      chargement. */
   width: 80px;
+  /* Sans ça, un input reste "rétrécissable" par défaut (flex-shrink:1) même
+     avec une largeur explicite posée en JS : le conteneur en width:fit-content
+     pouvait le compresser d'un cheveu et couper le dernier caractère. */
+  flex-shrink: 0;
   border: none;
   background: none;
   color: var(--text-icon-default);
