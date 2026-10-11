@@ -1715,7 +1715,7 @@
       const current = accountProfileCache.default_servings || 4;
       contentEl.innerHTML = `
         <p class="text-body" style="color:var(--text-icon-secondary);margin:0 0 16px;">Utilisé pour préremplir le nombre de personnes à la création d'une recette.</p>
-        <div class="servings-stepper">
+        <div class="servings-stepper servings-stepper-lg servings-stepper-tertiary">
           <button type="button" class="servings-minus" id="accountEdit_servingsMinus"><i class="bi bi-dash"></i></button>
           <span class="servings-value" id="accountEdit_servingsValue">${current}</span>
           <button type="button" class="servings-plus" id="accountEdit_servingsPlus"><i class="bi bi-plus"></i></button>

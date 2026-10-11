@@ -238,6 +238,14 @@
 .servings-stepper-lg .servings-minus,
 .servings-stepper-lg .servings-plus { font-size: 32px; }
 .servings-stepper-lg .servings-value { font-size: 40px; border-radius: var(--corner-radius-small); }
+/* Même composant (taille/proportions) utilisé hors bottom sheet (Compte >
+   Personnes par défaut), mais sur fond neutre : on garde les couleurs
+   habituelles (interaction-tertiary) plutôt que celles du sheet. */
+.servings-stepper-lg.servings-stepper-tertiary .servings-minus,
+.servings-stepper-lg.servings-stepper-tertiary .servings-plus,
+.servings-stepper-lg.servings-stepper-tertiary .servings-value {
+  background: var(--interaction-tertiary);
+}
 .servings-stepper-lg .servings-minus { border-radius: 64px var(--corner-radius-small) var(--corner-radius-small) 64px; }
 .servings-stepper-lg .servings-plus { border-radius: var(--corner-radius-small) 64px 64px var(--corner-radius-small); }
 
