@@ -456,9 +456,8 @@
   <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;" onclick="closePlanOccurrenceSheet()"></div>
   <div id="planOccurrencePanel" class="sheet-panel" style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
     <div class="detail-sheet-handle"></div>
-    <h2 id="planOccurrenceTitle" style="margin-bottom:0;"></h2>
-    <p id="planOccurrenceVersionReadonly" class="text-small" style="display:none;color:var(--text-icon-secondary);margin:2px 0 var(--gap-vertical-section);"></p>
-    <div id="planOccurrenceVariantWrap" style="display:none;margin-top:var(--gap-vertical-section);margin-bottom:20px;position:relative;">
+    <h2 id="planOccurrenceTitle" style="margin-bottom:var(--gap-vertical-section);"></h2>
+    <div id="planOccurrenceVariantWrap" style="display:none;margin-bottom:20px;position:relative;">
       <label class="field-label" style="margin-top:0;">Version</label>
       <button type="button" id="planOccurrenceVariantBtn" class="sheet-select-field" style="display:flex;align-items:center;justify-content:space-between;" onclick="togglePlanOccurrenceVariantMenu()">
         <span id="planOccurrenceVariantLabel">Base</span>
@@ -4022,19 +4021,17 @@
   function renderPlanOccurrenceSheet() {
     const st = planSheetState;
     const r = allRecipesForPlanning().find(x => x.id === st.recipeId);
-    document.getElementById('planOccurrenceTitle').textContent = r.title;
 
-    const versionReadonly = document.getElementById('planOccurrenceVersionReadonly');
     const variantWrap = document.getElementById('planOccurrenceVariantWrap');
     if (st.mode === 'edit') {
       // La version d'un repas déjà prévu n'est pas modifiable ici (on
-      // retirerait puis ajouterait pour en changer) — affichée en lecture
-      // seule sous le titre plutôt que dans un menu déroulant désactivé.
+      // retirerait puis ajouterait pour en changer) — affichée directement
+      // dans le titre ("Titre – Version") plutôt qu'un menu déroulant
+      // désactivé. Pas de version (recette sans variantes) : juste le titre.
       variantWrap.style.display = 'none';
-      versionReadonly.style.display = 'block';
-      versionReadonly.textContent = st.selectedVersion || 'Originale';
+      document.getElementById('planOccurrenceTitle').textContent = st.selectedVersion ? `${r.title} – ${st.selectedVersion}` : r.title;
     } else {
-      versionReadonly.style.display = 'none';
+      document.getElementById('planOccurrenceTitle').textContent = r.title;
       if (st.versions.length > 1) {
         variantWrap.style.display = 'block';
         document.getElementById('planOccurrenceVariantLabel').textContent = st.selectedVersion || 'Base';
