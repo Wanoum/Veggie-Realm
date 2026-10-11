@@ -22,7 +22,9 @@
   background: var(--surface-high);
   border-radius: var(--corner-radius-xlarge) var(--corner-radius-xlarge) 0 0;
   padding: 12px var(--padding-horizontal-app) var(--gap-vertical-section);
-  min-height: calc(100vh - 340px);
+  /* Pas de min-height forçant la fiche à occuper tout le viewport : pour une
+     recette courte (peu d'ingrédients/étapes), ça créait un grand vide entre
+     la fin du contenu et les boutons fixes en bas. */
 }
 .detail-sheet-handle {
   width: 36px; height: 4px;
@@ -335,9 +337,9 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--interaction-tertiary);
+  background: var(--surface-highest);
   border: 1px solid var(--border-default);
-  border-radius: var(--corner-radius-round);
+  border-radius: var(--corner-radius-small);
   color: var(--interaction-primary);
   font-size: 16px;
 }
@@ -352,28 +354,30 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 .course-item.checked .course-item-name { color: var(--text-icon-disabled); text-decoration: line-through; }
 .course-qty {
   margin-left: auto;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 18px;
-  line-height: 140%;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
   color: var(--text-icon-accent);
   white-space: nowrap;
-  background: var(--surface-highest);
-  border: 1px solid var(--border-default);
-  border-radius: var(--corner-radius-small);
-  padding: 2px 6px;
 }
+.course-qty span { text-decoration: underline; }
 .course-item-edit { cursor: default; }
 .course-rayon-group { margin-bottom: 8px; }
 .course-rayon-header {
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   background: none;
   border: none;
   padding: 12px 0;
 }
-.course-rayon-count { color: var(--text-icon-secondary); }
 
 /* ---- Planning ---- */
 .plan-recipe-row {

@@ -343,6 +343,10 @@
 }
 .floating-search i { font-size: 18px; color: var(--text-icon-default); flex-shrink: 0; }
 .floating-search input {
+  /* Largeur de repli avant que le JS ne mesure le texte exact du placeholder
+     (voir sizeFloatingSearchInputs dans index.html) — jamais visible en
+     pratique puisque ce script tourne en synchrone au chargement. */
+  width: 80px;
   border: none;
   background: none;
   font-family: 'Inter', sans-serif;
