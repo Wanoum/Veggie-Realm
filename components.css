@@ -384,9 +384,19 @@
 }
 .floating-search input {
   /* Largeur de repli avant que le JS ne mesure le texte exact du placeholder
-     — jamais visible en pratique puisque ce script tourne en synchrone au
+     (pour les navigateurs sans field-sizing, voir juste en dessous) —
+     jamais visible en pratique puisque ce script tourne en synchrone au
      chargement. */
   width: 80px;
+  /* Propriété CSS native pensée exactement pour ce cas (input qui "hug" son
+     contenu) : quand le navigateur la supporte (Safari 18.4+), c'est lui-même
+     qui calcule et rend la largeur exacte au pixel près, sans dépendre d'une
+     mesure JS approximative (miroir DOM, Canvas...) qui a pu différer du
+     rendu réel de l'input selon le moteur — cause probable des coupures de
+     texte répétées malgré une largeur a priori correcte côté JS. Le calcul
+     JS (sizeFloatingSearchInputs) reste en repli pour les navigateurs plus
+     anciens. */
+  field-sizing: content;
   /* Sans ça, un input reste "rétrécissable" par défaut (flex-shrink:1) même
      avec une largeur explicite posée en JS : le conteneur en width:fit-content
      pouvait le compresser d'un cheveu et couper le dernier caractère. */
