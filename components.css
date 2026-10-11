@@ -8,6 +8,24 @@
    dans le <style> de index.html.
    ========================================================================== */
 
+/* ---- Pages "plein-bleed" ----
+   Sort une page du padding du body (marges négatives haut + horizontal,
+   comme le fait déjà la fiche recette) puis réapplique la même valeur en
+   padding interne — rendu visuel strictement identique à avant, mais la
+   page devient autonome vis-à-vis du padding du body. Indispensable pour
+   le geste de retour par le bord (edge-swipe-back, voir setupEdgeSwipeBack
+   dans index.html) : il passe la page en position:fixed + inset:0 pendant
+   le drag, ce qui ignore complètement le padding du body — sans cette
+   classe, le contenu se retrouve collé aux bords de l'écran pendant le
+   geste. Le bas n'est pas touché (chaque page gère sa propre marge basse,
+   ou compte sur celle du body si elle n'a pas de footer fixe). */
+.page-fullbleed {
+  margin: calc(-1 * (var(--padding-horizontal-app) + env(safe-area-inset-top))) calc(-1 * var(--padding-horizontal-app)) 0;
+  padding-top: calc(var(--padding-horizontal-app) + env(safe-area-inset-top));
+  padding-left: var(--padding-horizontal-app);
+  padding-right: var(--padding-horizontal-app);
+}
+
 /* ---- Boutons ---- */
 .icon-btn {
   width: 40px; height: 40px;
@@ -350,16 +368,36 @@
   pointer-events: none;
 }
 .floating-search i { font-size: 18px; color: var(--text-icon-default); flex-shrink: 0; }
+.floating-search input,
+.search-width-measure {
+  /* Même règle de police pour l'input et son "miroir" de mesure (voir
+     sizeFloatingSearchInputs dans index.html) : ils doivent matcher au
+     pixel près, donc une seule et même déclaration pour les deux plutôt que
+     deux copies qui pourraient diverger. */
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+}
 .floating-search input {
   /* Largeur de repli avant que le JS ne mesure le texte exact du placeholder
-     (voir sizeFloatingSearchInputs dans index.html) — jamais visible en
-     pratique puisque ce script tourne en synchrone au chargement. */
+     — jamais visible en pratique puisque ce script tourne en synchrone au
+     chargement. */
   width: 80px;
   border: none;
   background: none;
-  font-family: 'Inter', sans-serif;
-  font-size: 16px;
   color: var(--text-icon-default);
+}
+/* Miroir invisible du placeholder, dans la même police, pour mesurer sa
+   largeur réelle avec getBoundingClientRect() — fiable, contrairement à
+   Canvas measureText() qui doit reconstruire la police sous forme de
+   chaîne (font-family/weight recombinés) et peut mal la reparser dans
+   certains moteurs, mesurant alors avec une police de repli plus étroite. */
+.search-width-measure {
+  position: absolute;
+  visibility: hidden;
+  white-space: pre;
+  pointer-events: none;
+  left: -9999px;
+  top: 0;
 }
 .floating-search input:focus { outline: none; }
 .floating-search input::placeholder { color: var(--text-icon-default); }

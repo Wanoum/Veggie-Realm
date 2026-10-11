@@ -58,7 +58,7 @@
   <div id="sharedRecipeContent"></div>
 </div>
 
-<div id="savedRecipesView" style="display:none;">
+<div id="savedRecipesView" class="page-fullbleed" style="display:none;">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--gap-vertical-section);">
     <button type="button" class="icon-btn icon-btn-lg glass-surface" onclick="showHome()"><i class="bi bi-arrow-left icon"></i></button>
     <h1 class="text-headline" style="margin:0;">Recettes partagées</h1>
@@ -102,7 +102,7 @@
   </div>
 </div>
 
-<div id="formView" style="display:none;padding-bottom:110px;">
+<div id="formView" class="page-fullbleed" style="display:none;padding-bottom:110px;">
   <h1 id="formTitle" style="margin-bottom:var(--gap-vertical-section);">Nouvelle recette</h1>
 
   <!-- Étape 1 : source -->
@@ -299,7 +299,7 @@
   </div>
 </div>
 
-<div id="accountEditView" style="display:none;padding-bottom:110px;">
+<div id="accountEditView" class="page-fullbleed" style="display:none;padding-bottom:110px;">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--gap-vertical-section);">
     <button type="button" class="icon-btn icon-btn-lg glass-surface" onclick="closeAccountEdit()"><i class="bi bi-arrow-left icon"></i></button>
     <h1 id="accountEditTitle" class="text-headline" style="margin:0;"></h1>
@@ -475,28 +475,36 @@
   // peut être oubliée ou mal recopiée.
   document.getElementById('appBuildTime').textContent = document.lastModified;
 
-  // Champ de recherche flottant : "hug" sur le texte du placeholder. L'attribut
-  // HTML size="N" (essayé avant) ne marche pas de façon fiable car il compte
-  // en largeur moyenne de caractère, pas la largeur réelle du texte rendu —
-  // d'où l'alternance "texte coupé" / "espace en trop" selon la police/le
-  // zoom. On mesure ici la largeur exacte du placeholder avec Canvas, dans la
-  // même police que l'input, et on l'applique en pixels.
+  // Champ de recherche flottant : "hug" sur le texte du placeholder. Deux
+  // approches essayées avant ont échoué de façon récurrente : l'attribut
+  // HTML size="N" (compte en largeur moyenne de caractère, pas la largeur
+  // réelle du texte) puis Canvas measureText() (doit reconstruire la police
+  // sous forme de chaîne à partir du style calculé — recombinaison qui peut
+  // mal se reparser selon le moteur et mesurer avec une police de repli plus
+  // étroite, d'où le texte encore coupé). On mesure ici avec un "miroir"
+  // invisible du texte dans le DOM (même règle CSS de police que l'input,
+  // voir .search-width-measure), et sa largeur réelle via
+  // getBoundingClientRect() — le moteur de rendu lui-même fait la mesure,
+  // aucune reconstruction de police à sa charge.
   function sizeFloatingSearchInputs() {
-    const canvas = sizeFloatingSearchInputs._canvas || (sizeFloatingSearchInputs._canvas = document.createElement('canvas'));
-    const ctx = canvas.getContext('2d');
     ['recipeSearchInput', 'planSearchInput'].forEach(id => {
       const input = document.getElementById(id);
       if (!input) return;
-      const cs = getComputedStyle(input);
-      ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
-      const width = ctx.measureText(input.placeholder || '').width;
-      // +4px : marge de sécurité pour que le dernier caractère ne soit jamais rogné.
-      input.style.width = Math.ceil(width) + 4 + 'px';
+      const bar = input.closest('.floating-search');
+      let measurer = bar.querySelector('.search-width-measure');
+      if (!measurer) {
+        measurer = document.createElement('span');
+        measurer.className = 'search-width-measure';
+        bar.appendChild(measurer);
+      }
+      measurer.textContent = input.placeholder || '';
+      // +6px : marge de sécurité pour que le dernier caractère ne soit jamais rogné.
+      input.style.width = Math.ceil(measurer.getBoundingClientRect().width) + 6 + 'px';
     });
   }
   sizeFloatingSearchInputs();
   // Au chargement, la police Inter (chargée via @import Google Fonts) peut ne
-  // pas encore être prête : le canvas mesurerait alors avec la police de
+  // pas encore être prête : le miroir mesurerait alors avec la police de
   // repli, donc une largeur fausse. On remesure une fois les polices prêtes.
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(sizeFloatingSearchInputs);
@@ -2016,25 +2024,17 @@
     }
 
     function beginLiveDrag() {
+      // Toutes les pages enregistrées ici sont "plein-bleed" (classe
+      // .page-fullbleed pour celles qui n'avaient pas déjà le traitement de
+      // la fiche recette) : passer en position:fixed + inset:0 reproduit
+      // donc leur rendu normal à l'identique, padding compris.
       viewEl.style.position = 'fixed';
+      viewEl.style.inset = '0';
       viewEl.style.zIndex = '295';
       if (activeView.hasPhoto) {
-        // Fiche recette / recette partagée : déjà en plein-bleed (marges
-        // négatives qui annulent le padding du body), inset:0 ne change donc
-        // rien à son rendu normal.
-        viewEl.style.inset = '0';
         photoEl = viewEl.querySelector('.detail-photo');
         if (photoEl) photoEl.style.position = 'absolute';
       } else {
-        // Page "normale" qui tient son padding du body (pas de marges
-        // négatives) : inset:0 l'ignorerait complètement et collerait son
-        // contenu aux bords de l'écran, sous la status bar. On capture donc
-        // sa position/largeur réelles juste avant de passer en fixed, pour
-        // les reproduire à l'identique.
-        const rect = viewEl.getBoundingClientRect();
-        viewEl.style.top = rect.top + 'px';
-        viewEl.style.left = rect.left + 'px';
-        viewEl.style.width = rect.width + 'px';
         // Fond plein pour ne rien laisser transparaître derrière pendant le
         // drag (ces pages n'ont pas de fond propre, elles comptent sur celui
         // du body).
@@ -2058,9 +2058,6 @@
       // position:fixed résiduel la prochaine fois qu'elle est affichée.
       viewEl.style.position = '';
       viewEl.style.inset = '';
-      viewEl.style.top = '';
-      viewEl.style.left = '';
-      viewEl.style.width = '';
       viewEl.style.background = '';
       viewEl.style.zIndex = '';
       if (photoEl) photoEl.style.position = '';
