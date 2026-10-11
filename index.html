@@ -1930,7 +1930,12 @@
           // Seulement sur une page "pleine" (accueil, Repas prévus/Liste,
           // Compte) — pas sur une sous-page de détail/à étapes, où tirer
           // vers le bas sert déjà à d'autres gestes (ou n'a pas de sens).
-          && !EDGE_SWIPE_PAGE_IDS.some(id => document.getElementById(id).style.display !== 'none');
+          && !EDGE_SWIPE_PAGE_IDS.some(id => document.getElementById(id).style.display !== 'none')
+          // Un bottom sheet ouvert verrouille déjà le scroll du fond
+          // (lockBackgroundScroll, body en position:fixed) : tirer vers le
+          // bas sur sa poignée pour le fermer ne doit pas aussi rafraîchir
+          // la page en dessous.
+          && document.body.style.position !== 'fixed';
     }
 
     document.addEventListener('touchstart', (e) => {
@@ -3745,8 +3750,8 @@
       const detailIdx = recipes.findIndex(x => x.id === r.id);
       return `
         <div class="plan-recipe-row">
-          <div style="display:flex;align-items:center;gap:12px;" onclick="openRecipeDetail(${detailIdx}, 'planning')">
-            <div style="width:72px;height:72px;border-radius:var(--corner-radius-large);overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:72px;height:72px;border-radius:var(--corner-radius-large);overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;" onclick="openRecipeDetail(${detailIdx}, 'planning')">
               ${safeUrl(r.photo_url)
                 ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
                 : emptyPhotoHtml(r.id, 'small')}
