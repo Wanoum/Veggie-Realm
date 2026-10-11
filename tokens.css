@@ -25,6 +25,7 @@
   --green-700: #244d3b;
   --green-800: #293b2e;
   --grey-400: #aaa59b;
+  --grey-500: #8e897f;
   --grey-700: #6f6e66;
   --grey-900: #191a17;
   --light-100: #f7f5ed;
@@ -39,7 +40,7 @@
 
   /* ---- Colors ---- */
   --border-accent: var(--green-700);
-  --border-default: var(--green-300);
+  --border-default: var(--grey-500);
   --border-divider: var(--light-500);
   --status-error: #B3261E;
   --status-success: #3D5A34;

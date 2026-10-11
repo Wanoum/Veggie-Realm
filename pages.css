@@ -346,7 +346,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   align-items: center;
   justify-content: center;
   background: var(--surface-highest);
-  border: 1px solid var(--border-accent);
+  border: 1px solid var(--border-default);
   border-radius: var(--corner-radius-small);
   color: var(--interaction-primary);
   font-size: 16px;
