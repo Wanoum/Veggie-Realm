@@ -520,6 +520,17 @@
   </div>
 </div>
 
+<div id="confirmDialog" style="display:none;">
+  <div id="confirmDialogOverlay" style="position:fixed;inset:0;z-index:410;"></div>
+  <div style="position:fixed;inset:0;z-index:410;display:flex;align-items:center;justify-content:center;padding:var(--padding-horizontal-app);pointer-events:none;">
+    <div style="width:100%;max-width:360px;background:var(--surface-highest);border-radius:var(--corner-radius-large);padding:var(--padding-horizontal-app);pointer-events:auto;">
+      <p id="confirmDialogMessage" class="text-body" style="margin:0 0 20px;color:var(--text-icon-default);"></p>
+      <button type="button" id="confirmDialogConfirmBtn" class="primary-btn" style="margin-top:0;"></button>
+      <button type="button" id="confirmDialogCancelBtn" class="secondary-btn"><svg class="icon-svg"><use href="#icon-close-outline"/></svg> Annuler</button>
+    </div>
+  </div>
+</div>
+
 <div id="variantPickerSheet" style="display:none;">
   <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;" onclick="closeVariantPickerSheet()"></div>
   <div class="sheet-panel" style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
@@ -870,9 +881,9 @@
   }
 
   // Supprime une version sans toucher au reste de la recette (contrairement
-  // à "Supprimer la recette", qui efface tout). Confirmation avant suppression
-  // — même pattern que "Supprimer la recette" (confirm() natif) — l'appelant
-  // s'en charge avant d'appeler cette fonction.
+  // à "Supprimer la recette", qui efface tout). Confirmation avant
+  // suppression (showConfirmDialog) — même pattern que "Supprimer la
+  // recette" — l'appelant s'en charge avant d'appeler cette fonction.
   async function deleteVariant(recipeId, label) {
     const r = recipes.find(x => x.id === recipeId);
     if (!r) return;
@@ -920,7 +931,7 @@
       listEl.querySelectorAll('[data-delete-variant]').forEach(btn => {
         btn.onclick = async () => {
           const label = btn.dataset.deleteVariant;
-          if (!confirm(`Supprimer la version "${label}" ? Cette action est irréversible.`)) return;
+          if (!(await showConfirmDialog({ message: `Voulez-vous supprimer définitivement la version "${label}" ?`, confirmLabel: 'Supprimer', confirmIcon: 'trash-outline' }))) return;
           await deleteVariant(r.id, label);
           const idx2 = rows.findIndex(row => row.label === label);
           if (idx2 !== -1) rows.splice(idx2, 1);
@@ -1421,6 +1432,36 @@
     if (toastActionHandler) toastActionHandler();
     toastActionHandler = null;
   };
+
+  // Dialogue de confirmation personnalisé (remplace confirm() natif) pour
+  // toute action destructrice/irréversible (suppression, réinitialisation).
+  // variant 'danger' (par défaut) : bouton + voile rouges (overlay-error).
+  function showConfirmDialog({ message, confirmLabel = 'Confirmer', confirmIcon = 'trash-outline', variant = 'danger' }) {
+    return new Promise(resolve => {
+      const dialog = document.getElementById('confirmDialog');
+      const overlay = document.getElementById('confirmDialogOverlay');
+      const confirmBtn = document.getElementById('confirmDialogConfirmBtn');
+      const cancelBtn = document.getElementById('confirmDialogCancelBtn');
+      document.getElementById('confirmDialogMessage').textContent = message;
+      confirmBtn.innerHTML = `<svg class="icon-svg"><use href="#icon-${confirmIcon}"/></svg> ${escapeHtml(confirmLabel)}`;
+      confirmBtn.className = 'primary-btn' + (variant === 'danger' ? ' primary-btn-danger' : '');
+      confirmBtn.style.marginTop = '0';
+      overlay.style.background = variant === 'danger' ? 'var(--overlay-error)' : 'var(--overlay-default)';
+      dialog.style.display = 'block';
+      lockBackgroundScroll();
+      const cleanup = (result) => {
+        dialog.style.display = 'none';
+        unlockBackgroundScroll();
+        overlay.onclick = null;
+        confirmBtn.onclick = null;
+        cancelBtn.onclick = null;
+        resolve(result);
+      };
+      overlay.onclick = () => cleanup(false);
+      confirmBtn.onclick = () => cleanup(true);
+      cancelBtn.onclick = () => cleanup(false);
+    });
+  }
 
   function showHome() {
     window.scrollTo(0, 0);
@@ -2798,7 +2839,7 @@
 
   async function deleteCurrentRecipe() {
     const r = recipes[currentDetailIndex];
-    if (!confirm(`Supprimer "${r.title}" ? Cette action est irréversible.`)) return;
+    if (!(await showConfirmDialog({ message: `Voulez-vous supprimer définitivement la recette "${r.title}" ?`, confirmLabel: 'Supprimer', confirmIcon: 'trash-outline' }))) return;
     const { error } = await sb.from('recipes').delete().eq('id', r.id);
     if (error) {
       alert("Erreur lors de la suppression : " + error.message);
@@ -4544,13 +4585,13 @@
   async function resetCoursesOrPlanning() {
     const onListTab = document.getElementById('subtabCourses').classList.contains('active');
     if (onListTab) {
-      if (!confirm("Réinitialiser la liste ? Les cases cochées et les quantités modifiées seront remises à zéro.")) return;
+      if (!(await showConfirmDialog({ message: "Voulez-vous réinitialiser la liste ? Les cases cochées et les quantités modifiées seront remises à zéro.", confirmLabel: 'Réinitialiser', confirmIcon: 'history-outline' }))) return;
       try { localStorage.removeItem(COURSES_CHECKED_KEY); } catch { /* ignoré */ }
       try { localStorage.removeItem(COURSES_QTY_OVERRIDE_KEY); } catch { /* ignoré */ }
       renderCoursesList();
       showToast('Liste réinitialisée');
     } else {
-      if (!confirm("Réinitialiser le planning ? Toutes les recettes prévues seront retirées.")) return;
+      if (!(await showConfirmDialog({ message: "Voulez-vous réinitialiser le planning ? Toutes les recettes prévues seront retirées.", confirmLabel: 'Réinitialiser', confirmIcon: 'history-outline' }))) return;
       await sb.from('meal_plan').delete().neq('recipe_id', '00000000-0000-0000-0000-000000000000');
       mealPlan = {};
       try { localStorage.removeItem(COURSES_CHECKED_KEY); } catch { /* ignoré */ }

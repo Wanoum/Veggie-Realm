@@ -36,6 +36,7 @@
   --light-50: #fffdf8;
   --light-500: #ddd7cc;
   --red-500: #a22205;
+  --red-700: #7a1a04;
   --white: #ffffff;
 
   /* ---- Colors ---- */
@@ -48,9 +49,15 @@
   --interaction-secondary: var(--green-200);
   --interaction-tertiary: var(--green-100);
   --interaction-inverted: var(--green-800);
-  /* Voile derrière un bottom sheet : vert foncé semi-transparent (pas noir),
-     combiné à un flou — reprend la maquette Figma. */
-  --overlay-default: rgba(41, 59, 46, 0.55);
+  /* Voile derrière un bottom sheet ou un dialogue de confirmation : vert
+     foncé semi-transparent (pas noir) — reprend la maquette Figma
+     (interaction/inverted à 40%). --overlay-error (red-700 à 20%) habille
+     les dialogues destructifs (suppression, réinitialisation) ;
+     --overlay-button (interaction/secondary à 20%) reste disponible pour un
+     futur état de bouton. */
+  --overlay-default: rgba(41, 59, 46, 0.4);
+  --overlay-error: rgba(122, 26, 4, 0.2);
+  --overlay-button: rgba(234, 246, 173, 0.2);
   --surface-high: var(--light-50);
   --surface-highest: var(--white);
   --surface-low: var(--light-200);
