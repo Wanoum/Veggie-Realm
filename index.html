@@ -694,19 +694,18 @@
   }
 
   // Supprime une version sans toucher au reste de la recette (contrairement
-  // à "Supprimer la recette", qui efface tout). Pas de confirmation — annulable
-  // via le toast, comme "Marquer comme cuisiné".
+  // à "Supprimer la recette", qui efface tout). Confirmation avant suppression
+  // — même pattern que "Supprimer la recette" (confirm() natif) — l'appelant
+  // s'en charge avant d'appeler cette fonction.
   async function deleteVariant(recipeId, label) {
     const r = recipes.find(x => x.id === recipeId);
     if (!r) return;
-    const removed = (r.variants || []).find(v => v.label === label);
-    if (!removed) return;
     const wasSelected = selectedVariantLabel === label;
     const wasDefault = userDefaultVariantLabel === label;
 
     const updatedVariants = (r.variants || []).filter(v => v.label !== label);
     const { error } = await sb.from('recipes').update({ variants: updatedVariants }).eq('id', recipeId);
-    if (error) { console.error('deleteVariant', error); return; }
+    if (error) { alert("Erreur lors de la suppression : " + error.message); return; }
     r.variants = updatedVariants;
     if (wasSelected) selectedVariantLabel = '';
     if (wasDefault) await setUserDefaultVariantLabel('');
@@ -714,22 +713,6 @@
     if (idx === currentDetailIndex && document.getElementById('detailView').style.display !== 'none') {
       renderDetail(idx);
     }
-
-    showToast(`${label} supprimée`, {
-      actionLabel: 'Annuler',
-      onAction: async () => {
-        const restoredVariants = [...r.variants, removed];
-        const { error: restoreError } = await sb.from('recipes').update({ variants: restoredVariants }).eq('id', recipeId);
-        if (restoreError) { console.error('deleteVariant undo', restoreError); return; }
-        r.variants = restoredVariants;
-        if (wasSelected) selectedVariantLabel = label;
-        if (wasDefault) await setUserDefaultVariantLabel(label);
-        const idx2 = recipes.findIndex(x => x.id === recipeId);
-        if (idx2 === currentDetailIndex && document.getElementById('detailView').style.display !== 'none') {
-          renderDetail(idx2);
-        }
-      }
-    });
   }
 
   // Sélectionne la version affichée sur la fiche (appelé par le sélecteur
@@ -757,25 +740,27 @@
         <span><i class="bi bi-plus-circle-fill"></i> Créer une version</span>
       </button>
     `;
-    listEl.innerHTML = renderRows();
-    listEl.querySelectorAll('[data-pick-variant]').forEach(btn => {
-      btn.onclick = () => { selectVariant(i, btn.dataset.pickVariant); closeVariantPickerSheet(); };
-    });
-    listEl.querySelectorAll('[data-delete-variant]').forEach(btn => {
-      // Pas de confirmation — suppression immédiate, annulable via le toast
-      // (même pattern que "Marquer comme cuisiné").
-      btn.onclick = async () => {
-        const label = btn.dataset.deleteVariant;
-        await deleteVariant(r.id, label);
-        const idx2 = rows.findIndex(row => row.label === label);
-        if (idx2 !== -1) rows.splice(idx2, 1);
-        listEl.innerHTML = renderRows();
+    const wireRows = () => {
+      listEl.innerHTML = renderRows();
+      listEl.querySelectorAll('[data-pick-variant]').forEach(btn => {
+        btn.onclick = () => { selectVariant(i, btn.dataset.pickVariant); closeVariantPickerSheet(); };
+      });
+      listEl.querySelectorAll('[data-delete-variant]').forEach(btn => {
+        btn.onclick = async () => {
+          const label = btn.dataset.deleteVariant;
+          if (!confirm(`Supprimer la version "${label}" ? Cette action est irréversible.`)) return;
+          await deleteVariant(r.id, label);
+          const idx2 = rows.findIndex(row => row.label === label);
+          if (idx2 !== -1) rows.splice(idx2, 1);
+          wireRows();
+        };
+      });
+      listEl.querySelector('[data-create-variant]').onclick = () => {
+        closeVariantPickerSheet();
+        createVersionForCurrentRecipe();
       };
-    });
-    listEl.querySelector('[data-create-variant]').onclick = () => {
-      closeVariantPickerSheet();
-      createVersionForCurrentRecipe();
     };
+    wireRows();
     document.getElementById('variantPickerSheet').style.display = 'flex';
     lockBackgroundScroll();
   }
@@ -2756,10 +2741,19 @@
     });
     document.querySelectorAll('[data-remove-ing]').forEach(btn => {
       btn.onclick = (e) => {
-        ingRows.splice(Number(e.currentTarget.dataset.removeIng), 1);
+        const idx = Number(e.currentTarget.dataset.removeIng);
+        const [removed] = ingRows.splice(idx, 1);
         if (ingRows.length === 0) ingRows = [{ qtyUnitText: '', name: '' }];
         renderIngRows();
         validateWizardStep();
+        showToast(`${removed.name || 'Ingrédient'} supprimé`, {
+          actionLabel: 'Annuler',
+          onAction: () => {
+            ingRows.splice(Math.min(idx, ingRows.length), 0, removed);
+            renderIngRows();
+            validateWizardStep();
+          }
+        });
       };
     });
   }
@@ -2811,9 +2805,19 @@
 
     container.querySelectorAll('[data-remove-step]').forEach(btn => {
       btn.onclick = () => {
-        stepRows.splice(Number(btn.dataset.removeStep), 1);
+        const idx = Number(btn.dataset.removeStep);
+        const [removed] = stepRows.splice(idx, 1);
         renderStepsList();
         validateWizardStep();
+        const label = removed.length > 40 ? removed.slice(0, 40) + '…' : removed;
+        showToast(`Étape "${label}" supprimée`, {
+          actionLabel: 'Annuler',
+          onAction: () => {
+            stepRows.splice(Math.min(idx, stepRows.length), 0, removed);
+            renderStepsList();
+            validateWizardStep();
+          }
+        });
       };
     });
 
