@@ -2220,10 +2220,17 @@
     renderStepsList();
     renderIngRows();
     // La photo reste celle de la recette de base (pas encore éditable par
-    // version) : affichée telle quelle, ou l'empty state habituel si la
-    // recette n'en a pas — mêmes dimensions que pour une nouvelle recette,
-    // juste non cliquable.
-    updatePhotoPreview(r.photo_url);
+    // version) : affichée telle quelle, ou — si la recette n'en a pas —
+    // l'illustration de remplacement utilisée sur les fiches/cartes (pas le
+    // "Ajouter une photo" de la création d'une recette) ; non cliquable.
+    const placeholderSrc = r.photo_url ? null : pickCardImage(r.id, 'big');
+    if (placeholderSrc) {
+      document.getElementById('photoPreview').src = placeholderSrc;
+      document.getElementById('photoPreview').style.display = 'block';
+      document.getElementById('photoPlaceholder').style.display = 'none';
+    } else {
+      updatePhotoPreview(r.photo_url);
+    }
     document.getElementById('photoDropZone').style.pointerEvents = 'none';
     document.getElementById('f_notes').style.display = 'none';
     document.getElementById('detailView').style.display = 'none';
