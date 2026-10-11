@@ -542,16 +542,21 @@
   // getBoundingClientRect() — le moteur de rendu lui-même fait la mesure,
   // aucune reconstruction de police à sa charge.
   function sizeFloatingSearchInputs() {
+    // Le miroir est ajouté à <body> (toujours rendu), jamais à l'intérieur
+    // d'une barre de recherche elle-même : tant qu'une barre est
+    // display:none (le cas la plupart du temps, selon l'écran affiché),
+    // getBoundingClientRect() sur un de ses descendants renvoie toujours 0 —
+    // mesurer depuis <body> rend ce calcul indépendant de l'écran courant.
+    let measurer = sizeFloatingSearchInputs._measurer;
+    if (!measurer) {
+      measurer = document.createElement('span');
+      measurer.className = 'search-width-measure';
+      document.body.appendChild(measurer);
+      sizeFloatingSearchInputs._measurer = measurer;
+    }
     ['recipeSearchInput', 'planSearchInput'].forEach(id => {
       const input = document.getElementById(id);
       if (!input) return;
-      const bar = input.closest('.floating-search');
-      let measurer = bar.querySelector('.search-width-measure');
-      if (!measurer) {
-        measurer = document.createElement('span');
-        measurer.className = 'search-width-measure';
-        bar.appendChild(measurer);
-      }
       measurer.textContent = input.placeholder || '';
       // +6px : marge de sécurité pour que le dernier caractère ne soit jamais rogné.
       input.style.width = Math.ceil(measurer.getBoundingClientRect().width) + 6 + 'px';
