@@ -60,10 +60,10 @@
 
 <div id="savedRecipesView" style="display:none;">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--gap-vertical-section);">
-    <button type="button" class="secondary-btn btn-square" style="margin-top:0;" onclick="showHome()"><i class="bi bi-arrow-left" style="font-size:20px;"></i></button>
+    <button type="button" class="icon-btn icon-btn-lg glass-surface" onclick="showHome()"><i class="bi bi-arrow-left icon"></i></button>
     <h1 class="text-headline" style="margin:0;">Recettes partagées</h1>
   </div>
-  <div id="savedRecipesList"></div>
+  <div id="savedRecipesList" style="display:grid;grid-template-columns:1fr;gap:var(--gap-large);"></div>
 </div>
 
 <div id="pullIndicator" style="display:flex;justify-content:center;align-items:center;height:0;overflow:hidden;transition:height 0.15s;">
@@ -1660,17 +1660,20 @@
     list.innerHTML = savedRecipes.map(row => {
       const r = row.recipe;
       return `
-        <div class="plan-recipe-row" style="cursor:pointer;" onclick="loadSharedRecipe('${r.share_token}', 'saved')">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:72px;height:72px;border-radius:var(--corner-radius-large);overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-              ${safeUrl(r.photo_url)
-                ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
-                : emptyPhotoHtml(r.id, 'small')}
-            </div>
-            <div class="plan-recipe-name">${escapeHtml(r.title)}</div>
-          </div>
-          <i class="bi bi-chevron-right" style="color:var(--text-icon-default);"></i>
-        </div>`;
+      <div class="card-v2" onclick="loadSharedRecipe('${r.share_token}', 'saved')">
+        <div class="card-v2-photo">
+          ${safeUrl(r.photo_url)
+            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML=emptyPhotoHtml('${r.id}','big','background:var(--grey-700);')" />`
+            : emptyPhotoHtml(r.id, 'big', 'background:var(--grey-700);')}
+        </div>
+        <div class="card-v2-textwrap">
+          <div class="card-v2-gradient"></div>
+        </div>
+        <div class="card-v2-content">
+          <h3>${escapeHtml(r.title)}</h3>
+        </div>
+      </div>
+      `;
     }).join('');
   }
 
@@ -1974,22 +1977,54 @@
     const ANIMATION_MS = 280;
     const SCRIM_MAX_OPACITY = 0.35;
 
-    const detailEl = document.getElementById('detailView');
+    // Toute page "de détail" ou de navigation à étapes peut se quitter en
+    // tirant depuis le bord gauche, comme sur la fiche recette — revient
+    // exactement au même endroit que le bouton retour de cette page.
+    // hasPhoto : la page a une photo en position fixed (.detail-photo) à
+    // détacher pendant le drag pour qu'elle suive le reste du contenu.
+    // reveal : id de l'écran montré en dessous pendant le drag (approximatif
+    // quand la destination dépend du contexte, ex. la fiche recette qui peut
+    // revenir au planning — même simplification qu'avant cette généralisation).
+    const EDGE_SWIPE_VIEWS = [
+      { id: 'detailView', back: () => goBackFromDetail(), hasPhoto: true, reveal: 'listView' },
+      { id: 'sharedRecipeView', back: () => goBackFromSharedRecipe(), hasPhoto: true, reveal: 'listView' },
+      { id: 'savedRecipesView', back: () => showHome(), reveal: 'listView' },
+      { id: 'accountEditView', back: () => closeAccountEdit(), reveal: 'accountView' },
+      // cond : wizardGoBack() ne fait rien à l'étape 1 (pas d'étape avant) —
+      // sans ce garde-fou, le geste ferait glisser le formulaire puis le
+      // ferait réapparaître d'un coup, faute d'action réelle à son issue.
+      { id: 'formView', back: () => wizardGoBack(), cond: () => wizardStep > 1 },
+    ];
+
     const scrimEl = document.getElementById('edgeSwipeScrim');
+    let activeView = null;
+    let viewEl = null;
+    let revealEl = null;
+    let photoEl = null;
     let startX = null;
     let startY = null;
-    let tracking = false; // un geste a démarré dans la zone de bord, sur la fiche recette
+    let tracking = false; // un geste a démarré dans la zone de bord, sur une page éligible
     let dragging = false; // confirmé horizontal (au-delà du verrou d'axe)
     let liveAnimationEnabled = false;
-    let photoEl = null;
+
+    function findActiveView() {
+      return EDGE_SWIPE_VIEWS.find(v => {
+        const el = document.getElementById(v.id);
+        if (!el || el.style.display === 'none') return false;
+        return !v.cond || v.cond();
+      }) || null;
+    }
 
     function beginLiveDrag() {
-      photoEl = detailEl.querySelector('.detail-photo');
-      detailEl.style.position = 'fixed';
-      detailEl.style.inset = '0';
-      detailEl.style.zIndex = '295';
-      if (photoEl) photoEl.style.position = 'absolute';
-      document.getElementById('listView').style.display = 'block';
+      viewEl.style.position = 'fixed';
+      viewEl.style.inset = '0';
+      viewEl.style.zIndex = '295';
+      if (activeView.hasPhoto) {
+        photoEl = viewEl.querySelector('.detail-photo');
+        if (photoEl) photoEl.style.position = 'absolute';
+      }
+      revealEl = activeView.reveal ? document.getElementById(activeView.reveal) : null;
+      if (revealEl) revealEl.style.display = 'block';
       scrimEl.style.display = 'block';
       scrimEl.style.opacity = String(SCRIM_MAX_OPACITY);
       // lockBackgroundScroll() est déjà appelé dès le premier micro-mouvement
@@ -1999,31 +2034,39 @@
     }
 
     function endLiveDrag(restoreNormalFlow) {
-      detailEl.style.transition = '';
-      detailEl.style.transform = '';
+      viewEl.style.transition = '';
+      viewEl.style.transform = '';
+      // Toujours retiré, succès ou abandon : sinon une page sans nettoyage
+      // propre côté back() (seule goBackFromDetail() le fait) garderait un
+      // position:fixed résiduel la prochaine fois qu'elle est affichée.
+      viewEl.style.position = '';
+      viewEl.style.inset = '';
+      viewEl.style.zIndex = '';
+      if (photoEl) photoEl.style.position = '';
       scrimEl.style.display = 'none';
       scrimEl.style.opacity = '';
       scrimEl.style.transition = '';
       unlockBackgroundScroll();
       if (restoreNormalFlow) {
-        // Geste abandonné : on reste sur la fiche, il faut donc redonner à
-        // tout son état normal (photo collée, fiche dans le flux de page).
-        detailEl.style.position = '';
-        detailEl.style.inset = '';
-        detailEl.style.zIndex = '';
-        if (photoEl) photoEl.style.position = '';
-        document.getElementById('listView').style.display = 'none';
+        // Geste abandonné : on reste sur la page, donc on recache l'écran
+        // du dessous qu'on avait révélé pour le drag.
+        if (revealEl) revealEl.style.display = 'none';
       }
-      // Si le retour est confirmé, goBackFromDetail() remet de toute façon
-      // tout à zéro (et la fiche est reconstruite au prochain affichage).
+      // Si le retour est confirmé, la fonction back() de la vue s'occupe de
+      // son propre affichage (la page quittée est de toute façon reconstruite
+      // au prochain affichage).
+      photoEl = null;
+      revealEl = null;
     }
 
     document.addEventListener('touchstart', (e) => {
       tracking = false;
       dragging = false;
-      if (detailEl.style.display === 'none') return;
       const x = e.touches[0].clientX;
       if (x > EDGE_ZONE) return;
+      activeView = findActiveView();
+      if (!activeView) return;
+      viewEl = document.getElementById(activeView.id);
       startX = x;
       startY = e.touches[0].clientY;
       tracking = true;
@@ -2057,7 +2100,7 @@
       if (liveAnimationEnabled) {
         const clamped = Math.max(0, Math.min(dx, window.innerWidth));
         const progress = clamped / window.innerWidth;
-        detailEl.style.transform = `translateX(${clamped}px)`;
+        viewEl.style.transform = `translateX(${clamped}px)`;
         scrimEl.style.opacity = String(SCRIM_MAX_OPACITY * (1 - progress));
       }
     }, { passive: false });
@@ -2083,20 +2126,21 @@
 
       const dx = e.changedTouches[0].clientX - startX;
       const completed = dx > window.innerWidth * COMPLETE_RATIO;
+      const back = activeView.back;
 
       if (!liveAnimationEnabled) {
-        if (completed) goBackFromDetail();
+        if (completed) back();
         return;
       }
 
-      detailEl.style.transition = `transform ${ANIMATION_MS}ms ${IOS_EASING}`;
+      viewEl.style.transition = `transform ${ANIMATION_MS}ms ${IOS_EASING}`;
       scrimEl.style.transition = `opacity ${ANIMATION_MS}ms ${IOS_EASING}`;
       if (completed) {
-        detailEl.style.transform = `translateX(${window.innerWidth}px)`;
+        viewEl.style.transform = `translateX(${window.innerWidth}px)`;
         scrimEl.style.opacity = '0';
-        setTimeout(() => { endLiveDrag(false); goBackFromDetail(); }, ANIMATION_MS);
+        setTimeout(() => { endLiveDrag(false); back(); }, ANIMATION_MS);
       } else {
-        detailEl.style.transform = 'translateX(0)';
+        viewEl.style.transform = 'translateX(0)';
         scrimEl.style.opacity = String(SCRIM_MAX_OPACITY);
         setTimeout(() => endLiveDrag(true), ANIMATION_MS);
       }
