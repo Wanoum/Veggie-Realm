@@ -3853,9 +3853,11 @@
     renderPlanningRecipes();
   }
 
+  // Toujours "personne(s)" ici, même pour une recette à la pièce : la
+  // mention "pièce" (et son "1 pièce" maladroit au singulier) est réservée
+  // au libellé du stepper dans le bottom sheet.
   function occurrenceSubtitle(r, servings) {
-    const unitWord = isPieceMode(r) ? (servings > 1 ? 'pièces' : 'pièce') : (servings > 1 ? 'personnes' : 'personne');
-    return `${servings} ${unitWord}`;
+    return `${servings} ${servings > 1 ? 'personnes' : 'personne'}`;
   }
 
   function renderPlanningRecipes() {
@@ -3884,8 +3886,11 @@
           ? `loadSharedRecipe('${r.share_token}', 'planning')`
           : `openRecipeDetail(${detailIdx}, 'planning')`;
         return sortedOccs.map(o => {
-          const subtitle = o.variantLabel
-            ? `${escapeHtml(o.variantLabel)} • ${occurrenceSubtitle(r, o.servings)}`
+          // "Originale" affichée seulement si la recette a réellement
+          // d'autres versions — sinon la précision n'a pas de sens.
+          const versionName = o.variantLabel || (versionOrder.length > 1 ? 'Originale' : '');
+          const subtitle = versionName
+            ? `${escapeHtml(versionName)} • ${occurrenceSubtitle(r, o.servings)}`
             : occurrenceSubtitle(r, o.servings);
           return `
             <div class="plan-recipe-row">
@@ -4049,7 +4054,7 @@
       }
     }
 
-    document.getElementById('planOccurrenceServingsLabel').textContent = 'Nombre de personnes';
+    document.getElementById('planOccurrenceServingsLabel').textContent = isPieceMode(r) ? 'Nombre de pièces' : 'Nombre de personnes';
     document.getElementById('planOccurrenceValue').textContent = st.servings;
 
     document.getElementById('planOccurrenceSaveBtn').innerHTML = st.mode === 'edit'
