@@ -353,12 +353,12 @@
 
 <div id="planOccurrenceSheet" style="display:none;">
   <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;" onclick="closePlanOccurrenceSheet()"></div>
-  <div id="planOccurrencePanel" style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
+  <div id="planOccurrencePanel" class="sheet-panel" style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
     <div class="detail-sheet-handle"></div>
     <h2 id="planOccurrenceTitle" style="margin-bottom:var(--gap-vertical-section);"></h2>
     <div id="planOccurrenceMealTypesWrap" style="display:none;margin-bottom:20px;">
       <label class="field-label">Type de repas</label>
-      <div id="planOccurrenceMealTypes" style="display:flex;gap:8px;"></div>
+      <div id="planOccurrenceMealTypes" style="display:flex;gap:var(--gap-xsmall);"></div>
     </div>
     <div id="planOccurrenceVariantWrap" style="display:none;margin-bottom:20px;position:relative;">
       <label class="field-label">Version</label>
@@ -366,7 +366,7 @@
         <span id="planOccurrenceVariantLabel">Base</span>
         <i class="bi bi-chevron-down"></i>
       </button>
-      <div id="planOccurrenceVariantMenu" class="course-sort-menu" style="display:none;"></div>
+      <div id="planOccurrenceVariantMenu" class="course-sort-menu" style="display:none;left:0;right:0;width:auto;"></div>
     </div>
     <label class="field-label" id="planOccurrenceServingsLabel">Nombre de personnes</label>
     <div class="servings-stepper servings-stepper-lg" style="margin-bottom:20px;">
@@ -382,7 +382,7 @@
 
 <div id="courseQtySheet" style="display:none;">
   <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;" onclick="closeCourseQtySheet()"></div>
-  <div style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
+  <div class="sheet-panel" style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
     <div class="detail-sheet-handle"></div>
     <h2 id="courseQtyTitle" style="margin-bottom:var(--gap-vertical-section);"></h2>
     <div id="courseQtyStepperWrap" style="display:none;">
@@ -403,7 +403,7 @@
 
 <div id="recipeActionsMenu" style="display:none;">
   <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;" onclick="closeRecipeActionsMenu()"></div>
-  <div style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
+  <div class="sheet-panel" style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
     <div class="detail-sheet-handle"></div>
     <button type="button" class="settings-row" onclick="shareRecipeLink()"><span style="display:flex;align-items:center;gap:10px;"><i class="bi bi-share"></i> Partager le lien</span></button>
     <button type="button" class="settings-row" onclick="exportRecipeAs('pdf')"><span style="display:flex;align-items:center;gap:10px;"><i class="bi bi-file-earmark-pdf"></i> Exporter en PDF</span></button>
@@ -415,7 +415,7 @@
 
 <div id="variantPickerSheet" style="display:none;">
   <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;" onclick="closeVariantPickerSheet()"></div>
-  <div style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
+  <div class="sheet-panel" style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
     <div class="detail-sheet-handle"></div>
     <div id="variantPickerList"></div>
     <button type="button" id="createVariantBtn" style="display:flex;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);"><i class="bi bi-plus-circle-fill"></i> <span style="text-decoration:underline;">Créer une version</span></button>

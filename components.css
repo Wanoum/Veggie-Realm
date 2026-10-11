@@ -252,12 +252,23 @@
   padding: 0 var(--padding-horizontal-default);
   border: none;
   border-radius: var(--corner-radius-default);
-  background: var(--interaction-tertiary);
+  background: var(--surface-highest);
   font-family: 'Inter', sans-serif;
   font-size: 18px;
   line-height: 120%;
   color: var(--text-icon-default);
 }
+
+/* ---- Contrôles à l'intérieur d'un bottom sheet (fond teinté) ----
+   Sur un fond neutre (page), les contrôles inactifs utilisent
+   --interaction-tertiary pour se détacher. Sur le fond teinté d'un bottom
+   sheet, ce même ton se fond dedans — ils passent donc sur --surface-highest
+   (blanc) à la place. Les labels de champ suivent la même logique de
+   contraste : --text-icon-secondary est pensé pour un fond clair, pas pour
+   le fond vert d'un sheet, donc --text-icon-default à la place. */
+.sheet-panel .filter-chip:not(.active) { background: var(--surface-highest); }
+.sheet-panel .servings-stepper button { background: var(--surface-highest); }
+.sheet-panel .field-label { color: var(--text-icon-default); }
 
 /* ---- Menu déroulant générique (photo, mode de portions...) ---- */
 .course-sort-menu {
