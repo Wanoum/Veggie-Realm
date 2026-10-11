@@ -1799,6 +1799,12 @@
   document.getElementById('navAdd').onclick = showForm;
   document.getElementById('navPlanning').onclick = showPlanning;
 
+  // Zone de bord (geste de retour) et liste des pages "de détail"/à étapes —
+  // partagées avec le pull-to-refresh ci-dessous, pour qu'il ne se déclenche
+  // ni pendant un geste de retour, ni sur une sous-page (voir isRefreshAllowed).
+  const EDGE_SWIPE_ZONE_PX = 24;
+  const EDGE_SWIPE_PAGE_IDS = ['detailView', 'sharedRecipeView', 'savedRecipesView', 'accountEditView', 'formView'];
+
   // ---- Tirer pour rafraîchir (pull-to-refresh) ----
   (function setupPullToRefresh() {
     const indicator = document.getElementById('pullIndicator');
@@ -1810,12 +1816,20 @@
     function isRefreshAllowed() {
       return document.getElementById('cookingModeView').style.display === 'none'
           && document.getElementById('authView').style.display === 'none'
-          && stepDragIdx === null;
+          && stepDragIdx === null
+          // Seulement sur une page "pleine" (accueil, Repas prévus/Liste,
+          // Compte) — pas sur une sous-page de détail/à étapes, où tirer
+          // vers le bas sert déjà à d'autres gestes (ou n'a pas de sens).
+          && !EDGE_SWIPE_PAGE_IDS.some(id => document.getElementById(id).style.display !== 'none');
     }
 
     document.addEventListener('touchstart', (e) => {
       if (!isRefreshAllowed()) { startY = null; pulling = false; return; }
       if ((window.scrollY || document.documentElement.scrollTop || 0) > 0) { startY = null; pulling = false; return; }
+      // Un doigt posé dans la zone de bord gauche peut être le début d'un
+      // geste de retour (edge-swipe-back, voir plus bas) : on ne tire jamais
+      // pour rafraîchir dans ce cas, même si le geste finit par être vertical.
+      if (e.touches[0].clientX <= EDGE_SWIPE_ZONE_PX) { startY = null; pulling = false; return; }
       startY = e.touches[0].clientY;
       pulling = true;
     }, { passive: true });
@@ -1978,7 +1992,7 @@
   enableSheetDragToClose('coursesActionsSheet', closeCoursesActionsSheet);
 
   (function setupEdgeSwipeBack() {
-    const EDGE_ZONE = 24; // px depuis le bord gauche où le geste doit démarrer
+    const EDGE_ZONE = EDGE_SWIPE_ZONE_PX; // px depuis le bord gauche où le geste doit démarrer — partagé avec le pull-to-refresh
     const AXIS_LOCK_PX = 4; // mouvement minimal avant de trancher horizontal/vertical (faible : on tranche tôt pour ne laisser fuiter aucun scroll)
     const COMPLETE_RATIO = 0.35; // fraction de la largeur d'écran à partir de laquelle le retour se confirme
     const IOS_EASING = 'cubic-bezier(0.32, 0.72, 0, 1)';
@@ -2030,6 +2044,14 @@
       // donc leur rendu normal à l'identique, padding compris.
       viewEl.style.position = 'fixed';
       viewEl.style.inset = '0';
+      // Les pages plein-bleed (fiche recette, .page-fullbleed) utilisent une
+      // marge négative pour s'extraire du padding du body QUAND ELLES SONT
+      // EN FLUX NORMAL. Une fois en position:fixed avec inset:0, cette même
+      // marge négative s'additionne aux bords déjà fixés à 0 (au lieu de
+      // "s'annuler" comme en flux normal) et pousse le contenu hors écran,
+      // sous la status bar. On neutralise donc la marge pendant tout le
+      // drag — inset:0 à lui seul suffit à occuper tout le viewport.
+      viewEl.style.margin = '0';
       viewEl.style.zIndex = '295';
       if (activeView.hasPhoto) {
         photoEl = viewEl.querySelector('.detail-photo');
@@ -2058,6 +2080,7 @@
       // position:fixed résiduel la prochaine fois qu'elle est affichée.
       viewEl.style.position = '';
       viewEl.style.inset = '';
+      viewEl.style.margin = '';
       viewEl.style.background = '';
       viewEl.style.zIndex = '';
       if (photoEl) photoEl.style.position = '';
