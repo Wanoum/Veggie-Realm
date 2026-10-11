@@ -76,7 +76,7 @@
 }
 .icon-pill-btn i { font-size: 20px; }
 .icon-pill-btn-danger { background: rgba(162, 34, 5, 0.12); color: var(--text-icon-error); }
-.icon-pill-btn-accent { background: var(--interaction-secondary); color: var(--text-icon-accent); }
+.icon-pill-btn-accent { background: var(--interaction-tertiary); color: var(--text-icon-accent); }
 
 .secondary-btn {
   width: 100%;

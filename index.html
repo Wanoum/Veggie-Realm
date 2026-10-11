@@ -315,8 +315,7 @@
 <div id="planningView" style="display:none;">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);position:relative;">
     <h1 style="margin:0;">Courses</h1>
-    <button type="button" class="icon-btn" id="coursesMenuBtn" style="background:var(--interaction-tertiary);border:none;color:var(--text-icon-default);" onclick="toggleCoursesMenu()"><i class="bi bi-three-dots"></i></button>
-    <div id="coursesMenu" class="course-sort-menu" style="display:none;"></div>
+    <button type="button" class="icon-btn glass-surface" id="coursesMenuBtn" onclick="handleCoursesMenuBtnClick()"><i class="bi bi-clock-history" id="coursesMenuBtnIcon"></i></button>
   </div>
   <div class="subtabs">
     <button id="subtabRecipes" class="subtab-btn active">Repas prévus</button>
@@ -407,6 +406,15 @@
     <button type="button" class="settings-row" onclick="exportRecipeAs('docx')"><span style="display:flex;align-items:center;gap:10px;"><i class="bi bi-file-earmark-word"></i> Exporter en Word</span></button>
     <button type="button" class="settings-row" onclick="closeRecipeActionsMenu(); editCurrentRecipe();"><span style="display:flex;align-items:center;gap:10px;"><i class="bi bi-pencil"></i> Modifier</span></button>
     <button type="button" class="settings-row" style="color:var(--text-icon-error);" onclick="closeRecipeActionsMenu(); deleteCurrentRecipe();"><span style="display:flex;align-items:center;gap:10px;"><i class="bi bi-trash"></i> Supprimer</span></button>
+  </div>
+</div>
+
+<div id="coursesActionsSheet" style="display:none;">
+  <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;" onclick="closeCoursesActionsSheet()"></div>
+  <div class="sheet-panel" style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
+    <div class="detail-sheet-handle"></div>
+    <button type="button" class="settings-row" id="coursesActionsEditRow" onclick="closeCoursesActionsSheet(); setCoursesEditMode(!coursesEditMode);"><span style="display:flex;align-items:center;gap:10px;"><i class="bi bi-pencil"></i> <span id="coursesActionsEditLabel">Modifier</span></span></button>
+    <button type="button" class="settings-row" onclick="closeCoursesActionsSheet(); resetCoursesOrPlanning();"><span style="display:flex;align-items:center;gap:10px;"><i class="bi bi-clock-history"></i> Réinitialiser les quantités</span></button>
   </div>
 </div>
 
@@ -1956,6 +1964,7 @@
   enableSheetDragToClose('planOccurrenceSheet', closePlanOccurrenceSheet);
   enableSheetDragToClose('courseQtySheet', closeCourseQtySheet);
   enableSheetDragToClose('variantPickerSheet', closeVariantPickerSheet);
+  enableSheetDragToClose('coursesActionsSheet', closeCoursesActionsSheet);
 
   (function setupEdgeSwipeBack() {
     const EDGE_ZONE = 24; // px depuis le bord gauche où le geste doit démarrer
@@ -4265,35 +4274,37 @@
     }
   }
 
-  function renderCoursesMenu() {
+  // Repas prévus : une seule action possible (réinitialiser le planning),
+  // donc le bouton l'exécute directement, pas de menu pour un choix unique.
+  // Liste : deux actions (Modifier / Réinitialiser les quantités), donc le
+  // bouton ouvre un bottom sheet (cohérent avec les autres bottom sheets de
+  // l'app) plutôt qu'un petit menu ancré.
+  function updateCoursesMenuBtnIcon() {
     const onListTab = document.getElementById('subtabCourses').classList.contains('active');
-    const menu = document.getElementById('coursesMenu');
-    menu.innerHTML = (onListTab ? `
-      <button type="button" class="course-sort-menu-item text-body" data-courses-menu-action="edit"><span>${coursesEditMode ? 'Terminer' : 'Modifier'}</span><i class="bi bi-pencil"></i></button>
-      <button type="button" class="course-sort-menu-item text-body" data-courses-menu-action="reset"><span>Réinitialiser les quantités</span><i class="bi bi-clock-history"></i></button>
-    ` : `
-      <button type="button" class="course-sort-menu-item text-body" data-courses-menu-action="reset"><span>Réinitialiser le planning</span><i class="bi bi-clock-history"></i></button>
-    `);
-    menu.querySelectorAll('[data-courses-menu-action]').forEach(btn => {
-      btn.onclick = () => {
-        menu.style.display = 'none';
-        if (btn.dataset.coursesMenuAction === 'edit') setCoursesEditMode(!coursesEditMode);
-        else resetCoursesOrPlanning();
-      };
-    });
+    document.getElementById('coursesMenuBtnIcon').className = onListTab ? 'bi bi-three-dots' : 'bi bi-clock-history';
   }
 
-  function toggleCoursesMenu() {
-    const menu = document.getElementById('coursesMenu');
-    if (menu.style.display === 'none') renderCoursesMenu();
-    menu.style.display = menu.style.display === 'none' ? 'flex' : 'none';
+  function handleCoursesMenuBtnClick() {
+    const onListTab = document.getElementById('subtabCourses').classList.contains('active');
+    if (onListTab) openCoursesActionsSheet();
+    else resetCoursesOrPlanning();
+  }
+
+  function openCoursesActionsSheet() {
+    document.getElementById('coursesActionsEditLabel').textContent = coursesEditMode ? 'Terminer' : 'Modifier';
+    document.getElementById('coursesActionsSheet').style.display = 'flex';
+    lockBackgroundScroll();
+  }
+
+  function closeCoursesActionsSheet() {
+    const wasOpen = document.getElementById('coursesActionsSheet').style.display !== 'none';
+    document.getElementById('coursesActionsSheet').style.display = 'none';
+    if (wasOpen) unlockBackgroundScroll();
   }
 
   document.addEventListener('click', (e) => {
     const sortMenu = document.getElementById('coursesSortMenu');
     if (sortMenu && sortMenu.style.display !== 'none' && !e.target.closest('#coursesSortRow')) sortMenu.style.display = 'none';
-    const coursesMenu = document.getElementById('coursesMenu');
-    if (coursesMenu && coursesMenu.style.display !== 'none' && !e.target.closest('#coursesMenuBtn') && !e.target.closest('#coursesMenu')) coursesMenu.style.display = 'none';
   });
 
   document.getElementById('subtabRecipes').onclick = () => {
@@ -4303,6 +4314,7 @@
     document.getElementById('planningCoursesPanel').style.display = 'none';
     document.getElementById('planSearchBar').style.display = 'flex';
     setCoursesEditMode(false);
+    updateCoursesMenuBtnIcon();
     renderPlanningRecipes();
   };
 
@@ -4312,6 +4324,7 @@
     document.getElementById('planningCoursesPanel').style.display = 'block';
     document.getElementById('planningRecipesPanel').style.display = 'none';
     document.getElementById('planSearchBar').style.display = 'none';
+    updateCoursesMenuBtnIcon();
     renderCoursesList();
   };
 
