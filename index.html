@@ -679,7 +679,9 @@
     return {
       ...r,
       ingredients: (variant.ingredients && variant.ingredients.length) ? variant.ingredients : r.ingredients,
-      steps: (variant.steps && variant.steps.length) ? variant.steps : r.steps
+      steps: (variant.steps && variant.steps.length) ? variant.steps : r.steps,
+      cook_time_minutes: variant.cook_time_minutes != null ? variant.cook_time_minutes : r.cook_time_minutes,
+      oven_temp_celsius: variant.oven_temp_celsius != null ? variant.oven_temp_celsius : r.oven_temp_celsius
     };
   }
 
@@ -808,7 +810,7 @@
     const rView = effectiveRecipeView(r);
     const base = getRecipeBase(r);
     const s = currentServings[i];
-    const metaPills = buildMetaPills(r);
+    const metaPills = buildMetaPills(rView);
 
     const ingredientsHtml = orderIngredientsByAppearance(rView).map(ing => {
       const q = ing.quantity != null ? (ing.quantity * s / base) : null;
@@ -2049,17 +2051,29 @@
   let ingRows = [];
   let editingId = null;
 
-  // ---- Variantes (optionnel, étape 5 du formulaire) ----
-  // Une entrée par variante : {label, ingredientsText, sameSteps, stepsText}.
-  // ingredientsText/stepsText restent du texte brut (une ligne par
-  // ingrédient/étape) jusqu'à l'enregistrement, où ils sont parsés avec les
-  // mêmes fonctions que les ingrédients/étapes de la recette originale —
-  // plus simple qu'une édition ligne par ligne comme ingRows/stepRows, qui
-  // demanderait de dupliquer tout ce système par variante.
+  // ---- Variantes (optionnel, à la fin de l'étape Étapes du formulaire) ----
+  // Une entrée par variante : {label, ingredientsText, stepsText, cookTimeText, ovenTempText}.
+  // Pré-remplie avec une copie de l'originale au moment de l'ajout (plutôt
+  // que de partir d'un formulaire vide) : l'utilisateur n'a plus qu'à
+  // modifier ce qui change réellement. ingredientsText/stepsText restent du
+  // texte brut (une ligne par ingrédient/étape) jusqu'à l'enregistrement, où
+  // ils sont parsés avec les mêmes fonctions que les ingrédients/étapes de
+  // la recette originale — plus simple qu'une édition ligne par ligne comme
+  // ingRows/stepRows, qui demanderait de dupliquer tout ce système par variante.
   let variantRows = [];
 
   function addVariantRow() {
-    variantRows.push({ label: '', ingredientsText: '', sameSteps: true, stepsText: '' });
+    const ingredientsText = ingRows
+      .filter(row => row.name && row.name.trim())
+      .map(row => [row.qtyUnitText, row.name].filter(Boolean).join(' ').trim())
+      .join('\n');
+    variantRows.push({
+      label: '',
+      ingredientsText,
+      stepsText: stepRows.join('\n'),
+      cookTimeText: document.getElementById('f_cook').value || '',
+      ovenTempText: document.getElementById('f_oven').value || ''
+    });
     renderVariantsList();
   }
 
@@ -2070,13 +2084,11 @@
         <input class="field-input" style="margin-bottom:var(--gap-default);" placeholder="Nom de la variante (ex : Sans gluten)" data-variant-idx="${idx}" data-variant-field="label" value="${escapeHtml(v.label)}" />
         <label class="field-label">Ingrédients (un par ligne)</label>
         <textarea class="field-input" style="min-height:80px;margin-bottom:var(--gap-default);" data-variant-idx="${idx}" data-variant-field="ingredientsText" placeholder="ex : 200 g farine sans gluten">${escapeHtml(v.ingredientsText)}</textarea>
-        <label style="display:flex;align-items:center;gap:8px;margin-bottom:var(--gap-default);">
-          <input type="checkbox" data-variant-idx="${idx}" data-variant-field="sameSteps" ${v.sameSteps ? 'checked' : ''} />
-          <span class="text-small">Mêmes étapes que l'originale</span>
-        </label>
-        <div style="display:${v.sameSteps ? 'none' : 'block'};">
-          <label class="field-label">Étapes (une par ligne)</label>
-          <textarea class="field-input" style="min-height:80px;margin-bottom:var(--gap-default);" data-variant-idx="${idx}" data-variant-field="stepsText" placeholder="ex : Mélanger la farine sans gluten et l'eau">${escapeHtml(v.stepsText)}</textarea>
+        <label class="field-label">Étapes (une par ligne)</label>
+        <textarea class="field-input" style="min-height:80px;margin-bottom:var(--gap-default);" data-variant-idx="${idx}" data-variant-field="stepsText" placeholder="ex : Mélanger la farine sans gluten et l'eau">${escapeHtml(v.stepsText)}</textarea>
+        <div style="display:flex;gap:8px;margin-bottom:var(--gap-default);">
+          <input class="field-input" type="number" placeholder="Temps de cuisson" style="flex:1;" data-variant-idx="${idx}" data-variant-field="cookTimeText" value="${escapeHtml(v.cookTimeText)}" />
+          <input class="field-input" type="number" placeholder="Température °C" style="flex:1;" data-variant-idx="${idx}" data-variant-field="ovenTempText" value="${escapeHtml(v.ovenTempText)}" />
         </div>
         <button type="button" class="secondary-btn" style="width:100%;color:var(--text-icon-error);" data-remove-variant="${idx}"><i class="bi bi-trash"></i> Supprimer la variante</button>
       </div>
@@ -2085,8 +2097,7 @@
     container.querySelectorAll('[data-variant-field]').forEach(el => {
       const handler = (e) => {
         const idx = Number(e.target.dataset.variantIdx), field = e.target.dataset.variantField;
-        variantRows[idx][field] = field === 'sameSteps' ? e.target.checked : e.target.value;
-        if (field === 'sameSteps') renderVariantsList();
+        variantRows[idx][field] = e.target.value;
       };
       el.oninput = handler;
       el.onchange = handler;
@@ -2119,8 +2130,13 @@
       const qtyUnit = [ing.quantity, ing.unit].filter(x => x != null && x !== '').join(' ');
       return [qtyUnit, ing.name].filter(Boolean).join(' ').trim();
     }).join('\n');
-    const hasSteps = v.steps && v.steps.length > 0;
-    return { label: v.label || '', ingredientsText, sameSteps: !hasSteps, stepsText: hasSteps ? v.steps.join('\n') : '' };
+    return {
+      label: v.label || '',
+      ingredientsText,
+      stepsText: (v.steps || []).join('\n'),
+      cookTimeText: v.cook_time_minutes != null ? String(v.cook_time_minutes) : '',
+      ovenTempText: v.oven_temp_celsius != null ? String(v.oven_temp_celsius) : ''
+    };
   }
 
   function buildVariantsPayload() {
@@ -2129,7 +2145,9 @@
       .map(v => ({
         label: v.label.trim(),
         ingredients: parseIngredientTextBlock(v.ingredientsText),
-        steps: v.sameSteps ? [] : v.stepsText.split(/\r\n|\r|\n/).map(s => s.trim()).filter(Boolean)
+        steps: v.stepsText.split(/\r\n|\r|\n/).map(s => s.trim()).filter(Boolean),
+        cook_time_minutes: v.cookTimeText ? Number(v.cookTimeText) : null,
+        oven_temp_celsius: v.ovenTempText ? Number(v.ovenTempText) : null
       }));
   }
 
