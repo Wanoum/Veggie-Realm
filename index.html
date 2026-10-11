@@ -2091,14 +2091,22 @@
     void el.offsetWidth; // force le reflow avant de ré-activer la transition
     el.style.transition = 'transform 280ms cubic-bezier(0.32, 0.72, 0, 1)';
     requestAnimationFrame(() => { el.style.transform = 'translateX(0)'; });
+    // Nettoyage sur un timer plutôt que sur transitionend : cet évènement
+    // peut ne jamais se déclencher (navigation interrompue par un nouvel
+    // appel avant la fin des 280ms, re-rendu qui enlève l'élément du DOM
+    // entre-temps...), laissant alors la photo/le footer bloqués en
+    // position:absolute en permanence — bug constaté (marge visible autour
+    // de la photo de la fiche recette, qui n'est alors plus plein-bleed).
+    let cleaned = false;
     const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
       el.style.transition = '';
       el.style.transform = '';
       if (photoEl) photoEl.style.position = '';
       if (footerEl) footerEl.style.position = '';
-      el.removeEventListener('transitionend', cleanup);
     };
-    el.addEventListener('transitionend', cleanup);
+    setTimeout(cleanup, 320);
   }
 
   // Permet de fermer un bottom sheet en le tirant vers le bas depuis sa
