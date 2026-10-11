@@ -262,6 +262,7 @@
   color: var(--text-icon-default);
 }
 .field-input::placeholder { color: var(--text-icon-secondary); }
+.field-input:disabled { color: var(--text-icon-disabled); background: var(--surface-low); }
 /* Champ combiné icône + valeur + unité (ex: "🔥 Cuisson ... min"), même
    boîte que .field-input mais en ligne avec une icône et un suffixe. */
 .field-input-icon {

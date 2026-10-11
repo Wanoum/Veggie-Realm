@@ -1272,7 +1272,7 @@
     document.getElementById('bottomNav').style.display = (step === 1) ? 'flex' : 'none';
     document.getElementById('wizardFooter').style.display = (step === 1) ? 'none' : 'flex';
     document.getElementById('wizardNextBtn').innerHTML = (step === 4)
-      ? '<i class="bi bi-check-lg"></i> Enregistrer la recette'
+      ? (creatingVariantFor ? '<i class="bi bi-check-lg"></i> Enregistrer la version' : '<i class="bi bi-check-lg"></i> Enregistrer la recette')
       : '<i class="bi bi-arrow-right"></i> Suivant';
     document.getElementById('formError').textContent = '';
 
@@ -1281,8 +1281,9 @@
       // Créer des versions n'a de sens que pour une recette déjà enregistrée
       // (sinon on mélange "créer la recette" et "créer une version" dans un
       // même parcours non sauvegardé) : la section reste masquée tant qu'on
-      // n'est pas en édition.
-      document.getElementById('variantsSection').style.display = editingId ? 'block' : 'none';
+      // n'est pas en édition — et une version ne peut pas elle-même avoir de
+      // version, donc masquée aussi pendant la création d'une version.
+      document.getElementById('variantsSection').style.display = (editingId && !creatingVariantFor) ? 'block' : 'none';
       renderVariantsList();
     }
     if (step === 2) {
@@ -1312,12 +1313,11 @@
   }
 
   function wizardGoBack() {
-    // Entrée directe sur l'étape Versions (depuis "Créer une version" sur la
-    // fiche) : reculer quitte vers la fiche, pas vers l'étape Ingrédients de
-    // la recette de base qui n'a rien à faire dans ce parcours.
-    if (wizardVariantOnlyEntry && wizardStep === 4) {
-      const idx = currentDetailIndex;
-      wizardVariantOnlyEntry = false;
+    // Parcours de création de version : comme pour l'édition, démarre
+    // directement à l'étape 2 (pas d'étape Source) — reculer quitte donc
+    // vers la fiche plutôt que vers l'étape 1, qui n'a pas de sens ici.
+    if (creatingVariantFor && wizardStep === 2) {
+      const idx = recipes.findIndex(x => x.id === creatingVariantFor.id);
       discardAbandonedUploads();
       resetForm();
       clearWizardDraft();
@@ -1508,7 +1508,7 @@
       if (wizardStep === 1) return; // on attend un choix explicite (nouvelle recette / import)
       goToWizardStep(wizardStep + 1);
     } else {
-      saveRecipe();
+      if (creatingVariantFor) saveVariant(); else saveRecipe();
     }
   };
 
@@ -2192,17 +2192,87 @@
 
   // true quand on a sauté directement à l'étape Versions (depuis la fiche,
   // via "Créer une version") plutôt que de passer par tout le formulaire
-  // d'édition : "retour" doit alors quitter vers la fiche, pas atterrir sur
-  // l'étape Ingrédients de la recette de base.
-  let wizardVariantOnlyEntry = false;
+  // Recette dont on est en train de créer une version, le temps du parcours
+  // dédié (étapes 2 à 4 réutilisées telles quelles — infos, ingrédients,
+  // étapes — mais réinterprétées : f_title porte le nom de la version, pas
+  // le titre, qui reste celui de la recette). null = parcours normal.
+  let creatingVariantFor = null;
 
   function createVersionForCurrentRecipe() {
-    editCurrentRecipe(4);
-    wizardVariantOnlyEntry = true;
-    addVariantRow();
+    const r = recipes[currentDetailIndex];
+    creatingVariantFor = r;
+    resetForm();
+    document.getElementById('f_title').placeholder = 'Nom de la version';
+    selectedMealTypes = [...(r.tags || [])].filter(t => MEAL_TYPES.includes(t));
+    renderMealTypeToggles();
+    document.getElementById('f_servings').value = r.servings || (isPieceMode(r) ? 1 : 4);
+    document.getElementById('f_servings').disabled = true;
+    document.getElementById('f_servingModeBtn').disabled = true;
+    setFormServingMode(r.serving_mode === 'piece' ? 'piece' : 'portion');
+    document.getElementById('f_cook').value = r.cook_time_minutes || '';
+    document.getElementById('f_oven').value = r.oven_temp_celsius || '';
+    ingRows = (r.ingredients || []).map(ing => ({
+      qtyUnitText: [ing.quantity, ing.unit].filter(v => v != null && v !== '').join(' '),
+      name: ing.name ?? ''
+    }));
+    ingRows.push({ qtyUnitText: '', name: '' });
+    stepRows = [...(r.steps || [])];
+    renderStepsList();
+    renderIngRows();
+    document.getElementById('photoDropZone').style.display = 'none';
+    document.getElementById('f_notes').style.display = 'none';
+    document.getElementById('detailView').style.display = 'none';
+    document.getElementById('formView').style.display = 'block';
+    document.getElementById('bottomNav').style.display = 'flex';
+    goToWizardStep(2);
+    sessionStorage.setItem('lastView', 'form');
   }
 
-  function editCurrentRecipe(targetStep) {
+  async function saveVariant() {
+    const r = creatingVariantFor;
+    const label = document.getElementById('f_title').value.trim();
+    if (!label) return;
+    const ingredients = ingRows
+      .filter(row => row.name && row.name.trim())
+      .map(row => {
+        const { quantity, unit } = parseQtyUnit(row.qtyUnitText);
+        return { name: canonicalizeIngredientName(row.name), quantity, unit };
+      });
+    const newVariant = {
+      label,
+      ingredients,
+      steps: [...stepRows],
+      tags: [...selectedMealTypes],
+      cook_time_minutes: document.getElementById('f_cook').value ? Number(document.getElementById('f_cook').value) : null,
+      oven_temp_celsius: document.getElementById('f_oven').value ? Number(document.getElementById('f_oven').value) : null
+    };
+
+    const nextBtn = document.getElementById('wizardNextBtn');
+    nextBtn.textContent = "Enregistrement...";
+    nextBtn.disabled = true;
+
+    const updatedVariants = [...(r.variants || []), newVariant];
+    const { error } = await sb.from('recipes').update({ variants: updatedVariants }).eq('id', r.id);
+    nextBtn.disabled = false;
+
+    if (error) {
+      document.getElementById('formError').textContent = "Erreur lors de l'enregistrement : " + error.message;
+      nextBtn.innerHTML = '<i class="bi bi-check-lg"></i> Enregistrer la version';
+      console.error(error);
+      return;
+    }
+
+    r.variants = updatedVariants;
+    selectedVariantLabel = label;
+    const idx = recipes.findIndex(x => x.id === r.id);
+    creatingVariantFor = null;
+    resetForm();
+    clearWizardDraft();
+    showDetail(idx);
+    showToast('Version enregistrée');
+  }
+
+  function editCurrentRecipe() {
     const r = recipes[currentDetailIndex];
     editingId = r.id;
     currentSessionUploadPath = null;
@@ -2210,12 +2280,17 @@
     currentSessionSourceUploadPath = null;
     importedSourceUrl = r.source_url || null;
     document.getElementById('formTitle').textContent = "Modifier la recette";
+    document.getElementById('f_title').placeholder = 'Titre de la recette';
     document.getElementById('f_title').value = r.title || '';
     document.getElementById('f_photo').value = r.photo_url || '';
     updatePhotoPreview(r.photo_url);
+    document.getElementById('photoDropZone').style.display = '';
+    document.getElementById('f_notes').style.display = '';
     selectedMealTypes = [...(r.tags || [])].filter(t => MEAL_TYPES.includes(t));
     renderMealTypeToggles();
     document.getElementById('f_servings').value = r.servings || 4;
+    document.getElementById('f_servings').disabled = false;
+    document.getElementById('f_servingModeBtn').disabled = false;
     setFormServingMode(r.serving_mode === 'piece' ? 'piece' : 'portion');
     document.getElementById('f_cook').value = r.cook_time_minutes || '';
     document.getElementById('f_oven').value = r.oven_temp_celsius || '';
@@ -2233,7 +2308,7 @@
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('formView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
-    goToWizardStep(targetStep || 2);
+    goToWizardStep(2);
     // Sans ça, un redémarrage de la page en cours d'édition restaurerait la
     // fiche recette (dernière vue avant l'édition) plutôt que le formulaire.
     sessionStorage.setItem('lastView', 'form');
@@ -2983,7 +3058,7 @@
 
   function resetForm() {
     editingId = null;
-    wizardVariantOnlyEntry = false;
+    creatingVariantFor = null;
     currentSessionUploadPath = null;
     originalPhotoUrlForSession = null;
     currentSessionSourceUploadPath = null;
@@ -2993,12 +3068,17 @@
     document.getElementById('importFetchBtn').disabled = true;
     document.getElementById('formTitle').textContent = "Nouvelle recette";
     document.getElementById('f_title').value = '';
+    document.getElementById('f_title').placeholder = 'Titre de la recette';
     document.getElementById('f_photo').value = '';
     updatePhotoPreview(null);
     document.getElementById('photoUploadStatus').textContent = '';
+    document.getElementById('photoDropZone').style.display = '';
+    document.getElementById('f_notes').style.display = '';
     selectedMealTypes = [];
     renderMealTypeToggles();
     document.getElementById('f_servings').value = '';
+    document.getElementById('f_servings').disabled = false;
+    document.getElementById('f_servingModeBtn').disabled = false;
     setFormServingMode('portion');
     document.getElementById('f_cook').value = '';
     document.getElementById('f_oven').value = '';
