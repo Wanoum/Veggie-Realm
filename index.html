@@ -324,6 +324,10 @@
   <svg class="icon-svg"><use href="#icon-search-outline"/></svg>
   <input id="planSearchInput" placeholder="Recherche" oninput="handlePlanSearchInput()" />
 </div>
+<div id="savedSearchBar" class="floating-search glass-surface" style="display:none;">
+  <svg class="icon-svg"><use href="#icon-search-outline"/></svg>
+  <input id="savedSearchInput" placeholder="Recherche" oninput="handleSavedSearchInput()" />
+</div>
 
 <nav id="bottomNav" style="display:none;">
   <button id="navHome" class="nav-btn active">
@@ -612,7 +616,7 @@
       document.body.appendChild(measurer);
       sizeFloatingSearchInputs._measurer = measurer;
     }
-    ['recipeSearchInput', 'planSearchInput'].forEach(id => {
+    ['recipeSearchInput', 'planSearchInput', 'savedSearchInput'].forEach(id => {
       const input = document.getElementById(id);
       if (!input) return;
       measurer.textContent = input.placeholder || '';
@@ -1414,6 +1418,7 @@
     document.getElementById('edgeSwipeScrim').style.display = 'none';
     document.getElementById('recipeSearchBar').style.display = 'none';
     document.getElementById('planSearchBar').style.display = 'none';
+    document.getElementById('savedSearchBar').style.display = 'none';
     document.getElementById('detailView').style.position = '';
     document.getElementById('detailView').style.inset = '';
     document.getElementById('detailView').style.transform = '';
@@ -1834,9 +1839,17 @@
     window.scrollTo(0, 0);
     hideAllViews();
     document.getElementById('savedRecipesView').style.display = 'block';
+    document.getElementById('savedSearchBar').style.display = 'flex';
+    sizeFloatingSearchInputs();
     document.getElementById('bottomNav').style.display = 'none';
     animatePageEnter(document.getElementById('savedRecipesView'));
     sessionStorage.setItem('lastView', 'saved');
+    renderSavedRecipesList();
+  }
+
+  let savedSearchQuery = '';
+  function handleSavedSearchInput() {
+    savedSearchQuery = normalize(document.getElementById('savedSearchInput').value);
     renderSavedRecipesList();
   }
 
@@ -1847,7 +1860,12 @@
       list.innerHTML = '<div class="empty">Aucune recette partagée pour le moment.</div>';
       return;
     }
-    list.innerHTML = savedRecipes.map(row => {
+    const filtered = savedSearchQuery ? savedRecipes.filter(row => matchesQuery(row.recipe, savedSearchQuery)) : savedRecipes;
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="empty">Aucun résultat pour ces critères.</div>';
+      return;
+    }
+    list.innerHTML = filtered.map(row => {
       const r = row.recipe;
       return `
       <div class="card-v2" onclick="loadSharedRecipe('${r.share_token}', 'saved')">
