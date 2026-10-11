@@ -1019,8 +1019,8 @@
     document.getElementById('detailView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'none';
     document.body.style.background = 'var(--surface-high)';
-    animatePageEnter(document.getElementById('detailView'));
     renderDetail(i);
+    animatePageEnter(document.getElementById('detailView'));
     sessionStorage.setItem('lastView', 'detail');
     sessionStorage.setItem('lastDetailRecipeId', r.id);
     try { sessionStorage.setItem('lastDetailRecipeData', JSON.stringify(r)); } catch (e) { /* ignoré si trop volumineux */ }
@@ -2061,6 +2061,18 @@
   // la page précédente n'a pas besoin de rester visible pendant l'entrée).
   function animatePageEnter(el) {
     if (!el) return;
+    // Appliquer un transform à el en fait le nouveau repère de positionnement
+    // de tout descendant position:fixed qu'il contient (règle CSS) — la
+    // fiche recette a justement une photo et un footer fixed à l'intérieur
+    // (voir le commentaire détaillé plus haut sur le geste de retour, qui
+    // doit déjà contourner ça pour la photo). Sans ce même traitement ici,
+    // le footer se mettait à flotter n'importe où pendant les ~280ms de
+    // l'animation au lieu de rester collé en bas de l'écran. On neutralise
+    // donc temporairement ces deux-là en position:absolute, comme le drag.
+    const photoEl = el.querySelector('.detail-photo');
+    const footerEl = el.querySelector('.fixed-action-footer');
+    if (photoEl) photoEl.style.position = 'absolute';
+    if (footerEl) footerEl.style.position = 'absolute';
     el.style.transition = 'none';
     el.style.transform = 'translateX(100%)';
     void el.offsetWidth; // force le reflow avant de ré-activer la transition
@@ -2069,6 +2081,8 @@
     const cleanup = () => {
       el.style.transition = '';
       el.style.transform = '';
+      if (photoEl) photoEl.style.position = '';
+      if (footerEl) footerEl.style.position = '';
       el.removeEventListener('transitionend', cleanup);
     };
     el.addEventListener('transitionend', cleanup);
