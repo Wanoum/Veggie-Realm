@@ -1018,6 +1018,7 @@
     document.getElementById('detailView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'none';
     document.body.style.background = 'var(--surface-high)';
+    animatePageEnter(document.getElementById('detailView'));
     renderDetail(i);
     sessionStorage.setItem('lastView', 'detail');
     sessionStorage.setItem('lastDetailRecipeId', r.id);
@@ -1761,6 +1762,7 @@
     hideAllViews();
     document.getElementById('savedRecipesView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'none';
+    animatePageEnter(document.getElementById('savedRecipesView'));
     sessionStorage.setItem('lastView', 'saved');
     renderSavedRecipesList();
   }
@@ -1863,6 +1865,7 @@
       : () => saveAccountEdit(field);
     document.getElementById('accountView').style.display = 'none';
     document.getElementById('accountEditView').style.display = 'block';
+    animatePageEnter(document.getElementById('accountEditView'));
     document.getElementById('accountEditFooter').style.display = 'flex';
     document.getElementById('bottomNav').style.display = 'none';
   }
@@ -2040,6 +2043,29 @@
     document.body.style.top = '';
     document.body.style.left = '';
     document.body.style.right = '';
+  }
+
+  // Anime l'entrée d'une sous-page (fiche recette, recette partagée,
+  // Recettes partagées, édition d'un réglage de Compte...) en la faisant
+  // glisser depuis le bord droit de l'écran, comme une transition "push"
+  // iOS — pendant du geste de retour par le bord (edge-swipe-back) qui gère
+  // déjà la sortie symétrique. L'élément doit déjà être display:block/flex
+  // au moment de l'appel ; un simple transform suffit (pas besoin de
+  // position:fixed ici, contrairement au drag : rien à révéler en dessous,
+  // la page précédente n'a pas besoin de rester visible pendant l'entrée).
+  function animatePageEnter(el) {
+    if (!el) return;
+    el.style.transition = 'none';
+    el.style.transform = 'translateX(100%)';
+    void el.offsetWidth; // force le reflow avant de ré-activer la transition
+    el.style.transition = 'transform 280ms cubic-bezier(0.32, 0.72, 0, 1)';
+    requestAnimationFrame(() => { el.style.transform = 'translateX(0)'; });
+    const cleanup = () => {
+      el.style.transition = '';
+      el.style.transform = '';
+      el.removeEventListener('transitionend', cleanup);
+    };
+    el.addEventListener('transitionend', cleanup);
   }
 
   // Permet de fermer un bottom sheet en le tirant vers le bas depuis sa
@@ -4812,6 +4838,7 @@
     hideAllViewsForShared();
     document.body.style.background = 'var(--surface-high)';
     document.getElementById('sharedRecipeView').style.display = 'block';
+    animatePageEnter(document.getElementById('sharedRecipeView'));
   }
 
   function hideAllViewsForShared() {
