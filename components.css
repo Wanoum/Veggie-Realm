@@ -336,6 +336,10 @@
 }
 .course-sort-menu-item .course-sort-menu-check { display: none; color: var(--text-icon-default); }
 .course-sort-menu-item:hover { background: var(--surface-low); }
+/* Version déjà prévue, visible dans le sélecteur du sheet d'ajout mais non
+   sélectionnable (plutôt que masquée, pour que son statut reste visible). */
+.course-sort-menu-item:disabled { color: var(--text-icon-disabled); pointer-events: none; }
+.course-sort-menu-item:disabled:hover { background: none; }
 .course-sort-menu-item.active {
   background: var(--surface-highest);
   color: var(--text-icon-default);

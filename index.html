@@ -456,20 +456,17 @@
   <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;" onclick="closePlanOccurrenceSheet()"></div>
   <div id="planOccurrencePanel" class="sheet-panel" style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
     <div class="detail-sheet-handle"></div>
-    <h2 id="planOccurrenceTitle" style="margin-bottom:var(--gap-vertical-section);"></h2>
-    <div id="planOccurrenceMealTypesWrap" style="display:none;margin-bottom:20px;">
-      <label class="field-label">Type de repas</label>
-      <div id="planOccurrenceMealTypes" style="display:flex;gap:var(--gap-xsmall);"></div>
-    </div>
-    <div id="planOccurrenceVariantWrap" style="display:none;margin-bottom:20px;position:relative;">
-      <label class="field-label">Version</label>
+    <h2 id="planOccurrenceTitle" style="margin-bottom:0;"></h2>
+    <p id="planOccurrenceVersionReadonly" class="text-small" style="display:none;color:var(--text-icon-secondary);margin:2px 0 var(--gap-vertical-section);"></p>
+    <div id="planOccurrenceVariantWrap" style="display:none;margin-top:var(--gap-vertical-section);margin-bottom:20px;position:relative;">
+      <label class="field-label" style="margin-top:0;">Version</label>
       <button type="button" id="planOccurrenceVariantBtn" class="sheet-select-field" style="display:flex;align-items:center;justify-content:space-between;" onclick="togglePlanOccurrenceVariantMenu()">
         <span id="planOccurrenceVariantLabel">Base</span>
         <svg class="icon-svg"><use href="#icon-chevron-down-outline"/></svg>
       </button>
       <div id="planOccurrenceVariantMenu" class="course-sort-menu" style="display:none;left:0;right:0;width:auto;"></div>
     </div>
-    <label class="field-label" id="planOccurrenceServingsLabel">Nombre de personnes</label>
+    <label class="field-label" id="planOccurrenceServingsLabel" style="margin-top:var(--gap-vertical-section);">Nombre de personnes</label>
     <div class="servings-stepper servings-stepper-lg" style="margin-bottom:20px;">
       <button type="button" class="servings-minus" id="planOccurrenceMinus"><svg class="icon-svg"><use href="#icon-minus-outline"/></svg></button>
       <span class="servings-value" id="planOccurrenceValue">1</span>
@@ -477,7 +474,7 @@
     </div>
     <button type="button" id="planOccurrenceSaveBtn" class="primary-btn" style="width:100%;margin-top:0;" onclick="savePlanOccurrenceSheet()"><svg class="icon-svg"><use href="#icon-check-outline"/></svg> Enregistrer</button>
     <button type="button" class="secondary-btn" id="planOccurrenceCookedBtn" style="width:100%;display:none;" onclick="markOccurrenceCooked()"><svg class="icon-svg"><use href="#icon-check-circle-outline"/></svg> Marquer comme cuisiné</button>
-    <button type="button" style="display:flex;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetPlanOccurrenceSheet()"><svg class="icon-svg" style="text-decoration:none;"><use href="#icon-close-outline"/></svg> Retirer la recette</button>
+    <button type="button" id="planOccurrenceRemoveBtn" style="display:none;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;" onclick="removePlanOccurrence()"><svg class="icon-svg" style="text-decoration:none;"><use href="#icon-close-outline"/></svg> Retirer ce repas</button>
   </div>
 </div>
 
@@ -860,6 +857,16 @@
     return (r.variants || []).find(v => v.label === selectedVariantLabel) || null;
   }
 
+  // Ingrédients d'une version précise d'une recette (par libellé plutôt que
+  // selectedVariantLabel) — utilisé pour calculer la liste de courses, où
+  // chaque repas prévu porte sa propre version indépendamment de celle
+  // actuellement affichée sur la fiche.
+  function ingredientsForVariant(r, variantLabel) {
+    if (!variantLabel) return r.ingredients || [];
+    const variant = (r.variants || []).find(v => v.label === variantLabel);
+    return (variant && variant.ingredients && variant.ingredients.length) ? variant.ingredients : (r.ingredients || []);
+  }
+
   // Vue "effective" de la recette pour l'affichage/le cook mode : reprend les
   // ingrédients de la variante sélectionnée, et ses étapes si elle en a
   // (sinon celles de l'originale — convention : variante sans étapes propres
@@ -1153,30 +1160,25 @@
     `;
   }
 
-  // Recette possédée ou partagée : clic sur le panier depuis sa fiche. Une
-  // recette avec plusieurs types de repas possibles (ex: Déjeuner + Dîner)
-  // ouvre toujours le bottom sheet, pour choisir lequel (ou lesquels).
-  // Sinon, ajout direct (ou incrément du nombre de fois planifiée) avec le
-  // nombre de personnes mémorisé pour cette recette.
+  // Recette possédée ou partagée : clic sur le panier depuis sa fiche. Ajoute
+  // la version actuellement affichée (selectedVariantLabel), avec le nombre
+  // de personnes actuellement affiché. Si cette version est déjà prévue, ne
+  // la duplique pas (une version ne peut être prévue qu'une fois) — simple
+  // confirmation par toast. Refonte complète de ce bouton (ajout direct vs
+  // sheet, synchronisation live) laissée à une tâche séparée.
   function addCurrentRecipeToPlanning(recipeId) {
     const r = allRecipesForPlanning().find(x => x.id === recipeId);
     if (!r) return;
-    // Reprend le nombre de personnes actuellement affiché sur la fiche
-    // (celui qu'on vient de regarder/ajuster), pas une valeur mémorisée à
-    // part — seulement si on part bien de la fiche de cette même recette.
-    const preferredServings = (recipes[currentDetailIndex] && recipes[currentDetailIndex].id === recipeId)
-      ? currentServings[currentDetailIndex] : null;
-    const tags = recipeMealTypeTags(r);
-    if (tags.length > 1) {
-      openPlanOccurrenceSheet(recipeId, preferredServings);
+    const isCurrentDetail = recipes[currentDetailIndex] && recipes[currentDetailIndex].id === recipeId;
+    const variantLabel = isCurrentDetail ? (selectedVariantLabel || '') : '';
+    if (findOccurrence(recipeId, variantLabel)) {
+      showToast('Déjà prévu dans les repas');
       return;
     }
-    const mealType = tags[0] || null;
-    const existing = findOccurrence(recipeId, mealType, '');
-    const newCount = (existing?.count || 0) + 1;
-    const servings = existing?.servings ?? preferredServings ?? getServingsPerOccurrence(r);
-    upsertMealPlanOccurrence(recipeId, mealType, '', servings, newCount).then(() => {
-      showToast('Ajouté au planning');
+    const preferredServings = isCurrentDetail ? currentServings[currentDetailIndex] : null;
+    const servings = preferredServings ?? getServingsPerOccurrence(r);
+    upsertMealPlanOccurrence(recipeId, variantLabel, servings).then(() => {
+      showToast('Ajouté aux repas');
       if (document.getElementById('planningView').style.display !== 'none') renderPlanningRecipes();
     });
   }
@@ -3749,26 +3751,41 @@
 
   resetForm();
 
-  // ---- Planning (sélection par compteur) ----
-  // { recipe_id: [{ id, mealType, variantLabel, count, servings }, ...] } —
-  // une entrée par combinaison recette + type de repas + variante, pour
-  // pouvoir planifier une même recette à plusieurs repas avec des nombres de
-  // personnes différents (ex: 6 au déjeuner, 2 au dîner).
+  // ---- Planning (sélection par version) ----
+  // { recipe_id: [{ id, variantLabel, servings }, ...] } — une entrée par
+  // combinaison recette + version (l'originale porte variantLabel: ''), pour
+  // planifier plusieurs versions d'une même recette en parallèle, chacune
+  // avec son propre nombre de personnes. Une version ne peut être prévue
+  // qu'une seule fois : pour plus de portions, on augmente le nombre de
+  // personnes plutôt que de dupliquer l'entrée.
   let mealPlan = {};
 
   async function loadMealPlan() {
     const { data, error } = await sb.from('meal_plan').select('*');
     if (error) { console.error(error); return; }
-    mealPlan = {};
+    // Nettoyage silencieux : l'ancien système (une entrée par type de repas)
+    // pouvait laisser plusieurs lignes pour une même recette+version. On ne
+    // garde que la première et on supprime le reste — pas de fusion, les
+    // anciens repas prévus en doublon sont simplement perdus, ce n'est pas
+    // grave. Plus de doublon possible ensuite, puisque meal_type est
+    // désormais toujours écrit vide (la contrainte d'unicité existante en
+    // base continue de l'empêcher).
+    const byGroup = {};
     (data || []).forEach(row => {
+      const gKey = row.recipe_id + '|' + (row.variant_label || '');
+      (byGroup[gKey] = byGroup[gKey] || []).push(row);
+    });
+    const kept = [];
+    const toDelete = [];
+    for (const rows of Object.values(byGroup)) {
+      kept.push(rows[0]);
+      rows.slice(1).forEach(row => toDelete.push(row.id));
+    }
+    if (toDelete.length) await sb.from('meal_plan').delete().in('id', toDelete);
+    mealPlan = {};
+    kept.forEach(row => {
       const list = mealPlan[row.recipe_id] = mealPlan[row.recipe_id] || [];
-      list.push({
-        id: row.id,
-        mealType: row.meal_type || null,
-        variantLabel: row.variant_label || '',
-        count: row.count || 1,
-        servings: row.servings
-      });
+      list.push({ id: row.id, variantLabel: row.variant_label || '', servings: row.servings });
     });
   }
 
@@ -3784,18 +3801,19 @@
     return recipes.concat(foreignPlanningRecipes());
   }
 
-  // Tags de type de repas d'une recette, dans l'ordre canonique — détermine
-  // si elle a besoin du choix de repas (plusieurs tags) ou non (0 ou 1).
-  function recipeMealTypeTags(r) {
-    return MEAL_TYPES.filter(t => (r?.tags || []).includes(t));
+  // Toutes les versions d'une recette, dans l'ordre d'affichage : l'originale
+  // (libellé '') toujours en premier, puis ses variantes. Une recette sans
+  // variantes n'a que cette unique version implicite.
+  function recipeVersionLabels(r) {
+    return ['', ...(r.variants || []).map(v => v.label)];
   }
 
   function getOccurrences(recipeId) {
     return mealPlan[recipeId] || [];
   }
 
-  function findOccurrence(recipeId, mealType, variantLabel) {
-    return getOccurrences(recipeId).find(o => (o.mealType || '') === (mealType || '') && (o.variantLabel || '') === (variantLabel || ''));
+  function findOccurrence(recipeId, variantLabel) {
+    return getOccurrences(recipeId).find(o => (o.variantLabel || '') === (variantLabel || ''));
   }
 
   // Dernier message d'erreur serveur rencontré lors d'un enregistrement de
@@ -3803,25 +3821,22 @@
   // le temps de diagnostiquer, faute d'accès à la console sur iPhone.
   let lastMealPlanError = '';
 
-  async function upsertMealPlanOccurrence(recipeId, mealType, variantLabel, servings, count) {
+  async function upsertMealPlanOccurrence(recipeId, variantLabel, servings) {
     const payload = {
       recipe_id: recipeId,
-      meal_type: mealType || '',
+      meal_type: '',
       variant_label: variantLabel || '',
       servings: servings,
-      count: count != null ? count : 1,
+      count: 1,
       user_id: currentUser.id
     };
     const { data, error } = await sb.from('meal_plan')
       .upsert(payload, { onConflict: 'user_id,recipe_id,meal_type,variant_label' })
       .select()
       .single();
-    // Remonté à l'appelant plutôt qu'avalé en silence : un échec serveur ici
-    // (ex: contrainte d'unicité absente côté base) donnait l'impression que
-    // "ça n'enregistre qu'un seul type de repas", sans aucun signal visible.
     if (error) { console.error(error); lastMealPlanError = error.message || error.details || error.hint || JSON.stringify(error); return false; }
-    const list = (mealPlan[recipeId] = (mealPlan[recipeId] || []).filter(o => (o.mealType || '') !== (mealType || '')));
-    list.push({ id: data.id, mealType: data.meal_type || null, variantLabel: data.variant_label || '', count: data.count, servings: data.servings });
+    const list = (mealPlan[recipeId] = (mealPlan[recipeId] || []).filter(o => (o.variantLabel || '') !== (variantLabel || '')));
+    list.push({ id: data.id, variantLabel: data.variant_label || '', servings: data.servings });
     return true;
   }
 
@@ -3833,15 +3848,15 @@
     });
   }
 
-  async function clearMealPlanOccurrences(recipeId) {
-    await sb.from('meal_plan').delete().eq('recipe_id', recipeId);
-    delete mealPlan[recipeId];
-  }
-
   let planSearchQuery = '';
   function handlePlanSearchInput() {
     planSearchQuery = normalize(document.getElementById('planSearchInput').value);
     renderPlanningRecipes();
+  }
+
+  function occurrenceSubtitle(r, servings) {
+    const unitWord = isPieceMode(r) ? (servings > 1 ? 'pièces' : 'pièce') : (servings > 1 ? 'personnes' : 'personne');
+    return `${servings} ${unitWord}`;
   }
 
   function renderPlanningRecipes() {
@@ -3853,52 +3868,71 @@
 
     const plannedListEl = document.getElementById('plannedRecipeList');
     if (planned.length === 0) {
-      plannedListEl.innerHTML = `<p class="text-body" style="color:var(--text-icon-secondary);">Aucun repas prévu pour l'instant.</p>`;
+      // Pas de placeholder "Aucun repas prévu" : la section ne doit
+      // apparaître que s'il y a au moins un repas prévu, sinon seules les
+      // Suggestions sont visibles (cf. maquette).
+      plannedListEl.innerHTML = '';
     } else {
-      plannedListEl.innerHTML = plannedFiltered.map(r => {
+      // Une ligne par occurrence (donc par version) plutôt qu'une ligne par
+      // recette concaténant tous ses repas : chaque version a son propre
+      // nombre de personnes et son propre bouton d'édition.
+      plannedListEl.innerHTML = plannedFiltered.flatMap(r => {
         const occs = getOccurrences(r.id);
+        const versionOrder = recipeVersionLabels(r);
+        const sortedOccs = [...occs].sort((a, b) => versionOrder.indexOf(a.variantLabel) - versionOrder.indexOf(b.variantLabel));
         const detailIdx = recipes.findIndex(x => x.id === r.id);
         const thumbOnclick = detailIdx === -1
           ? `loadSharedRecipe('${r.share_token}', 'planning')`
           : `openRecipeDetail(${detailIdx}, 'planning')`;
-        // Une ligne par occurrence plutôt qu'un seul bloc concaténé avec
-        // " · " : plus lisible dès qu'une recette a plusieurs repas prévus.
-        const recap = occs.map(o => {
-          const label = o.mealType || 'Repas';
-          const unitWord = isPieceMode(r) ? (o.servings > 1 ? 'pièces' : 'pièce') : (o.servings > 1 ? 'personnes' : 'personne');
-          const countPrefix = o.count > 1 ? `${o.count}× ` : '';
-          return `<div>${escapeHtml(label)} : ${countPrefix}${o.servings} ${unitWord}</div>`;
-        }).join('');
-        return `
-          <div class="plan-recipe-row">
-            <div style="display:flex;align-items:center;gap:12px;">
-              <div style="width:72px;height:72px;border-radius:var(--corner-radius-large);overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;" onclick="${thumbOnclick}">
-                ${safeUrl(r.photo_url)
-                  ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
-                  : emptyPhotoHtml(r.id, 'small')}
+        return sortedOccs.map(o => {
+          const subtitle = o.variantLabel
+            ? `${escapeHtml(o.variantLabel)} • ${occurrenceSubtitle(r, o.servings)}`
+            : occurrenceSubtitle(r, o.servings);
+          return `
+            <div class="plan-recipe-row">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:72px;height:72px;border-radius:var(--corner-radius-large);overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;" onclick="${thumbOnclick}">
+                  ${safeUrl(r.photo_url)
+                    ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
+                    : emptyPhotoHtml(r.id, 'small')}
+                </div>
+                <div>
+                  <div class="plan-recipe-name">${escapeHtml(r.title)}</div>
+                  <div class="plan-recipe-tags">${subtitle}</div>
+                </div>
               </div>
-              <div>
-                <div class="plan-recipe-name">${escapeHtml(r.title)}</div>
-                <div class="text-small" style="color:var(--text-icon-secondary);">${recap}</div>
-              </div>
+              <button type="button" class="icon-pill-btn icon-pill-btn-accent plan-card-action-btn" data-edit-occ="${escapeHtml(o.id)}"><svg class="icon-svg"><use href="#icon-edit-outline"/></svg></button>
             </div>
-            <button type="button" class="icon-pill-btn icon-pill-btn-accent plan-card-action-btn" data-edit-plan="${r.id}"><svg class="icon-svg"><use href="#icon-edit-outline"/></svg></button>
-          </div>
-        `;
+          `;
+        });
       }).join('');
-      plannedListEl.querySelectorAll('[data-edit-plan]').forEach(btn => {
-        btn.onclick = () => openPlanOccurrenceSheet(btn.dataset.editPlan);
+      plannedListEl.querySelectorAll('[data-edit-occ]').forEach(btn => {
+        btn.onclick = () => openEditOccurrenceSheet(btn.dataset.editOcc);
       });
     }
 
-    const plannedIds = new Set(planned.map(r => r.id));
-    let suggestions = recipes.filter(r => !plannedIds.has(r.id));
-    if (planSearchQuery) suggestions = suggestions.filter(r => matchesQuery(r, planSearchQuery));
-    suggestions.sort((a, b) => a.title.localeCompare(b.title, 'fr'));
+    // Suggestions : montre ce qui N'EST PAS encore prévu. Une recette dont
+    // toutes les versions sont déjà prévues disparaît entièrement.
+    let suggestions = recipes
+      .map(r => ({ r, remaining: recipeVersionLabels(r).filter(v => !findOccurrence(r.id, v)) }))
+      .filter(({ remaining }) => remaining.length > 0);
+    if (planSearchQuery) suggestions = suggestions.filter(({ r }) => matchesQuery(r, planSearchQuery));
+    suggestions.sort((a, b) => a.r.title.localeCompare(b.r.title, 'fr'));
 
     const suggestionListEl = document.getElementById('planSuggestionList');
-    suggestionListEl.innerHTML = suggestions.map(r => {
+    suggestionListEl.innerHTML = suggestions.map(({ r, remaining }) => {
       const detailIdx = recipes.findIndex(x => x.id === r.id);
+      const totalVersions = recipeVersionLabels(r).length;
+      let subtitleHtml = '';
+      if (totalVersions > 1) {
+        if (remaining.length === totalVersions) {
+          subtitleHtml = `<div class="text-small" style="color:var(--text-icon-secondary);">${totalVersions} versions</div>`;
+        } else if (remaining.length === 1) {
+          subtitleHtml = `<div class="text-small" style="color:var(--text-icon-default);">${escapeHtml(remaining[0])}</div>`;
+        } else {
+          subtitleHtml = `<div class="text-small" style="color:var(--text-icon-secondary);">${remaining.length} versions restantes</div>`;
+        }
+      }
       return `
         <div class="plan-recipe-row">
           <div style="display:flex;align-items:center;gap:12px;">
@@ -3907,7 +3941,10 @@
                 ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
                 : emptyPhotoHtml(r.id, 'small')}
             </div>
-            <div class="plan-recipe-name">${escapeHtml(r.title)}</div>
+            <div>
+              <div class="plan-recipe-name">${escapeHtml(r.title)}</div>
+              ${subtitleHtml}
+            </div>
           </div>
           <button type="button" class="icon-pill-btn icon-pill-btn-accent plan-card-action-btn" data-add-plan="${r.id}"><svg class="icon-svg"><use href="#icon-plus-outline"/></svg></button>
         </div>
@@ -3916,7 +3953,7 @@
     suggestionListEl.querySelectorAll('[data-add-plan]').forEach(btn => {
       btn.onclick = (e) => {
         e.stopPropagation();
-        openPlanOccurrenceSheet(btn.dataset.addPlan);
+        openAddOccurrenceSheet(btn.dataset.addPlan);
       };
     });
   }
@@ -3924,88 +3961,55 @@
   // ---- Bottom sheet d'ajout/édition d'une occurrence de planning ----
   let planSheetState = null;
 
-  function openPlanOccurrenceSheet(recipeId, preferredServings) {
-    const r = allRecipesForPlanning().find(x => x.id === recipeId);
+  function openAddOccurrenceSheet(recipeId) {
+    const r = recipes.find(x => x.id === recipeId) || allRecipesForPlanning().find(x => x.id === recipeId);
     if (!r) return;
-    const tags = recipeMealTypeTags(r);
-    const existing = getOccurrences(recipeId);
-    const isMulti = tags.length > 1;
-    const servingsByType = {};
-    const countByType = {};
-    const variantByType = {};
-    // Par défaut, reprend la version actuellement affichée sur la fiche
-    // (selectedVariantLabel) quand aucune occurrence n'existe encore pour ce
-    // repas — cohérent avec "ce que je suis en train de regarder". Pareil
-    // pour le nombre de personnes (preferredServings, passé par l'appelant
-    // quand on vient de la fiche recette) : uniquement pour une NOUVELLE
-    // occurrence, jamais pour écraser une quantité déjà planifiée.
-    // Un seul repas sélectionné à la fois (sélection simple, pas de puces
-    // multi-sélectionnables) : plus clair sur ce qui est actuellement choisi.
-    // Si la recette a déjà une occurrence, on l'affiche par défaut ; sinon le
-    // premier repas possible.
-    const existingType = existing.map(o => o.mealType).find(t => tags.includes(t));
-    const initialSelectedType = isMulti ? (existingType || tags[0]) : null;
-    if (isMulti) {
-      // 0 si pas d'occurrence pour ce repas — qu'elle n'ait jamais existé ou
-      // qu'elle vienne d'être mise à 0 (et donc supprimée) : on affiche
-      // toujours exactement ce qui est enregistré, jamais une valeur par
-      // défaut qui donnerait l'impression qu'une modification n'a pas été
-      // prise en compte. preferredServings ne s'applique qu'au repas
-      // sélectionné par défaut, pas à tous — sinon enregistrer sans rien
-      // toucher ajouterait la recette à tous les repas d'un coup.
-      tags.forEach(t => {
-        const occ = existing.find(o => o.mealType === t);
-        const defaultServings = (t === initialSelectedType && preferredServings != null) ? preferredServings : 0;
-        servingsByType[t] = occ ? occ.servings : defaultServings;
-        countByType[t] = occ ? occ.count : 1;
-        variantByType[t] = occ ? (occ.variantLabel || '') : (selectedVariantLabel || '');
-      });
-    }
+    const versions = recipeVersionLabels(r);
+    const remaining = versions.filter(v => !findOccurrence(r.id, v));
+    if (remaining.length === 0) return;
     planSheetState = {
+      mode: 'add',
       recipeId,
-      tags,
-      isMulti,
-      selectedType: initialSelectedType,
-      servingsByType,
-      countByType,
-      variantByType,
-      singleServings: !isMulti ? (existing[0]?.servings ?? preferredServings ?? getServingsPerOccurrence(r)) : null,
-      singleCount: !isMulti ? (existing[0]?.count ?? 1) : null,
-      singleVariantLabel: !isMulti ? (existing[0]?.variantLabel || selectedVariantLabel || '') : null
+      versions,
+      selectedVersion: remaining[0],
+      servings: getServingsPerOccurrence(r)
     };
     renderPlanOccurrenceSheet();
     document.getElementById('planOccurrenceSheet').style.display = 'flex';
     lockBackgroundScroll();
   }
 
-  function currentSheetServings() {
-    if (!planSheetState) return 1;
-    return planSheetState.isMulti ? (planSheetState.servingsByType[planSheetState.selectedType] ?? 1) : planSheetState.singleServings;
+  function openEditOccurrenceSheet(occurrenceId) {
+    let recipeId = null, occ = null;
+    for (const [rid, occs] of Object.entries(mealPlan)) {
+      const found = occs.find(o => o.id === occurrenceId);
+      if (found) { recipeId = rid; occ = found; break; }
+    }
+    if (!occ) return;
+    const r = allRecipesForPlanning().find(x => x.id === recipeId);
+    if (!r) return;
+    planSheetState = {
+      mode: 'edit',
+      recipeId,
+      occurrenceId,
+      selectedVersion: occ.variantLabel || '',
+      servings: occ.servings
+    };
+    renderPlanOccurrenceSheet();
+    document.getElementById('planOccurrenceSheet').style.display = 'flex';
+    lockBackgroundScroll();
   }
 
   function setSheetServings(v) {
     if (!planSheetState) return;
-    // Un repas peut descendre à 0 (= pas d'occurrence pour ce repas-là) :
-    // si les deux repas possibles finissent à 0, la recette repart
-    // naturellement en Suggestions, puisqu'elle n'a plus aucune occurrence.
-    // Une recette à un seul repas garde 1 comme plancher : "Retirer la
-    // recette" fait déjà ce travail dans ce cas.
-    const floor = planSheetState.isMulti ? 0 : 1;
-    const clamped = Math.max(floor, v);
-    if (planSheetState.isMulti) planSheetState.servingsByType[planSheetState.selectedType] = clamped;
-    else planSheetState.singleServings = clamped;
+    const clamped = Math.max(1, v);
+    planSheetState.servings = clamped;
     document.getElementById('planOccurrenceValue').textContent = clamped;
   }
 
-  function currentSheetVariantLabel() {
-    if (!planSheetState) return '';
-    return planSheetState.isMulti ? (planSheetState.variantByType[planSheetState.selectedType] || '') : (planSheetState.singleVariantLabel || '');
-  }
-
-  function setSheetVariantLabel(label) {
-    if (!planSheetState) return;
-    if (planSheetState.isMulti) planSheetState.variantByType[planSheetState.selectedType] = label;
-    else planSheetState.singleVariantLabel = label;
+  function setSheetVersion(label) {
+    if (!planSheetState || planSheetState.mode !== 'add') return;
+    planSheetState.selectedVersion = label;
     document.getElementById('planOccurrenceVariantLabel').textContent = label || 'Base';
     document.getElementById('planOccurrenceVariantMenu').style.display = 'none';
   }
@@ -4019,60 +4023,47 @@
     const st = planSheetState;
     const r = allRecipesForPlanning().find(x => x.id === st.recipeId);
     document.getElementById('planOccurrenceTitle').textContent = r.title;
-    const chipsWrap = document.getElementById('planOccurrenceMealTypesWrap');
-    const chipsEl = document.getElementById('planOccurrenceMealTypes');
-    if (st.isMulti) {
-      chipsWrap.style.display = 'block';
-      chipsEl.innerHTML = st.tags.map(t => `
-        <button type="button" class="filter-chip filter-chip-vertical ${st.selectedType === t ? 'active' : ''}" data-occ-type="${t}"><svg class="icon-svg" style="font-size:24px;"><use href="#${MEAL_TYPE_ICONS[t]}"/></svg>${t}</button>
-      `).join('');
-      chipsEl.querySelectorAll('[data-occ-type]').forEach(btn => {
-        btn.onclick = () => {
-          st.selectedType = btn.dataset.occType;
-          renderPlanOccurrenceSheet();
-        };
-      });
-    } else {
-      chipsWrap.style.display = 'none';
-      chipsEl.innerHTML = '';
-    }
-    document.getElementById('planOccurrenceServingsLabel').textContent = 'Nombre de personnes';
-    document.getElementById('planOccurrenceValue').textContent = currentSheetServings();
 
+    const versionReadonly = document.getElementById('planOccurrenceVersionReadonly');
     const variantWrap = document.getElementById('planOccurrenceVariantWrap');
-    if (r.variants && r.variants.length > 0) {
-      variantWrap.style.display = 'block';
-      const currentLabel = currentSheetVariantLabel();
-      document.getElementById('planOccurrenceVariantLabel').textContent = currentLabel || 'Base';
-      const options = [{ label: '', name: 'Base' }, ...r.variants.map(v => ({ label: v.label, name: v.label }))];
-      const menu = document.getElementById('planOccurrenceVariantMenu');
-      menu.innerHTML = options.map(opt => `
-        <button type="button" class="course-sort-menu-item text-body ${currentLabel === opt.label ? 'active' : ''}" data-set-variant="${escapeHtml(opt.label)}"><span>${escapeHtml(opt.name)}</span><svg class="icon-svg course-sort-menu-check"><use href="#icon-check-outline"/></svg></button>
-      `).join('');
-      menu.querySelectorAll('[data-set-variant]').forEach(btn => {
-        btn.onclick = () => setSheetVariantLabel(btn.dataset.setVariant);
-      });
-    } else {
+    if (st.mode === 'edit') {
+      // La version d'un repas déjà prévu n'est pas modifiable ici (on
+      // retirerait puis ajouterait pour en changer) — affichée en lecture
+      // seule sous le titre plutôt que dans un menu déroulant désactivé.
       variantWrap.style.display = 'none';
+      versionReadonly.style.display = 'block';
+      versionReadonly.textContent = st.selectedVersion || 'Originale';
+    } else {
+      versionReadonly.style.display = 'none';
+      if (st.versions.length > 1) {
+        variantWrap.style.display = 'block';
+        document.getElementById('planOccurrenceVariantLabel').textContent = st.selectedVersion || 'Base';
+        const menu = document.getElementById('planOccurrenceVariantMenu');
+        menu.innerHTML = st.versions.map(v => {
+          const taken = !!findOccurrence(st.recipeId, v);
+          const name = v || 'Base';
+          return `<button type="button" class="course-sort-menu-item text-body ${st.selectedVersion === v ? 'active' : ''}" data-set-version="${escapeHtml(v)}" ${taken ? 'disabled' : ''}><span>${escapeHtml(name)}</span><svg class="icon-svg course-sort-menu-check"><use href="#icon-check-outline"/></svg></button>`;
+        }).join('');
+        menu.querySelectorAll('[data-set-version]:not([disabled])').forEach(btn => {
+          btn.onclick = () => setSheetVersion(btn.dataset.setVersion);
+        });
+      } else {
+        variantWrap.style.display = 'none';
+      }
     }
 
-    // "Marquer comme cuisiné" n'a de sens que pour un repas déjà planifié et
-    // enregistré — pas pour une recette encore dans les Suggestions, qu'on
-    // est seulement en train d'ajouter (aucune occurrence existante pour ce
-    // type de repas précis).
-    const mealType = st.isMulti ? st.selectedType : (st.tags[0] || null);
-    const hasExistingOccurrence = !!findOccurrence(st.recipeId, mealType, currentSheetVariantLabel());
-    document.getElementById('planOccurrenceCookedBtn').style.display = hasExistingOccurrence ? 'flex' : 'none';
-    // Ajouter (nouvelle occurrence) vs Enregistrer (occurrence déjà
-    // planifiée qu'on modifie) : le libellé générique "Enregistrer" ne
-    // disait pas clairement ce que faisait le bouton.
-    document.getElementById('planOccurrenceSaveBtn').innerHTML = hasExistingOccurrence
-      ? '<svg class="icon-svg"><use href="#icon-check-outline"/></svg> Enregistrer le repas prévu'
-      : '<svg class="icon-svg"><use href="#icon-check-outline"/></svg> Ajouter au repas prévu';
+    document.getElementById('planOccurrenceServingsLabel').textContent = 'Nombre de personnes';
+    document.getElementById('planOccurrenceValue').textContent = st.servings;
+
+    document.getElementById('planOccurrenceSaveBtn').innerHTML = st.mode === 'edit'
+      ? '<svg class="icon-svg"><use href="#icon-check-outline"/></svg> Enregistrer'
+      : '<svg class="icon-svg"><use href="#icon-plus-outline"/></svg> Ajouter aux repas';
+    document.getElementById('planOccurrenceRemoveBtn').style.display = st.mode === 'edit' ? 'flex' : 'none';
+    document.getElementById('planOccurrenceCookedBtn').style.display = st.mode === 'edit' ? 'flex' : 'none';
   }
 
-  document.getElementById('planOccurrenceMinus').onclick = () => setSheetServings(currentSheetServings() - 1);
-  document.getElementById('planOccurrencePlus').onclick = () => setSheetServings(currentSheetServings() + 1);
+  document.getElementById('planOccurrenceMinus').onclick = () => setSheetServings((planSheetState?.servings || 1) - 1);
+  document.getElementById('planOccurrencePlus').onclick = () => setSheetServings((planSheetState?.servings || 1) + 1);
 
   function closePlanOccurrenceSheet() {
     const wasOpen = document.getElementById('planOccurrenceSheet').style.display !== 'none';
@@ -4084,76 +4075,48 @@
   async function savePlanOccurrenceSheet() {
     const st = planSheetState;
     if (!st) return;
-    let allOk = true;
-    if (st.isMulti) {
-      // Enregistre TOUS les types de repas de la recette, pas seulement celui
-      // actuellement sélectionné dans le sheet — sinon, modifier déjeuner puis
-      // passer sur dîner avant d'enregistrer perdait silencieusement le
-      // changement fait sur déjeuner.
-      for (const t of st.tags) {
-        const servings = st.servingsByType[t] || 0;
-        const variantLabel = st.variantByType[t] || '';
-        // Une seule occurrence par type de repas, quelle que soit la version :
-        // si la version a changé depuis l'ouverture du sheet, on retire
-        // l'ancienne au lieu d'en laisser une en double (clé d'unicité
-        // incluant variant_label, un simple upsert ne l'écraserait pas).
-        const existingForType = getOccurrences(st.recipeId).find(o => (o.mealType || '') === (t || ''));
-        if (servings <= 0) {
-          if (existingForType) await deleteMealPlanOccurrence(existingForType.id);
-        } else {
-          if (existingForType && (existingForType.variantLabel || '') !== variantLabel) {
-            await deleteMealPlanOccurrence(existingForType.id);
-          }
-          const ok = await upsertMealPlanOccurrence(st.recipeId, t, variantLabel, servings, st.countByType[t] || 1);
-          if (!ok) allOk = false;
-        }
-      }
-    } else {
-      const t = st.tags[0] || null;
-      const variantLabel = st.singleVariantLabel || '';
-      const existingForType = getOccurrences(st.recipeId).find(o => (o.mealType || '') === (t || ''));
-      if (existingForType && (existingForType.variantLabel || '') !== variantLabel) {
-        await deleteMealPlanOccurrence(existingForType.id);
-      }
-      const ok = await upsertMealPlanOccurrence(st.recipeId, t, variantLabel, st.singleServings || 1, st.singleCount || 1);
-      if (!ok) allOk = false;
-    }
+    const ok = await upsertMealPlanOccurrence(st.recipeId, st.selectedVersion, st.servings);
     closePlanOccurrenceSheet();
     renderPlanningRecipes();
-    // Un échec serveur partiel ne doit jamais ressembler à un succès : sinon
-    // on referme le sheet en pensant tout avoir enregistré alors qu'un des
-    // deux repas n'a pas été écrit en base. alert() plutôt que le toast
-    // (tronqué en une ligne) le temps de diagnostiquer le message exact.
-    if (allOk) showToast('Planning mis à jour');
+    if (ok) showToast(st.mode === 'edit' ? 'Repas mis à jour' : 'Ajouté aux repas');
     else alert(`Erreur d'enregistrement : ${lastMealPlanError}`);
   }
 
-  async function resetPlanOccurrenceSheet() {
+  // Retire uniquement l'occurrence affichée dans le sheet (une version d'une
+  // recette), pas les autres versions planifiées de la même recette — portée
+  // explicite demandée pour éviter l'ambiguïté de l'ancien "Retirer la
+  // recette". Toast avec Annuler plutôt qu'une confirmation bloquante : le
+  // filet de sécurité contre une erreur de clic, c'est ce bouton.
+  async function removePlanOccurrence() {
     const st = planSheetState;
-    if (!st) return;
-    await clearMealPlanOccurrences(st.recipeId);
+    if (!st || st.mode !== 'edit') return;
+    const recipeId = st.recipeId;
+    const restore = { variantLabel: st.selectedVersion, servings: st.servings };
+    await deleteMealPlanOccurrence(st.occurrenceId);
     closePlanOccurrenceSheet();
     renderPlanningRecipes();
-    showToast('Retiré du planning');
+    showToast('Retiré des repas', {
+      actionLabel: 'Annuler',
+      onAction: async () => {
+        await upsertMealPlanOccurrence(recipeId, restore.variantLabel, restore.servings);
+        renderPlanningRecipes();
+      }
+    });
   }
 
-  // Marque une occurrence précise comme cuisinée : quitte le planning (même
-  // effet que la retirer) et alimente le même compteur "Cuisiné Nx" que le
-  // cook mode (un seul signal, pas un mode "à cuisiner" séparé). Se pose par
-  // occurrence (le type de repas actuellement affiché dans le sheet), pas
-  // par recette entière, pour les recettes à plusieurs repas. Le filet de
-  // sécurité contre une erreur de clic est le bouton "Annuler" du toast, pas
-  // une confirmation bloquante.
+  // Marque l'occurrence affichée (recette + version précises) comme
+  // cuisinée : quitte le planning (même effet que la retirer) et alimente le
+  // compteur "Cuisiné Nx" (même compteur que le cook mode, un seul signal,
+  // pas un mode "à cuisiner" séparé). Le filet de sécurité contre une
+  // erreur de clic est le bouton "Annuler" du toast, pas une confirmation
+  // bloquante.
   async function markOccurrenceCooked() {
     const st = planSheetState;
-    if (!st) return;
-    const mealType = st.isMulti ? st.selectedType : (st.tags[0] || null);
-    const occ = findOccurrence(st.recipeId, mealType, currentSheetVariantLabel());
-    if (!occ) { showToast('Rien à marquer pour ce repas'); return; }
+    if (!st || st.mode !== 'edit') return;
     const recipeId = st.recipeId;
-    const restore = { mealType, variantLabel: occ.variantLabel || '', servings: occ.servings, count: occ.count };
+    const restore = { variantLabel: st.selectedVersion, servings: st.servings };
 
-    await deleteMealPlanOccurrence(occ.id);
+    await deleteMealPlanOccurrence(st.occurrenceId);
     let engagementEventId = null;
     const { data, error } = await sb.from('recipe_engagement_events')
       .insert({ recipe_id: recipeId, user_id: currentUser.id, event_type: 'cook_mode_completed' })
@@ -4168,7 +4131,7 @@
     showToast('Marqué comme cuisiné', {
       actionLabel: 'Annuler',
       onAction: async () => {
-        await upsertMealPlanOccurrence(recipeId, restore.mealType, restore.variantLabel, restore.servings, restore.count);
+        await upsertMealPlanOccurrence(recipeId, restore.variantLabel, restore.servings);
         if (engagementEventId) {
           await sb.from('recipe_engagement_events').delete().eq('id', engagementEventId);
           cookCounts[recipeId] = Math.max(0, (cookCounts[recipeId] || 1) - 1);
@@ -4411,21 +4374,26 @@
       if (occs.length === 0) return;
       hasAnySelection = true;
       const base = getRecipeBase(r);
-      const totalUnits = occs.reduce((sum, o) => sum + (o.count || 1) * (o.servings || 1), 0);
-      (r.ingredients || []).forEach(ing => {
-        if (!ing.name || !ing.name.trim()) return;
-        const nameKey = normalize(ing.name).replace(/s$/, '');
-        const unitKey = normalize(ing.unit);
-        const scaledQty = ing.quantity != null ? (ing.quantity * totalUnits / base) : null;
+      // Une occurrence par version : chacune a ses propres ingrédients
+      // (ingredientsForVariant) et ses propres personnes, pas de total
+      // partagé entre versions d'une même recette.
+      occs.forEach(o => {
+        const scale = (o.servings || 1) / base;
+        ingredientsForVariant(r, o.variantLabel).forEach(ing => {
+          if (!ing.name || !ing.name.trim()) return;
+          const nameKey = normalize(ing.name).replace(/s$/, '');
+          const unitKey = normalize(ing.unit);
+          const scaledQty = ing.quantity != null ? (ing.quantity * scale) : null;
 
-        if (!aggregated[nameKey]) {
-          aggregated[nameKey] = { displayName: ing.name.trim(), rayon: categorizeIngredient(ing.name), units: {} };
-        }
-        if (!aggregated[nameKey].units[unitKey]) {
-          aggregated[nameKey].units[unitKey] = { label: ing.unit || '', quantity: scaledQty };
-        } else if (scaledQty != null) {
-          aggregated[nameKey].units[unitKey].quantity = (aggregated[nameKey].units[unitKey].quantity || 0) + scaledQty;
-        }
+          if (!aggregated[nameKey]) {
+            aggregated[nameKey] = { displayName: ing.name.trim(), rayon: categorizeIngredient(ing.name), units: {} };
+          }
+          if (!aggregated[nameKey].units[unitKey]) {
+            aggregated[nameKey].units[unitKey] = { label: ing.unit || '', quantity: scaledQty };
+          } else if (scaledQty != null) {
+            aggregated[nameKey].units[unitKey].quantity = (aggregated[nameKey].units[unitKey].quantity || 0) + scaledQty;
+          }
+        });
       });
     });
 
@@ -4533,19 +4501,25 @@
         const occs = getOccurrences(r.id);
         if (occs.length === 0) return;
         const base = getRecipeBase(r);
-        const totalUnits = occs.reduce((sum, o) => sum + (o.count || 1) * (o.servings || 1), 0);
-        const recipeAgg = {};
-        (r.ingredients || []).forEach(ing => {
-          if (!ing.name || !ing.name.trim()) return;
-          const nameKey = normalize(ing.name).replace(/s$/, '');
-          const unitKey = normalize(ing.unit);
-          const scaledQty = ing.quantity != null ? (ing.quantity * totalUnits / base) : null;
-          if (!recipeAgg[nameKey]) recipeAgg[nameKey] = { displayName: ing.name.trim(), rayon: categorizeIngredient(ing.name), units: {} };
-          if (!recipeAgg[nameKey].units[unitKey]) recipeAgg[nameKey].units[unitKey] = { label: ing.unit || '', quantity: scaledQty };
-          else if (scaledQty != null) recipeAgg[nameKey].units[unitKey].quantity = (recipeAgg[nameKey].units[unitKey].quantity || 0) + scaledQty;
+        // Un groupe par occurrence (donc par version) : deux versions d'une
+        // même recette peuvent avoir des ingrédients différents, pas un seul
+        // groupe fusionné sous le nom de la recette.
+        occs.forEach(o => {
+          const scale = (o.servings || 1) / base;
+          const recipeAgg = {};
+          ingredientsForVariant(r, o.variantLabel).forEach(ing => {
+            if (!ing.name || !ing.name.trim()) return;
+            const nameKey = normalize(ing.name).replace(/s$/, '');
+            const unitKey = normalize(ing.unit);
+            const scaledQty = ing.quantity != null ? (ing.quantity * scale) : null;
+            if (!recipeAgg[nameKey]) recipeAgg[nameKey] = { displayName: ing.name.trim(), rayon: categorizeIngredient(ing.name), units: {} };
+            if (!recipeAgg[nameKey].units[unitKey]) recipeAgg[nameKey].units[unitKey] = { label: ing.unit || '', quantity: scaledQty };
+            else if (scaledQty != null) recipeAgg[nameKey].units[unitKey].quantity = (recipeAgg[nameKey].units[unitKey].quantity || 0) + scaledQty;
+          });
+          const recipeItems = Object.entries(recipeAgg).map(([key, item]) => ({ key, ...item }));
+          const title = o.variantLabel ? `${r.title} — ${o.variantLabel}` : r.title;
+          if (recipeItems.length) recipeGroups.push({ key: `recipe:${r.id}:${o.variantLabel}`, title, items: recipeItems });
         });
-        const recipeItems = Object.entries(recipeAgg).map(([key, item]) => ({ key, ...item }));
-        if (recipeItems.length) recipeGroups.push({ key: `recipe:${r.id}`, title: r.title, items: recipeItems });
       });
       bodyHtml = recipeGroups.map(g => renderGroup(g.key, g.title, g.items)).join('');
     } else {
