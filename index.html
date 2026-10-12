@@ -155,7 +155,7 @@
   <div id="tagFilters" class="tag-filters"></div>
 
   <div id="savedRecipesSection" style="display:none;margin-bottom:20px;">
-    <button type="button" onclick="showSavedRecipes()" style="display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;">Recettes partagées <svg class="icon-svg" style="text-decoration:none;"><use href="#icon-chevron-right-outline"/></svg></button>
+    <button type="button" onclick="showSavedRecipes()" style="display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;">Recettes partagées <svg class="icon-svg" style="font-size:20px;text-decoration:none;"><use href="#icon-chevron-right-outline"/></svg></button>
   </div>
 
   <p class="count" id="count">Chargement...</p>
@@ -312,7 +312,7 @@
 </div>
 
 <div id="wizardFooter" class="fixed-action-footer" style="display:none;">
-  <button type="button" id="wizardBackBtn" class="secondary-btn btn-square" style="margin-top:0;"><svg class="icon-svg" style="font-size:20px;"><use href="#icon-arrow-left-outline"/></svg></button>
+  <button type="button" id="wizardBackBtn" class="secondary-btn btn-square" style="margin-top:0;"><svg class="icon-svg"><use href="#icon-arrow-left-outline"/></svg></button>
   <button type="button" id="wizardNextBtn" class="primary-btn" style="margin-top:0;flex:1;"><svg class="icon-svg"><use href="#icon-arrow-right-outline"/></svg> Suivant</button>
 </div>
 
@@ -386,6 +386,10 @@
     </div>
 
     <div class="settings-list">
+      <button type="button" class="settings-row" onclick="openAccountEdit('feedback')">
+        <span>Envoyer un feedback</span>
+        <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
+      </button>
       <button type="button" class="settings-row" onclick="openAccountEdit('language')">
         <span>Langue</span>
         <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
@@ -398,7 +402,7 @@
 
     <p style="text-align:center;margin-top:16px;">
       <button type="button" onclick="location.reload()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;">
-        <svg class="icon-svg"><use href="#icon-refresh-outline"/></svg> Mettre à jour l'application
+        <svg class="icon-svg" style="font-size:20px;"><use href="#icon-refresh-outline"/></svg> Mettre à jour l'application
       </button>
     </p>
   </div>
@@ -436,7 +440,7 @@
   <div id="planningCoursesPanel" style="display:none;">
     <div id="coursesSortRow" style="display:none;margin-bottom:var(--gap-default);position:relative;">
       <button type="button" id="coursesSortBtn" style="background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;display:flex;align-items:center;gap:4px;" onclick="toggleCoursesSortMenu()">
-        <span id="coursesSortLabel">Trier : Par rayon</span> <svg class="icon-svg" style="text-decoration:none;"><use href="#icon-chevron-down-outline"/></svg>
+        <span id="coursesSortLabel">Trier : Par rayon</span> <svg class="icon-svg" style="font-size:20px;text-decoration:none;"><use href="#icon-chevron-down-outline"/></svg>
       </button>
       <div id="coursesSortMenu" class="course-sort-menu" style="display:none;left:0;right:auto;">
         <button type="button" class="course-sort-menu-item text-body" data-sort-mode="rayon"><span>Par rayon</span><svg class="icon-svg course-sort-menu-check"><use href="#icon-check-outline"/></svg></button>
@@ -473,7 +477,7 @@
     </div>
     <button type="button" id="planOccurrenceSaveBtn" class="primary-btn" style="width:100%;margin-top:0;" onclick="savePlanOccurrenceSheet()"><svg class="icon-svg"><use href="#icon-check-outline"/></svg> Enregistrer</button>
     <button type="button" class="secondary-btn" id="planOccurrenceCookedBtn" style="width:100%;display:none;" onclick="markOccurrenceCooked()"><svg class="icon-svg"><use href="#icon-check-circle-outline"/></svg> Marquer comme cuisiné</button>
-    <button type="button" id="planOccurrenceRemoveBtn" style="display:none;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;" onclick="removePlanOccurrence()"><svg class="icon-svg" style="text-decoration:none;"><use href="#icon-close-outline"/></svg> Retirer ce repas</button>
+    <button type="button" id="planOccurrenceRemoveBtn" style="display:none;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;" onclick="removePlanOccurrence()"><svg class="icon-svg" style="font-size:20px;text-decoration:none;"><use href="#icon-close-outline"/></svg> Retirer ce repas</button>
   </div>
 </div>
 
@@ -495,7 +499,7 @@
       <input id="courseQtyInput" class="field-input" placeholder="ex: 500 g" />
     </div>
     <button type="button" class="primary-btn" style="width:100%;margin-top:16px;" onclick="saveCourseQtySheet()"><svg class="icon-svg"><use href="#icon-check-outline"/></svg> Enregistrer</button>
-    <button type="button" style="display:flex;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetCourseQtySheet()"><svg class="icon-svg" style="text-decoration:none;"><use href="#icon-refresh-outline"/></svg> Réinitialiser cette quantité</button>
+    <button type="button" style="display:flex;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetCourseQtySheet()"><svg class="icon-svg" style="font-size:20px;text-decoration:none;"><use href="#icon-refresh-outline"/></svg> Réinitialiser cette quantité</button>
   </div>
 </div>
 
@@ -1105,7 +1109,7 @@
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <h2 style="margin:0;">Ingrédients</h2>
         <button type="button" onclick="openVariantPickerSheet(${i})" style="background:none;border:none;padding:0;display:flex;align-items:center;gap:2px;font-family:'Inter',sans-serif;font-size:16px;font-weight:500;color:var(--text-icon-accent);">
-          <span style="text-decoration:underline;">Version : ${escapeHtml(selectedVariantLabel || 'Base')}</span> <svg class="icon-svg"><use href="#icon-chevron-down-outline"/></svg>
+          <span style="text-decoration:underline;">Version : ${escapeHtml(selectedVariantLabel || 'Base')}</span> <svg class="icon-svg" style="font-size:20px;"><use href="#icon-chevron-down-outline"/></svg>
         </button>
       </div>
     ` : `
@@ -1153,7 +1157,7 @@
       </div>
 
       <div class="detail-footer fixed-action-footer">
-        <button type="button" class="secondary-btn btn-square" style="margin-top:0;" onclick="addCurrentRecipeToPlanning('${r.id}')"><svg class="icon-svg" style="font-size:20px;"><use href="#icon-calendar-add-outline"/></svg></button>
+        <button type="button" class="secondary-btn btn-square" style="margin-top:0;" onclick="addCurrentRecipeToPlanning('${r.id}')"><svg class="icon-svg"><use href="#icon-calendar-add-outline"/></svg></button>
         ${hasSteps ? `<button type="button" class="primary-btn" style="margin-top:0;" onclick="openCookingMode(effectiveRecipeView(recipes[${i}]), ${s})">Cook mode</button>` : ''}
       </div>
     `;
@@ -1964,14 +1968,20 @@
     } else if (field === 'recipe_display' || field === 'language') {
       titleEl.textContent = field === 'recipe_display' ? 'Affichage recettes' : 'Langue';
       contentEl.innerHTML = `<p class="text-body" style="color:var(--text-icon-secondary);">Pas encore disponible.</p>`;
+    } else if (field === 'feedback') {
+      titleEl.textContent = 'Envoyer un feedback';
+      initialValue = '';
+      contentEl.innerHTML = `<textarea id="accountEdit_feedback" class="field-input" rows="8" style="min-height:160px;padding:var(--padding-vertical-control) var(--padding-horizontal-default);resize:none;" placeholder="Dis-nous ce que tu penses, ce qui ne marche pas, ce qui te manque…" oninput="autoResizeTextarea(this)"></textarea>`;
+      getCurrentValue = () => document.getElementById('accountEdit_feedback').value;
     }
 
     const notYetAvailable = field === 'email' || field === 'recipe_display' || field === 'language';
+    saveBtn.textContent = field === 'feedback' ? 'Envoyer' : 'Enregistrer';
     window.updateAccountEditSaveState = () => {
       // Jamais vraiment "disabled" ici : le bouton doit rester cliquable
       // pour afficher le toast "pas encore disponible".
       if (notYetAvailable) { saveBtn.disabled = false; return; }
-      saveBtn.disabled = getCurrentValue ? getCurrentValue() === initialValue : false;
+      saveBtn.disabled = getCurrentValue ? getCurrentValue().trim() === initialValue : false;
     };
     saveBtn.classList.toggle('disabled-look', notYetAvailable);
     saveBtn.onclick = notYetAvailable
@@ -2017,6 +2027,14 @@
     } else if (field === 'default_variant_label') {
       const label = document.getElementById('accountEdit_variantLabel').value.trim();
       await setUserDefaultVariantLabel(label);
+    } else if (field === 'feedback') {
+      const message = document.getElementById('accountEdit_feedback').value.trim();
+      if (!message) { errEl.textContent = "Écris un message avant d'envoyer."; return; }
+      const { error } = await sb.from('feedback').insert({ user_id: currentUser.id, message });
+      if (error) { errEl.textContent = error.message; return; }
+      closeAccountEdit();
+      showToast('Feedback envoyé, merci !');
+      return;
     }
 
     closeAccountEdit();
@@ -4938,7 +4956,7 @@
     const showPlanningBtn = !!currentUser;
     const footer = (showPlanningBtn || hasSteps) ? `
       <div class="detail-footer fixed-action-footer">
-        ${showPlanningBtn ? `<button type="button" class="secondary-btn btn-square" style="margin-top:0;" onclick="addSharedRecipeToPlanning()"><svg class="icon-svg" style="font-size:20px;"><use href="#icon-calendar-add-outline"/></svg></button>` : ''}
+        ${showPlanningBtn ? `<button type="button" class="secondary-btn btn-square" style="margin-top:0;" onclick="addSharedRecipeToPlanning()"><svg class="icon-svg"><use href="#icon-calendar-add-outline"/></svg></button>` : ''}
         ${hasSteps ? `<button type="button" class="primary-btn" style="margin-top:0;" onclick="openCookingMode(currentSharedRecipe, ${getRecipeBase(r)})">Cook mode</button>` : ''}
       </div>` : '';
 

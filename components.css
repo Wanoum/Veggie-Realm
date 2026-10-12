@@ -115,6 +115,9 @@
   gap: var(--gap-default);
   box-shadow: none;
 }
+/* Icône plus grande que le texte (18px) dans les boutons primaire/
+   secondaire — reprend la taille des boutons-icône (icon-btn) de l'app. */
+.secondary-btn .icon-svg, .primary-btn .icon-svg { font-size: 24px; }
 .primary-btn {
   width: 100%;
   height: var(--height-default);
