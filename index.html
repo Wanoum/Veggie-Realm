@@ -164,7 +164,7 @@
 
 <div id="edgeSwipeScrim" style="display:none;position:fixed;inset:0;min-height:-webkit-fill-available;height:var(--app-height, 100dvh);background:rgba(0,0,0,0.35);z-index:290;pointer-events:none;"></div>
 
-<div id="detailView" style="display:none;margin:calc(-1 * (var(--padding-horizontal-app) + env(safe-area-inset-top))) calc(-1 * var(--padding-horizontal-app)) 0;">
+<div id="detailView" class="detail-view-fullbleed" style="display:none;">
   <div id="detailContent"></div>
 </div>
 
@@ -1418,6 +1418,8 @@
     document.getElementById('planningView').style.display = 'none';
     document.getElementById('accountView').style.display = 'none';
     document.getElementById('accountEditView').style.display = 'none';
+    document.getElementById('accountEditFooter').style.display = 'none';
+    document.getElementById('coursesEditFooter').style.display = 'none';
     document.getElementById('sharedRecipeView').style.display = 'none';
     document.getElementById('savedRecipesView').style.display = 'none';
     document.getElementById('edgeSwipeScrim').style.display = 'none';

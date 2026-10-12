@@ -25,6 +25,17 @@
   padding-left: var(--padding-horizontal-app);
   padding-right: var(--padding-horizontal-app);
 }
+/* Fiche recette (detailView) : même marge négative que .page-fullbleed,
+   sans sa compensation en padding — .detail-photo (position:fixed) et
+   .detail-sheet gèrent déjà chacun leur propre padding, l'ajouter ici
+   les aurait doublés ou décalés. Classe CSS plutôt que style inline :
+   un reset JS de detailEl.style.margin (nécessaire après un drag/une
+   animation) retombe alors sur cette valeur au lieu de l'effacer pour de
+   bon — c'est l'effacement qui causait la marge verte visible autour de
+   la fiche, reproductible même hors PWA. */
+.detail-view-fullbleed {
+  margin: calc(-1 * (var(--padding-horizontal-app) + env(safe-area-inset-top))) calc(-1 * var(--padding-horizontal-app)) 0;
+}
 
 /* ---- Boutons ---- */
 .icon-btn {
