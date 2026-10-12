@@ -4947,6 +4947,11 @@
     }
     const r = data;
     currentSharedRecipe = r;
+    // Lancée tout de suite (en parallèle des requêtes auteur/enregistrée
+    // encore à faire ci-dessous), attendue juste avant d'afficher la page :
+    // même traitement que showDetail(), pour que la photo soit déjà prête
+    // au moment de l'animation d'entrée plutôt que de "popper" après coup.
+    const photoPreload = preloadImage(safeUrl(r.photo_url));
 
     let authorName = null;
     if (r.user_id) {
@@ -4988,6 +4993,7 @@
         ${hasSteps ? `<button type="button" class="primary-btn" style="margin-top:0;" onclick="openCookingMode(currentSharedRecipe, ${getRecipeBase(r)})">Cook mode</button>` : ''}
       </div>` : '';
 
+    await photoPreload;
     document.getElementById('sharedRecipeContent').innerHTML = `
       <div class="detail-photo">
         ${safeUrl(r.photo_url)
