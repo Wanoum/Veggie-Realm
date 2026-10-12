@@ -140,7 +140,7 @@
 
 <div id="savedRecipesView" class="page-fullbleed" style="display:none;">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--gap-vertical-section);">
-    <button type="button" class="icon-btn icon-btn-lg glass-surface" onclick="showHome()"><svg class="icon-svg icon"><use href="#icon-arrow-left-outline"/></svg></button>
+    <button type="button" class="icon-btn icon-btn-lg glass-surface" onclick="playBackButtonAnimation('savedRecipesView')"><svg class="icon-svg icon"><use href="#icon-arrow-left-outline"/></svg></button>
     <h1 class="text-headline" style="margin:0;">Recettes partagées</h1>
   </div>
   <div id="savedRecipesList" style="display:grid;grid-template-columns:1fr;gap:var(--gap-large);"></div>
@@ -410,7 +410,7 @@
 
 <div id="accountEditView" class="page-fullbleed" style="display:none;padding-bottom:110px;">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--gap-vertical-section);">
-    <button type="button" class="icon-btn icon-btn-lg glass-surface" onclick="closeAccountEdit()"><svg class="icon-svg icon"><use href="#icon-arrow-left-outline"/></svg></button>
+    <button type="button" class="icon-btn icon-btn-lg glass-surface" onclick="playBackButtonAnimation('accountEditView')"><svg class="icon-svg icon"><use href="#icon-arrow-left-outline"/></svg></button>
     <h1 id="accountEditTitle" class="text-headline" style="margin:0;"></h1>
   </div>
   <div id="accountEditContent"></div>
@@ -1126,7 +1126,7 @@
         ${safeUrl(r.photo_url)
           ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.querySelector('img').style.display='none'" />`
           : emptyPhotoHtml(r.id, 'big')}
-        <button class="icon-btn icon-btn-lg glass-surface" style="position:absolute;top:calc(18px + env(safe-area-inset-top));left:18px;" onclick="goBackFromDetail()"><svg class="icon-svg icon"><use href="#icon-arrow-left-outline"/></svg></button>
+        <button class="icon-btn icon-btn-lg glass-surface" style="position:absolute;top:calc(18px + env(safe-area-inset-top));left:18px;" onclick="playBackButtonAnimation('detailView')"><svg class="icon-svg icon"><use href="#icon-arrow-left-outline"/></svg></button>
         <div style="position:absolute;top:calc(18px + env(safe-area-inset-top));right:18px;">
           <button class="icon-btn icon-btn-lg glass-surface" onclick="openRecipeActionsMenu(${i})"><svg class="icon-svg icon"><use href="#icon-more-vertical-outline"/></svg></button>
         </div>
@@ -1816,7 +1816,7 @@
     }
   };
 
-  document.getElementById('wizardBackBtn').onclick = wizardGoBack;
+  document.getElementById('wizardBackBtn').onclick = () => window.playBackButtonAnimation('formView');
 
   // Sauvegarde continue du brouillon : toute frappe dans les étapes du
   // formulaire (délégation, un seul listener par étape) et tout passage en
@@ -2495,6 +2495,32 @@
         setTimeout(() => endLiveDrag(true), ANIMATION_MS);
       }
     }, { passive: true });
+
+    // Bouton retour (flèche en haut à gauche) : rejoue exactement la même
+    // sortie que le geste de bord confirmé (beginLiveDrag → translateX
+    // jusqu'à sortir de l'écran → back()), plutôt qu'une fermeture instantanée
+    // — cohérence demandée entre les deux façons de revenir en arrière.
+    window.playBackButtonAnimation = function (viewId) {
+      const config = EDGE_SWIPE_VIEWS.find(v => v.id === viewId);
+      if (!config) return;
+      if (config.cond && !config.cond()) { config.back(); return; }
+      const el = document.getElementById(viewId);
+      if (!el || el.style.display === 'none') { config.back(); return; }
+      activeView = config;
+      viewEl = el;
+      lockBackgroundScroll();
+      beginLiveDrag();
+      viewEl.style.transition = 'none';
+      viewEl.style.transform = 'translateX(0)';
+      void viewEl.offsetWidth;
+      viewEl.style.transition = `transform ${ANIMATION_MS}ms ${IOS_EASING}`;
+      scrimEl.style.transition = `opacity ${ANIMATION_MS}ms ${IOS_EASING}`;
+      requestAnimationFrame(() => {
+        viewEl.style.transform = `translateX(${window.innerWidth}px)`;
+        scrimEl.style.opacity = '0';
+      });
+      setTimeout(() => { endLiveDrag(false); config.back(); }, ANIMATION_MS);
+    };
   })();
 
   // Rafraîchit les données au retour au premier plan. Nécessaire notamment
@@ -4967,7 +4993,7 @@
         ${safeUrl(r.photo_url)
           ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.querySelector('img').style.display='none'" />`
           : emptyPhotoHtml(r.id, 'big')}
-        ${currentUser ? `<button class="icon-btn icon-btn-lg glass-surface" style="position:absolute;top:calc(18px + env(safe-area-inset-top));left:18px;" onclick="goBackFromSharedRecipe()"><svg class="icon-svg icon"><use href="#icon-arrow-left-outline"/></svg></button>` : ''}
+        ${currentUser ? `<button class="icon-btn icon-btn-lg glass-surface" style="position:absolute;top:calc(18px + env(safe-area-inset-top));left:18px;" onclick="playBackButtonAnimation('sharedRecipeView')"><svg class="icon-svg icon"><use href="#icon-arrow-left-outline"/></svg></button>` : ''}
         ${(currentUser && !isOwnRecipe) ? `
           <button class="icon-btn icon-btn-lg glass-surface" style="position:absolute;top:calc(18px + env(safe-area-inset-top));right:18px;" onclick="toggleSavedRecipe('${r.id}')" id="saveSharedBtn" data-saved="${isSaved}">
             <svg class="icon-svg icon" id="saveSharedIcon"><use href="#icon-${isSaved ? 'bookmark-filled' : 'bookmark-outline'}"/></svg>
