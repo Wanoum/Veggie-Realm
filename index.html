@@ -2714,31 +2714,45 @@
 
   // true quand on a sauté directement à l'étape Versions (depuis la fiche,
   // via "Créer une version") plutôt que de passer par tout le formulaire
-  // Recette dont on est en train de créer une version, le temps du parcours
-  // dédié (étapes 2 à 4 réutilisées telles quelles — infos, ingrédients,
-  // étapes — mais réinterprétées : f_title porte le nom de la version, pas
-  // le titre, qui reste celui de la recette). null = parcours normal.
+  // Recette dont on est en train de créer/modifier une version, le temps du
+  // parcours dédié (étapes 2 à 4 réutilisées telles quelles — infos,
+  // ingrédients, étapes — mais réinterprétées : f_title porte le nom de la
+  // version, pas le titre, qui reste celui de la recette). null = parcours
+  // normal.
   let creatingVariantFor = null;
+  // Libellé d'origine de la version en cours de modification (null = on en
+  // crée une nouvelle) — saveVariant() s'en sert pour remplacer la bonne
+  // entrée dans r.variants plutôt que d'en ajouter une de plus.
+  let editingVariantLabel = null;
 
-  function createVersionForCurrentRecipe() {
-    const r = recipes[currentDetailIndex];
+  // Prépare le formulaire pour une version : soit une nouvelle (variant =
+  // null, préremplie avec une copie de l'originale), soit une version
+  // existante à modifier (variant fourni) — seule différence : la source
+  // des champs ingrédients/étapes/cuisson/four, et editingVariantLabel.
+  function enterVariantForm(r, variant) {
     resetForm();
     creatingVariantFor = r;
+    editingVariantLabel = variant ? variant.label : null;
     document.getElementById('f_title').placeholder = 'Nom de la version';
+    document.getElementById('f_title').value = variant ? (variant.label || '') : '';
     selectedMealTypes = [...(r.tags || [])].filter(t => MEAL_TYPES.includes(t));
     renderMealTypeToggles();
     document.getElementById('f_servings').value = r.servings || (isPieceMode(r) ? 1 : 4);
     document.getElementById('f_servings').disabled = true;
     document.getElementById('f_servingModeBtn').disabled = true;
     setFormServingMode(r.serving_mode === 'piece' ? 'piece' : 'portion');
-    document.getElementById('f_cook').value = r.cook_time_minutes || '';
-    document.getElementById('f_oven').value = r.oven_temp_celsius || '';
-    ingRows = (r.ingredients || []).map(ing => ({
+    // Une version sans son propre temps de cuisson/four reprend celui de
+    // l'originale (même convention que effectiveRecipeView pour l'affichage).
+    document.getElementById('f_cook').value = (variant && variant.cook_time_minutes != null) ? variant.cook_time_minutes : (r.cook_time_minutes || '');
+    document.getElementById('f_oven').value = (variant && variant.oven_temp_celsius != null) ? variant.oven_temp_celsius : (r.oven_temp_celsius || '');
+    const srcIngredients = (variant && variant.ingredients && variant.ingredients.length) ? variant.ingredients : (r.ingredients || []);
+    ingRows = srcIngredients.map(ing => ({
       qtyUnitText: [ing.quantity, ing.unit].filter(v => v != null && v !== '').join(' '),
       name: ing.name ?? ''
     }));
     ingRows.push({ qtyUnitText: '', name: '' });
-    stepRows = [...(r.steps || [])];
+    const srcSteps = (variant && variant.steps && variant.steps.length) ? variant.steps : (r.steps || []);
+    stepRows = [...srcSteps];
     renderStepsList();
     renderIngRows();
     // La photo reste celle de la recette de base (pas encore éditable par
@@ -2761,6 +2775,10 @@
     document.getElementById('bottomNav').style.display = 'flex';
     goToWizardStep(2);
     sessionStorage.setItem('lastView', 'form');
+  }
+
+  function createVersionForCurrentRecipe() {
+    enterVariantForm(recipes[currentDetailIndex], null);
   }
 
   async function saveVariant() {
@@ -2786,7 +2804,9 @@
     nextBtn.textContent = "Enregistrement...";
     nextBtn.disabled = true;
 
-    const updatedVariants = [...(r.variants || []), newVariant];
+    const updatedVariants = editingVariantLabel
+      ? (r.variants || []).map(v => v.label === editingVariantLabel ? newVariant : v)
+      : [...(r.variants || []), newVariant];
     const { error } = await sb.from('recipes').update({ variants: updatedVariants }).eq('id', r.id);
     nextBtn.disabled = false;
 
@@ -2797,10 +2817,17 @@
       return;
     }
 
+    // Renommage : si la version par défaut mémorisée pointait vers l'ancien
+    // libellé, elle doit suivre vers le nouveau plutôt que de se retrouver à
+    // pointer sur une version qui n'existe plus.
+    if (editingVariantLabel && userDefaultVariantLabel === editingVariantLabel && label !== editingVariantLabel) {
+      await setUserDefaultVariantLabel(label);
+    }
     r.variants = updatedVariants;
     selectedVariantLabel = label;
     const idx = recipes.findIndex(x => x.id === r.id);
     creatingVariantFor = null;
+    editingVariantLabel = null;
     resetForm();
     clearWizardDraft();
     showDetail(idx);
@@ -2809,6 +2836,13 @@
 
   function editCurrentRecipe() {
     const r = recipes[currentDetailIndex];
+    // Une version (autre que l'originale) est actuellement affichée sur la
+    // fiche : "Modifier" édite cette version précise plutôt que la recette
+    // de base — seul moyen jusqu'ici de modifier une version déjà créée.
+    if (selectedVariantLabel) {
+      const variant = (r.variants || []).find(v => v.label === selectedVariantLabel);
+      if (variant) { enterVariantForm(r, variant); return; }
+    }
     editingId = r.id;
     currentSessionUploadPath = null;
     originalPhotoUrlForSession = r.photo_url || null;
@@ -3631,6 +3665,7 @@
   function resetForm() {
     editingId = null;
     creatingVariantFor = null;
+    editingVariantLabel = null;
     currentSessionUploadPath = null;
     originalPhotoUrlForSession = null;
     currentSessionSourceUploadPath = null;
