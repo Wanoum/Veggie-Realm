@@ -283,6 +283,8 @@
       </div>
 
       <textarea id="f_notes" class="field-input" rows="3" style="min-height:var(--height-default);padding:var(--padding-vertical-control) var(--padding-horizontal-default);resize:none;overflow-y:hidden;" placeholder="Tapez ici vos remarques, par exemple : Attention aux mélange des œufs avec le chocolat chaud !" oninput="autoResizeTextarea(this)"></textarea>
+
+      <input id="f_source" class="field-input" placeholder="Source (lien, livre, personne...)" />
     </div>
   </div>
 
@@ -1152,7 +1154,7 @@
         ${ingredientsHtml}
         ${r.notes ? `<div class="notice">${escapeHtml(r.notes)}</div>` : ''}
         ${stepsHtml}
-        ${safeUrl(r.source_url) ? `<p style="margin-top:var(--gap-vertical-section);"><a href="${escapeHtml(safeUrl(r.source_url))}" target="_blank" rel="noopener" style="color:var(--text-icon-accent);font-size:14px;">Source : ${escapeHtml(sourceLinkLabel(r.source_url))}</a></p>` : ''}
+        ${sourceDisplayHtml(r)}
         <div style="height:90px;"></div>
       </div>
 
@@ -1562,7 +1564,6 @@
 
   // ---- Navigation du parcours d'ajout en 4 étapes ----
   let wizardStep = 1;
-  let importedSourceUrl = null;
 
   function goToWizardStep(step) {
     wizardStep = step;
@@ -1656,7 +1657,7 @@
   // Préremplit le formulaire avec les données renvoyées par l'un ou l'autre
   // endpoint d'import (URL ou fichier), qui partagent la même forme de réponse.
   function applyImportedRecipeData(data, sourceUrl) {
-    importedSourceUrl = data.source_url || sourceUrl || null;
+    document.getElementById('f_source').value = data.source_url || sourceUrl || '';
     document.getElementById('f_title').value = data.title || '';
     document.getElementById('f_photo').value = data.photo_url || '';
     updatePhotoPreview(data.photo_url || null);
@@ -2754,6 +2755,7 @@
     }
     document.getElementById('photoDropZone').style.pointerEvents = 'none';
     document.getElementById('f_notes').style.display = 'none';
+    document.getElementById('f_source').style.display = 'none';
     document.getElementById('detailView').style.display = 'none';
     document.getElementById('formView').style.display = 'block';
     document.getElementById('bottomNav').style.display = 'flex';
@@ -2811,7 +2813,7 @@
     currentSessionUploadPath = null;
     originalPhotoUrlForSession = r.photo_url || null;
     currentSessionSourceUploadPath = null;
-    importedSourceUrl = r.source_url || null;
+    document.getElementById('f_source').value = r.source_url || '';
     document.getElementById('formTitle').textContent = "Modifier la recette";
     document.getElementById('f_title').placeholder = 'Titre de la recette';
     document.getElementById('f_title').value = r.title || '';
@@ -2819,6 +2821,7 @@
     updatePhotoPreview(r.photo_url);
     document.getElementById('photoDropZone').style.pointerEvents = '';
     document.getElementById('f_notes').style.display = '';
+    document.getElementById('f_source').style.display = '';
     selectedMealTypes = [...(r.tags || [])].filter(t => MEAL_TYPES.includes(t));
     renderMealTypeToggles();
     document.getElementById('f_servings').value = r.servings || 4;
@@ -3524,6 +3527,21 @@
     try { return new URL(url).hostname.replace('www.', ''); } catch { return url; }
   }
 
+  // Source d'une recette : un lien (importée, ou collée à la main) devient
+  // cliquable ; tout autre texte libre (un livre, une personne...) reste du
+  // texte simple — safeUrl() ne sert qu'à choisir l'affichage, jamais à
+  // décider si la source est montrée (sinon un texte non-URL disparaîtrait
+  // silencieusement).
+  function sourceDisplayHtml(r) {
+    const raw = (r.source_url || '').trim();
+    if (!raw) return '';
+    const url = safeUrl(raw);
+    const inner = url
+      ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="color:var(--text-icon-accent);">Source : ${escapeHtml(sourceLinkLabel(raw))}</a>`
+      : `Source : ${escapeHtml(raw)}`;
+    return `<p style="margin-top:var(--gap-vertical-section);font-size:14px;">${inner}</p>`;
+  }
+
   async function handlePhotoFile(file) {
     if (!file) return;
     const statusEl = document.getElementById('photoUploadStatus');
@@ -3616,7 +3634,7 @@
     currentSessionUploadPath = null;
     originalPhotoUrlForSession = null;
     currentSessionSourceUploadPath = null;
-    importedSourceUrl = null;
+    document.getElementById('f_source').value = '';
     document.getElementById('import_url').value = '';
     document.getElementById('importStatus').textContent = '';
     document.getElementById('importFetchBtn').disabled = true;
@@ -3628,6 +3646,7 @@
     document.getElementById('photoUploadStatus').textContent = '';
     document.getElementById('photoDropZone').style.pointerEvents = '';
     document.getElementById('f_notes').style.display = '';
+    document.getElementById('f_source').style.display = '';
     selectedMealTypes = [];
     renderMealTypeToggles();
     document.getElementById('f_servings').value = userDefaultServings;
@@ -3666,11 +3685,11 @@
       cook: document.getElementById('f_cook').value,
       oven: document.getElementById('f_oven').value,
       notes: document.getElementById('f_notes').value,
+      source: document.getElementById('f_source').value,
       ingRows,
       stepRows,
       stepEntry: document.getElementById('stepEntryInput').value,
-      variantRows,
-      importedSourceUrl
+      variantRows
     };
   }
 
@@ -3701,6 +3720,7 @@
     document.getElementById('f_oven').value = data.oven || '';
     document.getElementById('f_notes').value = data.notes || '';
     autoResizeTextarea(document.getElementById('f_notes'));
+    document.getElementById('f_source').value = data.source || '';
     ingRows = Array.isArray(data.ingRows) && data.ingRows.length ? data.ingRows : [{ qtyUnitText: '', name: '' }];
     renderIngRows();
     stepRows = Array.isArray(data.stepRows) ? data.stepRows : [];
@@ -3708,7 +3728,6 @@
     renderStepsList();
     variantRows = Array.isArray(data.variantRows) ? data.variantRows : [];
     renderVariantsList();
-    importedSourceUrl = data.importedSourceUrl || null;
     validateWizardStep();
   }
 
@@ -3749,7 +3768,7 @@
       cook_time_minutes: document.getElementById('f_cook').value ? Number(document.getElementById('f_cook').value) : null,
       oven_temp_celsius: document.getElementById('f_oven').value ? Number(document.getElementById('f_oven').value) : null,
       notes: document.getElementById('f_notes').value.trim() || null,
-      source_url: importedSourceUrl,
+      source_url: document.getElementById('f_source').value.trim() || null,
       ingredients,
       steps,
       variants: buildVariantsPayload()
@@ -5017,7 +5036,7 @@
         ${ingredientsHtml}
         ${r.notes ? `<div class="notice" style="margin-top:16px;">${escapeHtml(r.notes)}</div>` : ''}
         ${stepsHtml}
-        ${safeUrl(r.source_url) ? `<p style="margin-top:var(--gap-vertical-section);"><a href="${escapeHtml(safeUrl(r.source_url))}" target="_blank" rel="noopener" style="color:var(--text-icon-accent);font-size:14px;">Source : ${escapeHtml(sourceLinkLabel(r.source_url))}</a></p>` : ''}
+        ${sourceDisplayHtml(r)}
         ${footer ? '<div style="height:90px;"></div>' : ''}
       </div>
       ${footer}
