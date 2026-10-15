@@ -456,7 +456,7 @@
 </div>
 
 <div id="coursesEditFooter" class="fixed-action-footer" style="display:none;">
-  <button type="button" class="secondary-btn" style="margin-top:0;flex:1;" onclick="setCoursesEditMode(false)"><svg class="icon-svg"><use href="#icon-close-outline"/></svg> Annuler</button>
+  <button type="button" class="secondary-btn" style="margin-top:0;flex:1;" onclick="setCoursesEditMode(false)"><svg class="icon-svg"><use href="#icon-close-outline"/></svg> <span data-i18n="btn_cancel">Annuler</span></button>
   <button type="button" class="icon-pill-btn icon-pill-btn-accent" style="width:var(--height-default);height:var(--height-default);flex-shrink:0;" onclick="setCoursesEditMode(false)"><svg class="icon-svg" style="font-size:20px;"><use href="#icon-check-outline"/></svg></button>
 </div>
 
@@ -466,9 +466,9 @@
     <div class="detail-sheet-handle"></div>
     <h2 id="planOccurrenceTitle" style="margin-bottom:var(--gap-vertical-section);"></h2>
     <div id="planOccurrenceVariantWrap" style="display:none;margin-bottom:20px;position:relative;">
-      <label class="field-label" style="margin-top:0;">Version</label>
+      <label class="field-label" style="margin-top:0;" data-i18n="version_field_label">Version</label>
       <button type="button" id="planOccurrenceVariantBtn" class="sheet-select-field" style="display:flex;align-items:center;justify-content:space-between;" onclick="togglePlanOccurrenceVariantMenu()">
-        <span id="planOccurrenceVariantLabel">Base</span>
+        <span id="planOccurrenceVariantLabel" data-i18n="base_label">Base</span>
         <svg class="icon-svg"><use href="#icon-chevron-down-outline"/></svg>
       </button>
       <div id="planOccurrenceVariantMenu" class="course-sort-menu" style="display:none;left:0;right:0;width:auto;"></div>
@@ -491,7 +491,7 @@
     <div class="detail-sheet-handle"></div>
     <h2 id="courseQtyTitle" style="margin-bottom:var(--gap-vertical-section);"></h2>
     <div id="courseQtyStepperWrap" style="display:none;">
-      <label class="field-label">Quantité</label>
+      <label class="field-label" data-i18n="quantity_label">Quantité</label>
       <div class="servings-stepper servings-stepper-lg">
         <button type="button" class="servings-minus" id="courseQtyMinus"><svg class="icon-svg"><use href="#icon-minus-outline"/></svg></button>
         <span class="servings-value" id="courseQtyValue">0</span>
@@ -499,11 +499,11 @@
       </div>
     </div>
     <div id="courseQtyInputWrap">
-      <label class="field-label">Quantité</label>
-      <input id="courseQtyInput" class="field-input" placeholder="ex: 500 g" />
+      <label class="field-label" data-i18n="quantity_label">Quantité</label>
+      <input id="courseQtyInput" class="field-input" data-i18n-placeholder="qty_example_placeholder" placeholder="ex: 500 g" />
     </div>
-    <button type="button" class="primary-btn" style="width:100%;margin-top:16px;" onclick="saveCourseQtySheet()"><svg class="icon-svg"><use href="#icon-check-outline"/></svg> Enregistrer</button>
-    <button type="button" style="display:flex;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetCourseQtySheet()"><svg class="icon-svg" style="font-size:20px;text-decoration:none;"><use href="#icon-refresh-outline"/></svg> Réinitialiser cette quantité</button>
+    <button type="button" class="primary-btn" style="width:100%;margin-top:16px;" onclick="saveCourseQtySheet()"><svg class="icon-svg"><use href="#icon-check-outline"/></svg> <span data-i18n="btn_save">Enregistrer</span></button>
+    <button type="button" style="display:flex;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;" onclick="resetCourseQtySheet()"><svg class="icon-svg" style="font-size:20px;text-decoration:none;"><use href="#icon-refresh-outline"/></svg> <span data-i18n="reset_this_qty">Réinitialiser cette quantité</span></button>
   </div>
 </div>
 
@@ -523,8 +523,8 @@
   <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;" onclick="closeCoursesActionsSheet()"></div>
   <div class="sheet-panel" style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
     <div class="detail-sheet-handle"></div>
-    <button type="button" class="settings-row" id="coursesActionsEditRow" onclick="closeCoursesActionsSheet(); setCoursesEditMode(!coursesEditMode);"><span style="display:flex;align-items:center;gap:10px;"><svg class="icon-svg"><use href="#icon-edit-outline"/></svg> <span id="coursesActionsEditLabel">Modifier</span></span></button>
-    <button type="button" class="settings-row" onclick="closeCoursesActionsSheet(); resetCoursesOrPlanning();"><span style="display:flex;align-items:center;gap:10px;"><svg class="icon-svg"><use href="#icon-history-outline"/></svg> Réinitialiser les quantités</span></button>
+    <button type="button" class="settings-row" id="coursesActionsEditRow" onclick="closeCoursesActionsSheet(); setCoursesEditMode(!coursesEditMode);"><span style="display:flex;align-items:center;gap:10px;"><svg class="icon-svg"><use href="#icon-edit-outline"/></svg> <span id="coursesActionsEditLabel" data-i18n="edit_label">Modifier</span></span></button>
+    <button type="button" class="settings-row" onclick="closeCoursesActionsSheet(); resetCoursesOrPlanning();"><span style="display:flex;align-items:center;gap:10px;"><svg class="icon-svg"><use href="#icon-history-outline"/></svg> <span data-i18n="reset_quantities">Réinitialiser les quantités</span></span></button>
   </div>
 </div>
 
@@ -544,7 +544,7 @@
   <div class="sheet-panel" style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
     <div class="detail-sheet-handle"></div>
     <div id="variantPickerList"></div>
-    <button type="button" id="createVariantBtn" style="display:flex;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);"><i class="bi bi-plus-circle-fill"></i> <span style="text-decoration:underline;">Créer une version</span></button>
+    <button type="button" id="createVariantBtn" style="display:flex;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);"><i class="bi bi-plus-circle-fill"></i> <span style="text-decoration:underline;" data-i18n="create_version">Créer une version</span></button>
   </div>
 </div>
 
@@ -643,7 +643,10 @@
       ingredient_name_placeholder: "Nom de l'ingrédient",
       ingredient_placeholder: 'Ingrédient', ingredient_default_name: 'Ingrédient',
       toast_ingredient_removed: '{name} supprimé',
-      toast_step_removed: 'Étape "{label}" supprimée'
+      toast_step_removed: 'Étape "{label}" supprimée',
+      version_field_label: 'Version', quantity_label: 'Quantité', qty_example_placeholder: 'ex: 500 g',
+      reset_this_qty: 'Réinitialiser cette quantité', reset_quantities: 'Réinitialiser les quantités',
+      edit_mode_done: 'Terminer', toast_list_reset: 'Liste réinitialisée', toast_planning_reset: 'Planning réinitialisé'
     },
     en: {
       nav_recipes: 'Recipes', nav_courses: 'Groceries', nav_add: 'Add', nav_account: 'Account',
@@ -718,7 +721,10 @@
       ingredient_name_placeholder: 'Ingredient name',
       ingredient_placeholder: 'Ingredient', ingredient_default_name: 'Ingredient',
       toast_ingredient_removed: '{name} removed',
-      toast_step_removed: 'Step "{label}" removed'
+      toast_step_removed: 'Step "{label}" removed',
+      version_field_label: 'Version', quantity_label: 'Quantity', qty_example_placeholder: 'e.g.: 500 g',
+      reset_this_qty: 'Reset this quantity', reset_quantities: 'Reset quantities',
+      edit_mode_done: 'Done', toast_list_reset: 'List reset', toast_planning_reset: 'Meal plan reset'
     }
   };
   function detectDeviceLanguage() {
@@ -1139,7 +1145,7 @@
   function openVariantPickerSheet(i) {
     const r = recipes[i];
     const listEl = document.getElementById('variantPickerList');
-    const rows = [{ label: '', name: 'Base' }, ...r.variants.map(v => ({ label: v.label, name: v.label }))];
+    const rows = [{ label: '', name: t('base_label') }, ...r.variants.map(v => ({ label: v.label, name: v.label }))];
     const renderRows = () => rows.map(row => `
       <div class="settings-row">
         <button type="button" style="flex:1;display:flex;align-items:center;justify-content:space-between;gap:10px;background:none;border:none;padding:0;text-align:left;font:inherit;color:inherit;" data-pick-variant="${escapeHtml(row.label)}">
@@ -4404,7 +4410,7 @@
   function setSheetVersion(label) {
     if (!planSheetState || planSheetState.mode !== 'add') return;
     planSheetState.selectedVersion = label;
-    document.getElementById('planOccurrenceVariantLabel').textContent = label || 'Base';
+    document.getElementById('planOccurrenceVariantLabel').textContent = label || t('base_label');
     document.getElementById('planOccurrenceVariantMenu').style.display = 'none';
   }
 
@@ -4429,11 +4435,11 @@
       document.getElementById('planOccurrenceTitle').textContent = r.title;
       if (st.versions.length > 1) {
         variantWrap.style.display = 'block';
-        document.getElementById('planOccurrenceVariantLabel').textContent = st.selectedVersion || 'Base';
+        document.getElementById('planOccurrenceVariantLabel').textContent = st.selectedVersion || t('base_label');
         const menu = document.getElementById('planOccurrenceVariantMenu');
         menu.innerHTML = st.versions.map(v => {
           const taken = !!findOccurrence(st.recipeId, v);
-          const name = v || 'Base';
+          const name = v || t('base_label');
           return `<button type="button" class="course-sort-menu-item text-body ${st.selectedVersion === v ? 'active' : ''}" data-set-version="${escapeHtml(v)}" ${taken ? 'disabled' : ''}><span>${escapeHtml(name)}</span><svg class="icon-svg course-sort-menu-check"><use href="#icon-check-outline"/></svg></button>`;
         }).join('');
         menu.querySelectorAll('[data-set-version]:not([disabled])').forEach(btn => {
@@ -5009,7 +5015,7 @@
       try { localStorage.removeItem(COURSES_CHECKED_KEY); } catch { /* ignoré */ }
       try { localStorage.removeItem(COURSES_QTY_OVERRIDE_KEY); } catch { /* ignoré */ }
       renderCoursesList();
-      showToast('Liste réinitialisée');
+      showToast(t('toast_list_reset'));
     } else {
       if (!(await showConfirmDialog({ message: t('confirm_reset_planning'), confirmLabel: t('btn_reset'), confirmIcon: 'history-outline' }))) return;
       await sb.from('meal_plan').delete().neq('recipe_id', '00000000-0000-0000-0000-000000000000');
@@ -5017,7 +5023,7 @@
       try { localStorage.removeItem(COURSES_CHECKED_KEY); } catch { /* ignoré */ }
       try { localStorage.removeItem(COURSES_QTY_OVERRIDE_KEY); } catch { /* ignoré */ }
       renderPlanningRecipes();
-      showToast('Planning réinitialisé');
+      showToast(t('toast_planning_reset'));
     }
   }
 
@@ -5038,7 +5044,7 @@
   }
 
   function openCoursesActionsSheet() {
-    document.getElementById('coursesActionsEditLabel').textContent = coursesEditMode ? 'Terminer' : 'Modifier';
+    document.getElementById('coursesActionsEditLabel').textContent = coursesEditMode ? t('edit_mode_done') : t('edit_label');
     document.getElementById('coursesActionsSheet').style.display = 'flex';
     lockBackgroundScroll();
   }
