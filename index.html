@@ -183,15 +183,15 @@
 </div>
 
 <div id="formView" class="page-fullbleed" style="display:none;padding-bottom:110px;">
-  <h1 id="formTitle" style="margin-bottom:var(--gap-vertical-section);">Nouvelle recette</h1>
+  <h1 id="formTitle" data-i18n="wizard_new_recipe_title" style="margin-bottom:var(--gap-vertical-section);">Nouvelle recette</h1>
 
   <!-- Étape 1 : source -->
   <div id="wizardStep1" class="wizard-step">
     <div class="wizard-url-card">
       <img src="src/card-big-pattern.svg" alt="" class="wizard-url-card-bg" />
-      <p class="wizard-url-card-title">Depuis un site web</p>
+      <p class="wizard-url-card-title" data-i18n="wizard_from_website">Depuis un site web</p>
       <div style="display:flex;gap:8px;">
-        <input id="import_url" class="field-input" style="flex:1;min-width:0;" placeholder="Coller un lien" oninput="updateImportButtonState()" />
+        <input id="import_url" class="field-input" style="flex:1;min-width:0;" data-i18n-placeholder="wizard_paste_link" placeholder="Coller un lien" oninput="updateImportButtonState()" />
         <button type="button" id="importFetchBtn" class="secondary-btn btn-square" style="margin-top:0;" onclick="performImport()" disabled><svg class="icon-svg"><use href="#icon-arrow-right-outline"/></svg></button>
       </div>
       <p id="importStatus" class="wizard-url-status"></p>
@@ -201,8 +201,8 @@
       <button type="button" id="fileImportTile" class="wizard-source-row" onclick="document.getElementById('recipeFileInput').click()">
         <svg class="icon-svg wizard-source-row-icon"><use href="#icon-import-file"/></svg>
         <span class="wizard-source-row-text">
-          <span class="wizard-source-row-title" id="fileImportTileLabel">Importer un fichier</span>
-          <span class="wizard-source-row-subtitle">PDF ou Word</span>
+          <span class="wizard-source-row-title" id="fileImportTileLabel" data-i18n="wizard_import_file">Importer un fichier</span>
+          <span class="wizard-source-row-subtitle" data-i18n="wizard_import_file_sub">PDF ou Word</span>
         </span>
         <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
       </button>
@@ -211,8 +211,8 @@
       <button type="button" class="wizard-source-row" onclick="chooseNewRecipe()">
         <svg class="icon-svg wizard-source-row-icon"><use href="#icon-create-recipe"/></svg>
         <span class="wizard-source-row-text">
-          <span class="wizard-source-row-title">Créer une nouvelle recette</span>
-          <span class="wizard-source-row-subtitle">Partir de zéro</span>
+          <span class="wizard-source-row-title" data-i18n="wizard_new_recipe">Créer une nouvelle recette</span>
+          <span class="wizard-source-row-subtitle" data-i18n="wizard_new_recipe_sub">Partir de zéro</span>
         </span>
         <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
       </button>
@@ -220,8 +220,8 @@
       <button type="button" class="wizard-source-row" disabled>
         <svg class="icon-svg wizard-source-row-icon"><use href="#icon-photo-recipe"/></svg>
         <span class="wizard-source-row-text">
-          <span class="wizard-source-row-title">Photographier</span>
-          <span class="wizard-source-row-subtitle">Bientôt disponible</span>
+          <span class="wizard-source-row-title" data-i18n="wizard_photograph">Photographier</span>
+          <span class="wizard-source-row-subtitle" data-i18n="wizard_coming_soon">Bientôt disponible</span>
         </span>
         <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
       </button>
@@ -252,39 +252,39 @@
     <div class="wizard-form-content">
       <p id="photoUploadStatus" style="font-size:12px;color:var(--text-icon-secondary);margin:0;min-height:1em;"></p>
 
-      <textarea id="f_title" class="serif" placeholder="Titre de la recette" rows="1" oninput="validateWizardStep(); autoResizeTextarea(this);" onkeydown="if (event.key === 'Enter') { event.preventDefault(); this.blur(); }"></textarea>
+      <textarea id="f_title" class="serif" data-i18n-placeholder="wizard_title_placeholder" placeholder="Titre de la recette" rows="1" oninput="validateWizardStep(); autoResizeTextarea(this);" onkeydown="if (event.key === 'Enter') { event.preventDefault(); this.blur(); }"></textarea>
 
       <div id="f_mealTypes" class="tag-filters" style="margin:0;"></div>
 
       <div style="display:flex;gap:8px;">
-        <input id="f_servings" class="field-input" type="number" placeholder="Quantité" style="flex:1;text-align:center;" />
+        <input id="f_servings" class="field-input" type="number" data-i18n-placeholder="wizard_quantity_placeholder" placeholder="Quantité" style="flex:1;text-align:center;" />
         <div id="f_servingModeWrap" style="flex:2;position:relative;">
           <button type="button" id="f_servingModeBtn" class="field-input" style="width:100%;display:flex;align-items:center;justify-content:space-between;" onclick="toggleServingModeMenu()">
-            <span id="f_servingModeLabel">Personnes</span>
+            <span id="f_servingModeLabel" data-i18n="people_label">Personnes</span>
             <svg class="icon-svg"><use href="#icon-chevron-down-outline"/></svg>
           </button>
           <div id="f_servingModeMenu" class="course-sort-menu serving-mode-menu" style="display:none;">
-            <button type="button" class="course-sort-menu-item text-body active" data-serving-mode="portion"><span>Personnes</span><svg class="icon-svg course-sort-menu-check"><use href="#icon-check-outline"/></svg></button>
-            <button type="button" class="course-sort-menu-item text-body" data-serving-mode="piece"><span>À la pièce</span><svg class="icon-svg course-sort-menu-check"><use href="#icon-check-outline"/></svg></button>
+            <button type="button" class="course-sort-menu-item text-body active" data-serving-mode="portion"><span data-i18n="people_label">Personnes</span><svg class="icon-svg course-sort-menu-check"><use href="#icon-check-outline"/></svg></button>
+            <button type="button" class="course-sort-menu-item text-body" data-serving-mode="piece"><span data-i18n="serving_mode_piece">À la pièce</span><svg class="icon-svg course-sort-menu-check"><use href="#icon-check-outline"/></svg></button>
           </div>
         </div>
       </div>
 
       <div class="field-input-icon">
         <svg class="icon-svg"><use href="#icon-cooking-time-outline"/></svg>
-        <input id="f_cook" type="number" placeholder="Cuisson" />
+        <input id="f_cook" type="number" data-i18n-placeholder="wizard_cook_placeholder" placeholder="Cuisson" />
         <span class="field-input-suffix">min</span>
       </div>
 
       <div class="field-input-icon">
         <svg class="icon-svg"><use href="#icon-temperature-outline"/></svg>
-        <input id="f_oven" type="number" placeholder="Température" />
+        <input id="f_oven" type="number" data-i18n-placeholder="wizard_oven_placeholder" placeholder="Température" />
         <span class="field-input-suffix">°C</span>
       </div>
 
-      <textarea id="f_notes" class="field-input" rows="3" style="min-height:var(--height-default);padding:var(--padding-vertical-control) var(--padding-horizontal-default);resize:none;overflow-y:hidden;" placeholder="Tapez ici vos remarques, par exemple : Attention aux mélange des œufs avec le chocolat chaud !" oninput="autoResizeTextarea(this)"></textarea>
+      <textarea id="f_notes" class="field-input" rows="3" style="min-height:var(--height-default);padding:var(--padding-vertical-control) var(--padding-horizontal-default);resize:none;overflow-y:hidden;" data-i18n-placeholder="wizard_notes_placeholder" placeholder="Tapez ici vos remarques, par exemple : Attention aux mélange des œufs avec le chocolat chaud !" oninput="autoResizeTextarea(this)"></textarea>
 
-      <input id="f_source" class="field-input" placeholder="Source (lien, livre, personne...)" />
+      <input id="f_source" class="field-input" data-i18n-placeholder="wizard_source_placeholder" placeholder="Source (lien, livre, personne...)" />
     </div>
   </div>
 
@@ -617,7 +617,19 @@
       edit_label: 'Modifier', delete_label: 'Supprimer',
       toast_recipe_modified: 'Recette modifiée', toast_recipe_saved: 'Recette enregistrée',
       toast_recipe_deleted: 'Recette supprimée', toast_version_saved: 'Version enregistrée',
-      toast_version_deleted: 'Version supprimée', toast_recipe_removed: 'Recette retirée'
+      toast_version_deleted: 'Version supprimée', toast_recipe_removed: 'Recette retirée',
+      wizard_from_website: 'Depuis un site web', wizard_paste_link: 'Coller un lien',
+      wizard_import_file: 'Importer un fichier', wizard_import_file_sub: 'PDF ou Word',
+      wizard_new_recipe: 'Créer une nouvelle recette', wizard_new_recipe_sub: 'Partir de zéro',
+      wizard_photograph: 'Photographier', wizard_coming_soon: 'Bientôt disponible',
+      wizard_title_placeholder: 'Titre de la recette', wizard_quantity_placeholder: 'Quantité',
+      wizard_cook_placeholder: 'Cuisson', wizard_oven_placeholder: 'Température',
+      wizard_notes_placeholder: 'Tapez ici vos remarques, par exemple : Attention aux mélange des œufs avec le chocolat chaud !',
+      wizard_source_placeholder: 'Source (lien, livre, personne...)',
+      wizard_next: 'Suivant', wizard_save_recipe: 'Enregistrer la recette', wizard_save_version: 'Enregistrer la version',
+      serving_mode_piece: 'À la pièce',
+      wizard_version_name_placeholder: 'Nom de la version',
+      wizard_edit_recipe_title: 'Modifier la recette', wizard_new_recipe_title: 'Nouvelle recette'
     },
     en: {
       nav_recipes: 'Recipes', nav_courses: 'Groceries', nav_add: 'Add', nav_account: 'Account',
@@ -666,7 +678,19 @@
       edit_label: 'Edit', delete_label: 'Delete',
       toast_recipe_modified: 'Recipe updated', toast_recipe_saved: 'Recipe saved',
       toast_recipe_deleted: 'Recipe deleted', toast_version_saved: 'Version saved',
-      toast_version_deleted: 'Version deleted', toast_recipe_removed: 'Recipe removed'
+      toast_version_deleted: 'Version deleted', toast_recipe_removed: 'Recipe removed',
+      wizard_from_website: 'From a website', wizard_paste_link: 'Paste a link',
+      wizard_import_file: 'Import a file', wizard_import_file_sub: 'PDF or Word',
+      wizard_new_recipe: 'Create a new recipe', wizard_new_recipe_sub: 'Start from scratch',
+      wizard_photograph: 'Take a photo', wizard_coming_soon: 'Coming soon',
+      wizard_title_placeholder: 'Recipe title', wizard_quantity_placeholder: 'Quantity',
+      wizard_cook_placeholder: 'Cook time', wizard_oven_placeholder: 'Temperature',
+      wizard_notes_placeholder: 'Type your notes here, e.g.: Careful mixing the eggs with the hot chocolate!',
+      wizard_source_placeholder: 'Source (link, book, person...)',
+      wizard_next: 'Next', wizard_save_recipe: 'Save recipe', wizard_save_version: 'Save version',
+      serving_mode_piece: 'By the piece',
+      wizard_version_name_placeholder: 'Version name',
+      wizard_edit_recipe_title: 'Edit recipe', wizard_new_recipe_title: 'New recipe'
     }
   };
   function detectDeviceLanguage() {
@@ -1136,10 +1160,10 @@
     return isPieceMode(r) ? 1 : userDefaultServings;
   }
 
-  const SERVING_MODE_LABELS = { portion: 'Personnes', piece: 'À la pièce' };
+  const SERVING_MODE_KEYS = { portion: 'people_label', piece: 'serving_mode_piece' };
   function setFormServingMode(mode) {
     formServingMode = mode;
-    document.getElementById('f_servingModeLabel').textContent = SERVING_MODE_LABELS[mode];
+    document.getElementById('f_servingModeLabel').textContent = t(SERVING_MODE_KEYS[mode]);
     document.querySelectorAll('#f_servingModeMenu [data-serving-mode]').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.servingMode === mode);
     });
@@ -1718,7 +1742,7 @@
     resetForm();
     editingId = draft.editingId || null;
     originalPhotoUrlForSession = draft.originalPhotoUrlForSession || null;
-    document.getElementById('formTitle').textContent = editingId ? "Modifier la recette" : "Nouvelle recette";
+    document.getElementById('formTitle').textContent = editingId ? t('wizard_edit_recipe_title') : t('wizard_new_recipe_title');
     if (!editingId) document.getElementById('navAdd').classList.add('active');
     applyWizardDraft(draft);
     goToWizardStep(draft.step && draft.step >= 2 ? Math.min(draft.step, 4) : (editingId ? 2 : 1));
@@ -1740,8 +1764,8 @@
     document.getElementById('bottomNav').style.display = (step === 1) ? 'flex' : 'none';
     document.getElementById('wizardFooter').style.display = (step === 1) ? 'none' : 'flex';
     document.getElementById('wizardNextBtn').innerHTML = (step === 4)
-      ? (creatingVariantFor ? '<svg class="icon-svg"><use href="#icon-check-outline"/></svg> Enregistrer la version' : '<svg class="icon-svg"><use href="#icon-check-outline"/></svg> Enregistrer la recette')
-      : '<svg class="icon-svg"><use href="#icon-arrow-right-outline"/></svg> Suivant';
+      ? `<svg class="icon-svg"><use href="#icon-check-outline"/></svg> ${creatingVariantFor ? t('wizard_save_version') : t('wizard_save_recipe')}`
+      : `<svg class="icon-svg"><use href="#icon-arrow-right-outline"/></svg> ${t('wizard_next')}`;
     document.getElementById('formError').textContent = '';
 
     if (step === 3) renderIngRows();
@@ -1967,7 +1991,7 @@
       clearTimeout(timeout);
       document.getElementById('recipeFileInput').value = '';
       tile.disabled = false;
-      tileLabel.textContent = 'Importer un fichier';
+      tileLabel.textContent = t('wizard_import_file');
     }
   }
 
@@ -2971,7 +2995,7 @@
     resetForm();
     creatingVariantFor = r;
     editingVariantLabel = variant ? variant.label : null;
-    document.getElementById('f_title').placeholder = 'Nom de la version';
+    document.getElementById('f_title').placeholder = t('wizard_version_name_placeholder');
     document.getElementById('f_title').value = variant ? (variant.label || '') : '';
     selectedMealTypes = [...(r.tags || [])].filter(t => MEAL_TYPES.includes(t));
     renderMealTypeToggles();
@@ -3086,8 +3110,8 @@
     originalPhotoUrlForSession = r.photo_url || null;
     currentSessionSourceUploadPath = null;
     document.getElementById('f_source').value = r.source_url || '';
-    document.getElementById('formTitle').textContent = "Modifier la recette";
-    document.getElementById('f_title').placeholder = 'Titre de la recette';
+    document.getElementById('formTitle').textContent = t('wizard_edit_recipe_title');
+    document.getElementById('f_title').placeholder = t('wizard_title_placeholder');
     document.getElementById('f_title').value = r.title || '';
     document.getElementById('f_photo').value = r.photo_url || '';
     updatePhotoPreview(r.photo_url);
@@ -3911,9 +3935,9 @@
     document.getElementById('import_url').value = '';
     document.getElementById('importStatus').textContent = '';
     document.getElementById('importFetchBtn').disabled = true;
-    document.getElementById('formTitle').textContent = "Nouvelle recette";
+    document.getElementById('formTitle').textContent = t('wizard_new_recipe_title');
     document.getElementById('f_title').value = '';
-    document.getElementById('f_title').placeholder = 'Titre de la recette';
+    document.getElementById('f_title').placeholder = t('wizard_title_placeholder');
     document.getElementById('f_photo').value = '';
     updatePhotoPreview(null);
     document.getElementById('photoUploadStatus').textContent = '';
