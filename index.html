@@ -2306,7 +2306,7 @@
         getCurrentValue = () => [];
       } else {
         const labelRow = (label) => `
-          <button type="button" class="course-item" style="width:100%;" data-label-choice="${escapeHtml(label)}">
+          <button type="button" class="course-item" style="width:100%;border:none;text-align:left;" data-label-choice="${escapeHtml(label)}">
             <span class="course-checkbox-visual${selectedLabels.includes(label) ? ' checked' : ''}"><svg class="icon-svg"><use href="#icon-check-outline"/></svg></span>
             <span class="text-body-medium">${escapeHtml(label)}</span>
           </button>`;
