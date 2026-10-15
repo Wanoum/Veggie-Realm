@@ -534,7 +534,7 @@
     <div style="width:100%;max-width:360px;background:var(--surface-highest);border-radius:var(--corner-radius-large);padding:var(--padding-horizontal-app);pointer-events:auto;">
       <p id="confirmDialogMessage" class="text-body" style="margin:0 0 20px;color:var(--text-icon-default);"></p>
       <button type="button" id="confirmDialogConfirmBtn" class="primary-btn" style="margin-top:0;"></button>
-      <button type="button" id="confirmDialogCancelBtn" class="secondary-btn"><svg class="icon-svg"><use href="#icon-close-outline"/></svg> Annuler</button>
+      <button type="button" id="confirmDialogCancelBtn" class="secondary-btn"><svg class="icon-svg"><use href="#icon-close-outline"/></svg> <span data-i18n="btn_cancel">Annuler</span></button>
     </div>
   </div>
 </div>
@@ -604,7 +604,12 @@
       toast_added_to_meals: 'Ajouté aux repas', toast_meal_updated: 'Repas mis à jour',
       toast_removed_from_meals: 'Retiré des repas', toast_marked_cooked: 'Marqué comme cuisiné',
       toast_already_planned: 'Déjà prévu dans les repas',
-      btn_save: 'Enregistrer', btn_cancel: 'Annuler', btn_undo: 'Annuler', btn_send: 'Envoyer'
+      btn_save: 'Enregistrer', btn_cancel: 'Annuler', btn_undo: 'Annuler', btn_send: 'Envoyer',
+      btn_delete: 'Supprimer', btn_reset: 'Réinitialiser', btn_confirm: 'Confirmer',
+      confirm_delete_version: 'Voulez-vous supprimer définitivement la version "{label}" ?',
+      confirm_delete_recipe: 'Voulez-vous supprimer définitivement la recette "{title}" ?',
+      confirm_reset_list: 'Voulez-vous réinitialiser la liste ? Les cases cochées et les quantités modifiées seront remises à zéro.',
+      confirm_reset_planning: 'Voulez-vous réinitialiser le planning ? Toutes les recettes prévues seront retirées.'
     },
     en: {
       nav_recipes: 'Recipes', nav_courses: 'Groceries', nav_add: 'Add', nav_account: 'Account',
@@ -640,7 +645,12 @@
       toast_added_to_meals: 'Added to meals', toast_meal_updated: 'Meal updated',
       toast_removed_from_meals: 'Removed from meals', toast_marked_cooked: 'Marked as cooked',
       toast_already_planned: 'Already planned in meals',
-      btn_save: 'Save', btn_cancel: 'Cancel', btn_undo: 'Undo', btn_send: 'Send'
+      btn_save: 'Save', btn_cancel: 'Cancel', btn_undo: 'Undo', btn_send: 'Send',
+      btn_delete: 'Delete', btn_reset: 'Reset', btn_confirm: 'Confirm',
+      confirm_delete_version: 'Permanently delete the "{label}" version?',
+      confirm_delete_recipe: 'Permanently delete the "{title}" recipe?',
+      confirm_reset_list: 'Reset the list? Checked items and edited quantities will be cleared.',
+      confirm_reset_planning: 'Reset the meal plan? All planned recipes will be removed.'
     }
   };
   function detectDeviceLanguage() {
@@ -651,9 +661,16 @@
   function t(key) {
     return (I18N[currentLanguage] && I18N[currentLanguage][key]) || I18N.fr[key] || key;
   }
-  // Variante de t() avec un compteur ({n} dans la chaîne, ex. "{n} versions").
+  // Variante de t() avec des espaces réservés ({nom} dans la chaîne) remplacés
+  // par les valeurs données, ex. tf('confirm_delete_recipe', {title: r.title}).
+  function tf(key, params) {
+    let s = t(key);
+    Object.keys(params).forEach(k => { s = s.split('{' + k + '}').join(params[k]); });
+    return s;
+  }
+  // Variante à un seul compteur ({n} dans la chaîne, ex. "{n} versions").
   function tn(key, n) {
-    return t(key).replace('{n}', n);
+    return tf(key, { n });
   }
   // Pluriel simple fr/en (une seule forme plurielle, suffisant pour l'app) :
   // choisit la clé singulier/pluriel selon n, pour accorder "personne" ⇄
@@ -1072,7 +1089,7 @@
       listEl.querySelectorAll('[data-delete-variant]').forEach(btn => {
         btn.onclick = async () => {
           const label = btn.dataset.deleteVariant;
-          if (!(await showConfirmDialog({ message: `Voulez-vous supprimer définitivement la version "${label}" ?`, confirmLabel: 'Supprimer', confirmIcon: 'trash-outline' }))) return;
+          if (!(await showConfirmDialog({ message: tf('confirm_delete_version', { label }), confirmLabel: t('btn_delete'), confirmIcon: 'trash-outline' }))) return;
           await deleteVariant(r.id, label);
           const idx2 = rows.findIndex(row => row.label === label);
           if (idx2 !== -1) rows.splice(idx2, 1);
@@ -1610,7 +1627,7 @@
   // Dialogue de confirmation personnalisé (remplace confirm() natif) pour
   // toute action destructrice/irréversible (suppression, réinitialisation).
   // variant 'danger' (par défaut) : bouton + voile rouges (overlay-error).
-  function showConfirmDialog({ message, confirmLabel = 'Confirmer', confirmIcon = 'trash-outline', variant = 'danger' }) {
+  function showConfirmDialog({ message, confirmLabel = t('btn_confirm'), confirmIcon = 'trash-outline', variant = 'danger' }) {
     return new Promise(resolve => {
       const dialog = document.getElementById('confirmDialog');
       const overlay = document.getElementById('confirmDialogOverlay');
@@ -3176,7 +3193,7 @@
 
   async function deleteCurrentRecipe() {
     const r = recipes[currentDetailIndex];
-    if (!(await showConfirmDialog({ message: `Voulez-vous supprimer définitivement la recette "${r.title}" ?`, confirmLabel: 'Supprimer', confirmIcon: 'trash-outline' }))) return;
+    if (!(await showConfirmDialog({ message: tf('confirm_delete_recipe', { title: r.title }), confirmLabel: t('btn_delete'), confirmIcon: 'trash-outline' }))) return;
     const { error } = await sb.from('recipes').delete().eq('id', r.id);
     if (error) {
       alert("Erreur lors de la suppression : " + error.message);
@@ -4920,13 +4937,13 @@
   async function resetCoursesOrPlanning() {
     const onListTab = document.getElementById('subtabCourses').classList.contains('active');
     if (onListTab) {
-      if (!(await showConfirmDialog({ message: "Voulez-vous réinitialiser la liste ? Les cases cochées et les quantités modifiées seront remises à zéro.", confirmLabel: 'Réinitialiser', confirmIcon: 'history-outline' }))) return;
+      if (!(await showConfirmDialog({ message: t('confirm_reset_list'), confirmLabel: t('btn_reset'), confirmIcon: 'history-outline' }))) return;
       try { localStorage.removeItem(COURSES_CHECKED_KEY); } catch { /* ignoré */ }
       try { localStorage.removeItem(COURSES_QTY_OVERRIDE_KEY); } catch { /* ignoré */ }
       renderCoursesList();
       showToast('Liste réinitialisée');
     } else {
-      if (!(await showConfirmDialog({ message: "Voulez-vous réinitialiser le planning ? Toutes les recettes prévues seront retirées.", confirmLabel: 'Réinitialiser', confirmIcon: 'history-outline' }))) return;
+      if (!(await showConfirmDialog({ message: t('confirm_reset_planning'), confirmLabel: t('btn_reset'), confirmIcon: 'history-outline' }))) return;
       await sb.from('meal_plan').delete().neq('recipe_id', '00000000-0000-0000-0000-000000000000');
       mealPlan = {};
       try { localStorage.removeItem(COURSES_CHECKED_KEY); } catch { /* ignoré */ }
