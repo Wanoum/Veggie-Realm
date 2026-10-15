@@ -290,22 +290,22 @@
 
   <!-- Étape 3 : ingrédients -->
   <div id="wizardStep3" class="wizard-step" style="display:none;">
-    <h1 style="margin-bottom:var(--gap-vertical-section);">Ingrédients</h1>
+    <h1 data-i18n="ingredients_title" style="margin-bottom:var(--gap-vertical-section);">Ingrédients</h1>
     <div id="f_ingredients" style="position:relative;"></div>
   </div>
 
   <!-- Étape 4 : étapes + variantes (optionnel) -->
   <div id="wizardStep4" class="wizard-step" style="display:none;">
-    <h1 style="margin-bottom:var(--gap-vertical-section);">Étapes</h1>
+    <h1 data-i18n="steps_title" style="margin-bottom:var(--gap-vertical-section);">Étapes</h1>
     <div id="stepsListContainer"></div>
-    <textarea id="stepEntryInput" class="steps-inline-input" rows="1" placeholder="Décrire l'étape à effectuer"></textarea>
+    <textarea id="stepEntryInput" class="steps-inline-input" rows="1" data-i18n-placeholder="step_entry_placeholder" placeholder="Décrire l'étape à effectuer"></textarea>
 
     <div id="variantsSection" style="display:none;margin-top:var(--gap-vertical-section);">
       <div id="variantsListContainer"></div>
       <button type="button" class="add-variant-card" onclick="addVariantRow()">
         <span class="add-variant-card-icon"><svg class="icon-svg"><use href="#icon-plus-outline"/></svg></span>
-        <span class="text-body-medium">Ajouter une version</span>
-        <span class="text-small" style="color:var(--text-icon-secondary);">La même recette avec des ingrédients ou étapes différents pour une version sans gluten, vegan…</span>
+        <span class="text-body-medium" data-i18n="add_version_title">Ajouter une version</span>
+        <span class="text-small" data-i18n="add_version_subtitle" style="color:var(--text-icon-secondary);">La même recette avec des ingrédients ou étapes différents pour une version sans gluten, vegan…</span>
       </button>
     </div>
   </div>
@@ -629,7 +629,21 @@
       wizard_next: 'Suivant', wizard_save_recipe: 'Enregistrer la recette', wizard_save_version: 'Enregistrer la version',
       serving_mode_piece: 'À la pièce',
       wizard_version_name_placeholder: 'Nom de la version',
-      wizard_edit_recipe_title: 'Modifier la recette', wizard_new_recipe_title: 'Nouvelle recette'
+      wizard_edit_recipe_title: 'Modifier la recette', wizard_new_recipe_title: 'Nouvelle recette',
+      step_entry_placeholder: "Décrire l'étape à effectuer",
+      add_version_title: 'Ajouter une version',
+      add_version_subtitle: 'La même recette avec des ingrédients ou étapes différents pour une version sans gluten, vegan…',
+      version_name_field_placeholder: 'Nom de la version (ex : Sans gluten)',
+      ingredients_one_per_line: 'Ingrédients (un par ligne)',
+      ingredients_one_per_line_placeholder: 'ex : 200 g farine sans gluten',
+      steps_one_per_line: 'Étapes (une par ligne)',
+      steps_one_per_line_placeholder: "ex : Mélanger la farine sans gluten et l'eau",
+      cook_time_field_placeholder: 'Temps de cuisson', oven_temp_field_placeholder: 'Température °C',
+      delete_version: 'Supprimer la version',
+      ingredient_name_placeholder: "Nom de l'ingrédient",
+      ingredient_placeholder: 'Ingrédient', ingredient_default_name: 'Ingrédient',
+      toast_ingredient_removed: '{name} supprimé',
+      toast_step_removed: 'Étape "{label}" supprimée'
     },
     en: {
       nav_recipes: 'Recipes', nav_courses: 'Groceries', nav_add: 'Add', nav_account: 'Account',
@@ -690,7 +704,21 @@
       wizard_next: 'Next', wizard_save_recipe: 'Save recipe', wizard_save_version: 'Save version',
       serving_mode_piece: 'By the piece',
       wizard_version_name_placeholder: 'Version name',
-      wizard_edit_recipe_title: 'Edit recipe', wizard_new_recipe_title: 'New recipe'
+      wizard_edit_recipe_title: 'Edit recipe', wizard_new_recipe_title: 'New recipe',
+      step_entry_placeholder: 'Describe the step',
+      add_version_title: 'Add a version',
+      add_version_subtitle: 'The same recipe with different ingredients or steps, for a gluten-free, vegan… version',
+      version_name_field_placeholder: 'Version name (e.g. Gluten-free)',
+      ingredients_one_per_line: 'Ingredients (one per line)',
+      ingredients_one_per_line_placeholder: 'e.g.: 200 g gluten-free flour',
+      steps_one_per_line: 'Steps (one per line)',
+      steps_one_per_line_placeholder: 'e.g.: Mix the gluten-free flour and water',
+      cook_time_field_placeholder: 'Cook time', oven_temp_field_placeholder: 'Temperature °C',
+      delete_version: 'Delete version',
+      ingredient_name_placeholder: 'Ingredient name',
+      ingredient_placeholder: 'Ingredient', ingredient_default_name: 'Ingredient',
+      toast_ingredient_removed: '{name} removed',
+      toast_step_removed: 'Step "{label}" removed'
     }
   };
   function detectDeviceLanguage() {
@@ -2904,16 +2932,16 @@
     const container = document.getElementById('variantsListContainer');
     container.innerHTML = variantRows.map((v, idx) => `
       <div style="border:1px solid var(--border-default);border-radius:var(--corner-radius-default);padding:var(--padding-horizontal-default);margin-bottom:var(--gap-default);">
-        <input class="field-input" style="margin-bottom:var(--gap-default);" placeholder="Nom de la version (ex : Sans gluten)" data-variant-idx="${idx}" data-variant-field="label" value="${escapeHtml(v.label)}" />
-        <label class="field-label">Ingrédients (un par ligne)</label>
-        <textarea class="field-input" style="min-height:80px;margin-bottom:var(--gap-default);" data-variant-idx="${idx}" data-variant-field="ingredientsText" placeholder="ex : 200 g farine sans gluten">${escapeHtml(v.ingredientsText)}</textarea>
-        <label class="field-label">Étapes (une par ligne)</label>
-        <textarea class="field-input" style="min-height:80px;margin-bottom:var(--gap-default);" data-variant-idx="${idx}" data-variant-field="stepsText" placeholder="ex : Mélanger la farine sans gluten et l'eau">${escapeHtml(v.stepsText)}</textarea>
+        <input class="field-input" style="margin-bottom:var(--gap-default);" placeholder="${escapeHtml(t('version_name_field_placeholder'))}" data-variant-idx="${idx}" data-variant-field="label" value="${escapeHtml(v.label)}" />
+        <label class="field-label">${t('ingredients_one_per_line')}</label>
+        <textarea class="field-input" style="min-height:80px;margin-bottom:var(--gap-default);" data-variant-idx="${idx}" data-variant-field="ingredientsText" placeholder="${escapeHtml(t('ingredients_one_per_line_placeholder'))}">${escapeHtml(v.ingredientsText)}</textarea>
+        <label class="field-label">${t('steps_one_per_line')}</label>
+        <textarea class="field-input" style="min-height:80px;margin-bottom:var(--gap-default);" data-variant-idx="${idx}" data-variant-field="stepsText" placeholder="${escapeHtml(t('steps_one_per_line_placeholder'))}">${escapeHtml(v.stepsText)}</textarea>
         <div style="display:flex;gap:8px;margin-bottom:var(--gap-default);">
-          <input class="field-input" type="number" placeholder="Temps de cuisson" style="flex:1;" data-variant-idx="${idx}" data-variant-field="cookTimeText" value="${escapeHtml(v.cookTimeText)}" />
-          <input class="field-input" type="number" placeholder="Température °C" style="flex:1;" data-variant-idx="${idx}" data-variant-field="ovenTempText" value="${escapeHtml(v.ovenTempText)}" />
+          <input class="field-input" type="number" placeholder="${escapeHtml(t('cook_time_field_placeholder'))}" style="flex:1;" data-variant-idx="${idx}" data-variant-field="cookTimeText" value="${escapeHtml(v.cookTimeText)}" />
+          <input class="field-input" type="number" placeholder="${escapeHtml(t('oven_temp_field_placeholder'))}" style="flex:1;" data-variant-idx="${idx}" data-variant-field="ovenTempText" value="${escapeHtml(v.ovenTempText)}" />
         </div>
-        <button type="button" class="secondary-btn" style="width:100%;color:var(--text-icon-error);" data-remove-variant="${idx}"><svg class="icon-svg"><use href="#icon-trash-outline"/></svg> Supprimer la version</button>
+        <button type="button" class="secondary-btn" style="width:100%;color:var(--text-icon-error);" data-remove-variant="${idx}"><svg class="icon-svg"><use href="#icon-trash-outline"/></svg> ${t('delete_version')}</button>
       </div>
     `).join('');
 
@@ -3479,8 +3507,8 @@
       if (isLast) {
         return `
       <div class="row-item" data-idx="${idx}">
-        <input class="qty-input" placeholder="Quantité" data-idx="${idx}" data-field="qtyUnitText" value="${escapeHtml(row.qtyUnitText)}" />
-        <input class="ing-name-input" placeholder="Ingrédient" autocomplete="off" data-idx="${idx}" data-field="name" value="${escapeHtml(row.name)}" />
+        <input class="qty-input" placeholder="${escapeHtml(t('wizard_quantity_placeholder'))}" data-idx="${idx}" data-field="qtyUnitText" value="${escapeHtml(row.qtyUnitText)}" />
+        <input class="ing-name-input" placeholder="${escapeHtml(t('ingredient_placeholder'))}" autocomplete="off" data-idx="${idx}" data-field="name" value="${escapeHtml(row.name)}" />
       </div>`;
       }
       return `
@@ -3527,8 +3555,8 @@
         if (ingRows.length === 0) ingRows = [{ qtyUnitText: '', name: '' }];
         renderIngRows();
         validateWizardStep();
-        showToast(`${removed.name || 'Ingrédient'} supprimé`, {
-          actionLabel: 'Annuler',
+        showToast(tf('toast_ingredient_removed', { name: removed.name || t('ingredient_default_name') }), {
+          actionLabel: t('btn_undo'),
           onAction: () => {
             ingRows.splice(Math.min(idx, ingRows.length), 0, removed);
             renderIngRows();
@@ -3545,8 +3573,8 @@
 
     const current = ingRows[idx];
     row.innerHTML = `
-      <input class="qty-input" placeholder="Quantité" value="${escapeHtml(current.qtyUnitText)}" />
-      <input class="ing-name-input" placeholder="Ingrédient" autocomplete="off" value="${escapeHtml(current.name)}" />
+      <input class="qty-input" placeholder="${escapeHtml(t('wizard_quantity_placeholder'))}" value="${escapeHtml(current.qtyUnitText)}" />
+      <input class="ing-name-input" placeholder="${escapeHtml(t('ingredient_placeholder'))}" autocomplete="off" value="${escapeHtml(current.name)}" />
     `;
     const qtyInput = row.querySelector('.qty-input');
     const nameInput = row.querySelector('.ing-name-input');
@@ -3591,8 +3619,8 @@
         renderStepsList();
         validateWizardStep();
         const label = removed.length > 40 ? removed.slice(0, 40) + '…' : removed;
-        showToast(`Étape "${label}" supprimée`, {
-          actionLabel: 'Annuler',
+        showToast(tf('toast_step_removed', { label }), {
+          actionLabel: t('btn_undo'),
           onAction: () => {
             stepRows.splice(Math.min(idx, stepRows.length), 0, removed);
             renderStepsList();
