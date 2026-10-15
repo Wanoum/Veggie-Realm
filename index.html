@@ -729,9 +729,12 @@
   let recipesLoaded = false;
   let currentServings = {};
   let userDefaultServings = 4;
-  // Variante préférée, mémorisée par compte et appliquée par défaut sur
-  // n'importe quelle fiche qui a une variante portant ce même libellé.
-  let userDefaultVariantLabel = '';
+  // Libellés de versions préférés, mémorisés par compte : plusieurs
+  // recettes peuvent avoir des variantes différentes (ex. "Sans gluten" sur
+  // l'une, "Vegan" sur une autre), donc un ensemble plutôt qu'un libellé
+  // unique. Une fiche applique la première (dans l'ordre de création) de
+  // ses propres variantes dont le libellé figure dans cet ensemble.
+  let userDefaultVariantLabels = [];
   // Variante actuellement affichée sur LA fiche recette ouverte (pas une
   // préférence de compte) : '' = originale.
   let selectedVariantLabel = '';
@@ -953,10 +956,19 @@
     };
   }
 
-  async function setUserDefaultVariantLabel(label) {
-    userDefaultVariantLabel = label;
-    try { await sb.from('profiles').update({ default_variant_label: label || null }).eq('id', currentUser.id); }
-    catch (e) { console.error('setUserDefaultVariantLabel', e); }
+  async function setUserDefaultVariantLabels(labels) {
+    userDefaultVariantLabels = labels;
+    try { await sb.from('profiles').update({ default_variant_labels: labels }).eq('id', currentUser.id); }
+    catch (e) { console.error('setUserDefaultVariantLabels', e); }
+  }
+
+  // Ajoute un libellé à l'ensemble préféré sans toucher aux autres (contrairement
+  // à un remplacement complet) — utilisé quand on choisit une version à la
+  // main sur une fiche (selectVariant) : elle s'ajoute aux préférences du
+  // compte plutôt que d'écraser celles déjà choisies pour d'autres recettes.
+  async function addUserDefaultVariantLabel(label) {
+    if (!label || userDefaultVariantLabels.includes(label)) return;
+    await setUserDefaultVariantLabels([...userDefaultVariantLabels, label]);
   }
 
   // Supprime une version sans toucher au reste de la recette (contrairement
@@ -967,14 +979,14 @@
     const r = recipes.find(x => x.id === recipeId);
     if (!r) return;
     const wasSelected = selectedVariantLabel === label;
-    const wasDefault = userDefaultVariantLabel === label;
+    const wasDefault = userDefaultVariantLabels.includes(label);
 
     const updatedVariants = (r.variants || []).filter(v => v.label !== label);
     const { error } = await sb.from('recipes').update({ variants: updatedVariants }).eq('id', recipeId);
     if (error) { alert("Erreur lors de la suppression : " + error.message); return; }
     r.variants = updatedVariants;
     if (wasSelected) selectedVariantLabel = '';
-    if (wasDefault) await setUserDefaultVariantLabel('');
+    if (wasDefault) await setUserDefaultVariantLabels(userDefaultVariantLabels.filter(l => l !== label));
     const idx = recipes.findIndex(x => x.id === recipeId);
     if (idx === currentDetailIndex && document.getElementById('detailView').style.display !== 'none') {
       renderDetail(idx);
@@ -985,7 +997,9 @@
   // "Version") : mémorisée par compte, pas seulement pour cette recette.
   function selectVariant(i, label) {
     selectedVariantLabel = label || '';
-    setUserDefaultVariantLabel(selectedVariantLabel);
+    // Choisir l'originale ne retire rien aux préférences déjà enregistrées
+    // pour d'autres recettes — seul le choix d'une version nommée s'y ajoute.
+    if (selectedVariantLabel) addUserDefaultVariantLabel(selectedVariantLabel);
     renderDetail(i);
   }
 
@@ -1117,9 +1131,12 @@
     const savedServings = loadRecipeServings()[r.id];
     const defaultServings = isPieceMode(r) ? 1 : userDefaultServings;
     currentServings[i] = savedServings != null ? savedServings : defaultServings;
-    // Reprend la variante préférée du compte si cette recette en a une portant
-    // ce libellé, sinon retombe sur l'originale.
-    selectedVariantLabel = (r.variants || []).some(v => v.label === userDefaultVariantLabel) ? userDefaultVariantLabel : '';
+    // Reprend la première (dans l'ordre de création) des variantes de cette
+    // recette dont le libellé fait partie des préférences du compte, sinon
+    // retombe sur l'originale. Une recette peut avoir plusieurs de ses
+    // variantes cochées en préférence : seule la première créée l'emporte.
+    const preferredVariant = (r.variants || []).find(v => userDefaultVariantLabels.includes(v.label));
+    selectedVariantLabel = preferredVariant ? preferredVariant.label : '';
     // hideAllViews() cache tout, y compris planningView : sans ça, une
     // fiche recette ouverte depuis le planning laissait le planning visible
     // en dessous (repris tel quel plus loin dans le wizard d'édition, faute
@@ -1975,6 +1992,20 @@
 
   document.getElementById('navAccount').onclick = showAccount;
 
+  // Compare la valeur courante d'un champ d'édition de compte à sa valeur
+  // initiale, pour activer/désactiver "Enregistrer" — gère aussi bien les
+  // chaînes (espaces ignorés) que les tableaux (ordre ignoré), puisque
+  // default_variant_label en renvoie un depuis la liste à cases à cocher.
+  function accountEditValuesEqual(current, initial) {
+    if (Array.isArray(current) || Array.isArray(initial)) {
+      const a = [...(current || [])].sort();
+      const b = [...(initial || [])].sort();
+      return a.length === b.length && a.every((v, i) => v === b[i]);
+    }
+    const normalized = typeof current === 'string' ? current.trim() : current;
+    return normalized === initial;
+  }
+
   // ---- Écran d'édition d'un réglage du compte (façon liste iOS) ----
   function openAccountEdit(field) {
     const titleEl = document.getElementById('accountEditTitle');
@@ -2027,12 +2058,39 @@
       };
     } else if (field === 'default_variant_label') {
       titleEl.textContent = 'Version préférée';
-      initialValue = userDefaultVariantLabel || '';
-      contentEl.innerHTML = `
-        <p class="text-body" style="color:var(--text-icon-secondary);margin:0 0 16px;">Quand une recette a une version portant ce libellé, elle est proposée par défaut à l'ouverture de la fiche.</p>
-        <input id="accountEdit_variantLabel" class="field-input" placeholder="Ex. Sans gluten (laisse vide pour la version Base)" value="${escapeHtml(initialValue)}" />
-      `;
-      getCurrentValue = () => document.getElementById('accountEdit_variantLabel').value;
+      initialValue = [...userDefaultVariantLabels];
+      const selectedLabels = [...userDefaultVariantLabels];
+      // L'ensemble de tous les libellés de versions existant sur ses propres
+      // recettes (pas seulement la recette actuellement ouverte) : plusieurs
+      // peuvent être cochés à la fois, puisque chaque recette a ses propres
+      // variantes.
+      const allLabels = [...new Set(recipes.flatMap(r => (r.variants || []).map(v => v.label).filter(Boolean)))]
+        .sort((a, b) => a.localeCompare(b, currentLanguage === 'en' ? 'en' : 'fr'));
+      if (allLabels.length === 0) {
+        contentEl.innerHTML = `<p class="text-body" style="color:var(--text-icon-secondary);">Crée une première version sur une recette pour pouvoir la préférer par défaut.</p>`;
+        getCurrentValue = () => [];
+      } else {
+        const labelRow = (label) => `
+          <button type="button" class="settings-row" data-label-choice="${escapeHtml(label)}">
+            <span>${escapeHtml(label)}</span>
+            <svg class="icon-svg" style="${selectedLabels.includes(label) ? '' : 'visibility:hidden;'}"><use href="#icon-check-outline"/></svg>
+          </button>`;
+        contentEl.innerHTML = `
+          <p class="text-body" style="color:var(--text-icon-secondary);margin:0 0 16px;">Quand une recette a une version dont le libellé est coché, elle est proposée par défaut à l'ouverture de la fiche. Si plusieurs versions cochées existent sur une même recette, seule la première créée s'applique.</p>
+          <div class="settings-list">${allLabels.map(labelRow).join('')}</div>
+        `;
+        getCurrentValue = () => selectedLabels;
+        contentEl.querySelectorAll('[data-label-choice]').forEach(btn => {
+          btn.onclick = () => {
+            const label = btn.dataset.labelChoice;
+            const idx = selectedLabels.indexOf(label);
+            const svg = btn.querySelector('svg');
+            if (idx === -1) { selectedLabels.push(label); svg.style.visibility = ''; }
+            else { selectedLabels.splice(idx, 1); svg.style.visibility = 'hidden'; }
+            updateAccountEditSaveState();
+          };
+        });
+      }
     } else if (field === 'recipe_display') {
       titleEl.textContent = t('account_recipe_display');
       contentEl.innerHTML = `<p class="text-body" style="color:var(--text-icon-secondary);">Pas encore disponible.</p>`;
@@ -2064,11 +2122,16 @@
 
     const notYetAvailable = field === 'email' || field === 'recipe_display';
     saveBtn.textContent = field === 'feedback' ? 'Envoyer' : 'Enregistrer';
+    // Exposée pour saveAccountEdit (défini plus bas) : les champs qui n'ont
+    // pas un unique <input> à relire directement (ex. la liste à cases à
+    // cocher de default_variant_label) n'ont que cette fermeture pour
+    // connaître la valeur actuellement sélectionnée.
+    window.getAccountEditValue = () => (getCurrentValue ? getCurrentValue() : null);
     window.updateAccountEditSaveState = () => {
       // Jamais vraiment "disabled" ici : le bouton doit rester cliquable
       // pour afficher le toast "pas encore disponible".
       if (notYetAvailable) { saveBtn.disabled = false; return; }
-      saveBtn.disabled = getCurrentValue ? getCurrentValue().trim() === initialValue : false;
+      saveBtn.disabled = getCurrentValue ? accountEditValuesEqual(getCurrentValue(), initialValue) : false;
     };
     saveBtn.classList.toggle('disabled-look', notYetAvailable);
     saveBtn.onclick = notYetAvailable
@@ -2112,8 +2175,7 @@
       if (error) { errEl.textContent = error.message; return; }
       userDefaultServings = value;
     } else if (field === 'default_variant_label') {
-      const label = document.getElementById('accountEdit_variantLabel').value.trim();
-      await setUserDefaultVariantLabel(label);
+      await setUserDefaultVariantLabels(window.getAccountEditValue() || []);
     } else if (field === 'language') {
       const language = document.getElementById('accountEditContent').dataset.selectedLanguage;
       const { error } = await sb.from('profiles').update({ language }).eq('id', currentUser.id);
@@ -2912,11 +2974,11 @@
       return;
     }
 
-    // Renommage : si la version par défaut mémorisée pointait vers l'ancien
-    // libellé, elle doit suivre vers le nouveau plutôt que de se retrouver à
+    // Renommage : si l'ancien libellé faisait partie des préférences du
+    // compte, il doit suivre vers le nouveau plutôt que de se retrouver à
     // pointer sur une version qui n'existe plus.
-    if (editingVariantLabel && userDefaultVariantLabel === editingVariantLabel && label !== editingVariantLabel) {
-      await setUserDefaultVariantLabel(label);
+    if (editingVariantLabel && label !== editingVariantLabel && userDefaultVariantLabels.includes(editingVariantLabel)) {
+      await setUserDefaultVariantLabels(userDefaultVariantLabels.map(l => l === editingVariantLabel ? label : l));
     }
     r.variants = updatedVariants;
     selectedVariantLabel = label;
@@ -5014,7 +5076,13 @@
     const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
     if (error) { console.error('loadUserDefaultServings a échoué (droit de lecture manquant ?)', error); return; }
     userDefaultServings = data?.default_servings || 4;
-    userDefaultVariantLabel = data?.default_variant_label || '';
+    // Reprend l'ancien réglage à libellé unique (default_variant_label) tant
+    // qu'aucune préférence n'a encore été enregistrée dans le nouvel ensemble
+    // multi-libellés (default_variant_labels) — rien n'est perdu au passage
+    // de l'un à l'autre.
+    userDefaultVariantLabels = (Array.isArray(data?.default_variant_labels) && data.default_variant_labels.length)
+      ? data.default_variant_labels
+      : (data?.default_variant_label ? [data.default_variant_label] : []);
     // Rien d'enregistré : on garde la langue de l'appareil détectée au
     // chargement du script (déjà appliquée à l'écran de connexion avant même
     // que le profil ne soit connu).
