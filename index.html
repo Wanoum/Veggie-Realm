@@ -235,14 +235,14 @@
       <img id="photoPreview" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />
       <div id="photoPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:var(--gap-large);pointer-events:none;">
         <img src="src/create-new-recipe.png" alt="" />
-        <span class="text-body-medium" style="color:var(--text-icon-accent);">Ajouter une photo</span>
+        <span class="text-body-medium" data-i18n="add_photo" style="color:var(--text-icon-accent);">Ajouter une photo</span>
       </div>
 
       <div id="photoMenu" class="course-sort-menu photo-menu" style="display:none;">
-        <button type="button" class="course-sort-menu-item text-body" data-photo-action="gallery">Photothèque</button>
-        <button type="button" class="course-sort-menu-item text-body" data-photo-action="camera">Prendre une photo</button>
-        <button type="button" class="course-sort-menu-item text-body" data-photo-action="file">Choisir le fichier</button>
-        <button type="button" class="course-sort-menu-item text-body" data-photo-action="paste">Coller depuis le presse-papiers</button>
+        <button type="button" class="course-sort-menu-item text-body" data-photo-action="gallery" data-i18n="photo_library">Photothèque</button>
+        <button type="button" class="course-sort-menu-item text-body" data-photo-action="camera" data-i18n="photo_take">Prendre une photo</button>
+        <button type="button" class="course-sort-menu-item text-body" data-photo-action="file" data-i18n="photo_choose_file">Choisir le fichier</button>
+        <button type="button" class="course-sort-menu-item text-body" data-photo-action="paste" data-i18n="photo_paste">Coller depuis le presse-papiers</button>
       </div>
     </div>
     <input type="file" id="photoFileInput" accept="image/*" style="display:none;" />
@@ -650,7 +650,36 @@
       meal_type_breakfast: 'Petit-déj', meal_type_lunch: 'Déjeuner', meal_type_dinner: 'Dîner', meal_type_snack: 'Encas',
       rayon_produce: 'Fruits & légumes', rayon_dairy: 'Produits laitiers & oeufs', rayon_bakery: 'Boulangerie',
       rayon_frozen: 'Surgelés', rayon_drinks: 'Boissons', rayon_sweet_pantry: 'Épicerie sucrée',
-      rayon_savory_pantry: 'Épicerie salée', rayon_other: 'Autres'
+      rayon_savory_pantry: 'Épicerie salée', rayon_other: 'Autres',
+      photo_library: 'Photothèque', photo_take: 'Prendre une photo',
+      photo_choose_file: 'Choisir le fichier', photo_paste: 'Coller depuis le presse-papiers',
+      add_photo: 'Ajouter une photo',
+      pseudo_placeholder: 'Ton pseudo', new_password_placeholder: 'Nouveau mot de passe',
+      default_servings_explainer: 'Utilisé pour préremplir le nombre de personnes à la création d\'une recette.',
+      default_variant_empty: 'Crée une première version sur une recette pour pouvoir la préférer par défaut.',
+      default_variant_explainer: 'Quand une recette a une version dont le libellé est coché, elle est proposée par défaut à l\'ouverture de la fiche. Si plusieurs versions cochées existent sur une même recette, seule la première créée s\'applique.',
+      feedback_placeholder: 'Dis-nous ce que tu penses, ce qui ne marche pas, ce qui te manque…',
+      error_pseudo_empty: 'Le pseudo ne peut pas être vide.',
+      error_password_empty: 'Entre un nouveau mot de passe.',
+      error_password_short: 'Le mot de passe doit faire au moins 6 caractères.',
+      error_feedback_empty: "Écris un message avant d'envoyer.",
+      error_save_prefix: "Erreur lors de l'enregistrement : ",
+      error_title_required: 'Le titre est obligatoire.',
+      saving_ellipsis: 'Enregistrement...',
+      error_email_required: 'Entre ton email ci-dessus, puis reclique sur ce lien.',
+      reset_email_sent: 'Email envoyé ! Vérifie ta boîte de réception (et les spams).',
+      error_email_password_required: 'Email et mot de passe requis.',
+      account_created: 'Compte créé ! Tu peux maintenant te connecter.',
+      error_loading: 'Erreur de chargement',
+      error_paste_link_first: "Colle d'abord un lien.",
+      status_fetching_recipe: 'Récupération de la recette...',
+      status_reading_document: 'Lecture du document...',
+      status_compressing: 'Compression et envoi...',
+      error_compression_fallback: "Erreur de compression, envoi de l'original...",
+      error_upload_prefix: "Erreur d'envoi : ",
+      status_photo_added: 'Photo ajoutée ✓',
+      error_no_image_clipboard: 'Aucune image trouvée dans le presse-papiers.',
+      error_clipboard_unavailable: 'Impossible de lire le presse-papiers (autorisation refusée ou indisponible sur ce navigateur).'
     },
     en: {
       nav_recipes: 'Recipes', nav_courses: 'Groceries', nav_add: 'Add', nav_account: 'Account',
@@ -732,7 +761,36 @@
       meal_type_breakfast: 'Breakfast', meal_type_lunch: 'Lunch', meal_type_dinner: 'Dinner', meal_type_snack: 'Snack',
       rayon_produce: 'Fruits & vegetables', rayon_dairy: 'Dairy & eggs', rayon_bakery: 'Bakery',
       rayon_frozen: 'Frozen', rayon_drinks: 'Drinks', rayon_sweet_pantry: 'Sweet pantry',
-      rayon_savory_pantry: 'Savory pantry', rayon_other: 'Other'
+      rayon_savory_pantry: 'Savory pantry', rayon_other: 'Other',
+      photo_library: 'Photo library', photo_take: 'Take a photo',
+      photo_choose_file: 'Choose file', photo_paste: 'Paste from clipboard',
+      add_photo: 'Add a photo',
+      pseudo_placeholder: 'Your username', new_password_placeholder: 'New password',
+      default_servings_explainer: 'Used to prefill the number of servings when creating a recipe.',
+      default_variant_empty: 'Create a first version on a recipe to be able to prefer it by default.',
+      default_variant_explainer: 'When a recipe has a version whose label is checked, it is suggested by default when opening the recipe. If several checked versions exist on the same recipe, only the first one created applies.',
+      feedback_placeholder: "Tell us what you think, what's not working, what's missing…",
+      error_pseudo_empty: 'Username cannot be empty.',
+      error_password_empty: 'Enter a new password.',
+      error_password_short: 'The password must be at least 6 characters.',
+      error_feedback_empty: 'Write a message before sending.',
+      error_save_prefix: 'Error while saving: ',
+      error_title_required: 'The title is required.',
+      saving_ellipsis: 'Saving...',
+      error_email_required: 'Enter your email above, then click this link again.',
+      reset_email_sent: 'Email sent! Check your inbox (and spam folder).',
+      error_email_password_required: 'Email and password are required.',
+      account_created: 'Account created! You can now log in.',
+      error_loading: 'Loading error',
+      error_paste_link_first: 'Paste a link first.',
+      status_fetching_recipe: 'Fetching the recipe...',
+      status_reading_document: 'Reading the document...',
+      status_compressing: 'Compressing and sending...',
+      error_compression_fallback: 'Compression error, sending original...',
+      error_upload_prefix: 'Upload error: ',
+      status_photo_added: 'Photo added ✓',
+      error_no_image_clipboard: 'No image found in the clipboard.',
+      error_clipboard_unavailable: 'Could not read the clipboard (permission denied or unavailable in this browser).'
     }
   };
   function detectDeviceLanguage() {
@@ -925,7 +983,7 @@
   async function loadRecipes() {
     const { data, error } = await sb.from('recipes').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
     if (error) {
-      document.getElementById('count').textContent = "Erreur de chargement";
+      document.getElementById('count').textContent = t('error_loading');
       console.error(error);
       return;
     }
@@ -1914,12 +1972,12 @@
 
     if (!url) {
       statusEl.style.color = 'var(--text-icon-error)';
-      statusEl.textContent = "Colle d'abord un lien.";
+      statusEl.textContent = t('error_paste_link_first');
       return;
     }
 
     btn.disabled = true;
-    statusEl.textContent = "Récupération de la recette...";
+    statusEl.textContent = t('status_fetching_recipe');
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 50000);
@@ -1971,7 +2029,7 @@
     // l'encart se désactive et change d'état pour que ce soit visible, plutôt
     // que de laisser croire que rien ne s'est passé pendant l'attente.
     tile.disabled = true;
-    tileLabel.textContent = 'Lecture du document...';
+    tileLabel.textContent = t('status_reading_document');
     statusEl.style.color = 'var(--text-icon-secondary)';
     statusEl.textContent = '';
 
@@ -2168,24 +2226,24 @@
     let initialValue = null;
 
     if (field === 'email') {
-      titleEl.textContent = 'Email';
+      titleEl.textContent = t('account_email');
       contentEl.innerHTML = `<input class="field-input" value="${escapeHtml(currentUser.email)}" readonly />`;
     } else if (field === 'display_name') {
-      titleEl.textContent = 'Pseudo';
+      titleEl.textContent = t('account_pseudo');
       initialValue = accountProfileCache.display_name || '';
-      contentEl.innerHTML = `<input id="accountEdit_displayName" class="field-input" placeholder="Ton pseudo" value="${escapeHtml(initialValue)}" />`;
+      contentEl.innerHTML = `<input id="accountEdit_displayName" class="field-input" placeholder="${escapeHtml(t('pseudo_placeholder'))}" value="${escapeHtml(initialValue)}" />`;
       getCurrentValue = () => document.getElementById('accountEdit_displayName').value;
     } else if (field === 'password') {
-      titleEl.textContent = 'Mot de passe';
+      titleEl.textContent = t('account_password');
       initialValue = '';
-      contentEl.innerHTML = `<input id="accountEdit_password" class="field-input" type="password" placeholder="Nouveau mot de passe" autocomplete="new-password" />`;
+      contentEl.innerHTML = `<input id="accountEdit_password" class="field-input" type="password" placeholder="${escapeHtml(t('new_password_placeholder'))}" autocomplete="new-password" />`;
       getCurrentValue = () => document.getElementById('accountEdit_password').value;
     } else if (field === 'default_servings') {
-      titleEl.textContent = 'Personnes par défaut';
+      titleEl.textContent = t('account_default_servings');
       const current = accountProfileCache.default_servings || 4;
       initialValue = current;
       contentEl.innerHTML = `
-        <p class="text-body" style="color:var(--text-icon-secondary);margin:0 0 16px;">Utilisé pour préremplir le nombre de personnes à la création d'une recette.</p>
+        <p class="text-body" style="color:var(--text-icon-secondary);margin:0 0 16px;">${t('default_servings_explainer')}</p>
         <div class="servings-stepper servings-stepper-lg servings-stepper-tertiary">
           <button type="button" class="servings-minus" id="accountEdit_servingsMinus"><svg class="icon-svg"><use href="#icon-minus-outline"/></svg></button>
           <span class="servings-value" id="accountEdit_servingsValue">${current}</span>
@@ -2204,7 +2262,7 @@
         updateAccountEditSaveState();
       };
     } else if (field === 'default_variant_label') {
-      titleEl.textContent = 'Version préférée';
+      titleEl.textContent = t('account_default_variant');
       initialValue = [...userDefaultVariantLabels];
       const selectedLabels = [...userDefaultVariantLabels];
       // L'ensemble de tous les libellés de versions existant sur ses propres
@@ -2214,7 +2272,7 @@
       const allLabels = [...new Set(recipes.flatMap(r => (r.variants || []).map(v => v.label).filter(Boolean)))]
         .sort((a, b) => a.localeCompare(b, currentLanguage === 'en' ? 'en' : 'fr'));
       if (allLabels.length === 0) {
-        contentEl.innerHTML = `<p class="text-body" style="color:var(--text-icon-secondary);">Crée une première version sur une recette pour pouvoir la préférer par défaut.</p>`;
+        contentEl.innerHTML = `<p class="text-body" style="color:var(--text-icon-secondary);">${t('default_variant_empty')}</p>`;
         getCurrentValue = () => [];
       } else {
         const labelRow = (label) => `
@@ -2223,7 +2281,7 @@
             <svg class="icon-svg" style="${selectedLabels.includes(label) ? '' : 'visibility:hidden;'}"><use href="#icon-check-outline"/></svg>
           </button>`;
         contentEl.innerHTML = `
-          <p class="text-body" style="color:var(--text-icon-secondary);margin:0 0 16px;">Quand une recette a une version dont le libellé est coché, elle est proposée par défaut à l'ouverture de la fiche. Si plusieurs versions cochées existent sur une même recette, seule la première créée s'applique.</p>
+          <p class="text-body" style="color:var(--text-icon-secondary);margin:0 0 16px;">${t('default_variant_explainer')}</p>
           <div class="settings-list">${allLabels.map(labelRow).join('')}</div>
         `;
         getCurrentValue = () => selectedLabels;
@@ -2261,9 +2319,9 @@
         };
       });
     } else if (field === 'feedback') {
-      titleEl.textContent = 'Envoyer un feedback';
+      titleEl.textContent = t('account_feedback');
       initialValue = '';
-      contentEl.innerHTML = `<textarea id="accountEdit_feedback" class="field-input" rows="8" style="min-height:160px;padding:var(--padding-vertical-control) var(--padding-horizontal-default);resize:none;" placeholder="Dis-nous ce que tu penses, ce qui ne marche pas, ce qui te manque…" oninput="autoResizeTextarea(this)"></textarea>`;
+      contentEl.innerHTML = `<textarea id="accountEdit_feedback" class="field-input" rows="8" style="min-height:160px;padding:var(--padding-vertical-control) var(--padding-horizontal-default);resize:none;" placeholder="${escapeHtml(t('feedback_placeholder'))}" oninput="autoResizeTextarea(this)"></textarea>`;
       getCurrentValue = () => document.getElementById('accountEdit_feedback').value;
     }
 
@@ -2307,13 +2365,13 @@
 
     if (field === 'display_name') {
       const name = document.getElementById('accountEdit_displayName').value.trim();
-      if (!name) { errEl.textContent = "Le pseudo ne peut pas être vide."; return; }
+      if (!name) { errEl.textContent = t('error_pseudo_empty'); return; }
       const { error } = await sb.from('profiles').update({ display_name: name }).eq('id', currentUser.id);
       if (error) { errEl.textContent = error.message; return; }
     } else if (field === 'password') {
       const newPassword = document.getElementById('accountEdit_password').value;
-      if (!newPassword) { errEl.textContent = "Entre un nouveau mot de passe."; return; }
-      if (newPassword.length < 6) { errEl.textContent = "Le mot de passe doit faire au moins 6 caractères."; return; }
+      if (!newPassword) { errEl.textContent = t('error_password_empty'); return; }
+      if (newPassword.length < 6) { errEl.textContent = t('error_password_short'); return; }
       const { error } = await sb.auth.updateUser({ password: newPassword });
       if (error) { errEl.textContent = error.message; return; }
     } else if (field === 'default_servings') {
@@ -2336,7 +2394,7 @@
       return;
     } else if (field === 'feedback') {
       const message = document.getElementById('accountEdit_feedback').value.trim();
-      if (!message) { errEl.textContent = "Écris un message avant d'envoyer."; return; }
+      if (!message) { errEl.textContent = t('error_feedback_empty'); return; }
       const { error } = await sb.from('feedback').insert({ user_id: currentUser.id, message });
       if (error) { errEl.textContent = error.message; return; }
       closeAccountEdit();
@@ -3115,7 +3173,7 @@
     };
 
     const nextBtn = document.getElementById('wizardNextBtn');
-    nextBtn.textContent = "Enregistrement...";
+    nextBtn.textContent = t('saving_ellipsis');
     nextBtn.disabled = true;
 
     const updatedVariants = editingVariantLabel
@@ -3125,8 +3183,8 @@
     nextBtn.disabled = false;
 
     if (error) {
-      document.getElementById('formError').textContent = "Erreur lors de l'enregistrement : " + error.message;
-      nextBtn.innerHTML = '<svg class="icon-svg"><use href="#icon-check-outline"/></svg> Enregistrer la version';
+      document.getElementById('formError').textContent = t('error_save_prefix') + error.message;
+      nextBtn.innerHTML = `<svg class="icon-svg"><use href="#icon-check-outline"/></svg> ${t('wizard_save_version')}`;
       console.error(error);
       return;
     }
@@ -3893,20 +3951,20 @@
   async function handlePhotoFile(file) {
     if (!file) return;
     const statusEl = document.getElementById('photoUploadStatus');
-    statusEl.textContent = "Compression et envoi...";
+    statusEl.textContent = t('status_compressing');
 
     let blob;
     try {
       blob = await compressImage(file);
     } catch (err) {
-      statusEl.textContent = "Erreur de compression, envoi de l'original...";
+      statusEl.textContent = t('error_compression_fallback');
       blob = file;
     }
 
     const path = `${currentUser.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
     const { error } = await sb.storage.from('recipe-photos').upload(path, blob, { contentType: 'image/jpeg' });
     if (error) {
-      statusEl.textContent = "Erreur d'envoi : " + error.message;
+      statusEl.textContent = t('error_upload_prefix') + error.message;
       return;
     }
 
@@ -3919,7 +3977,7 @@
     const { data } = sb.storage.from('recipe-photos').getPublicUrl(path);
     document.getElementById('f_photo').value = data.publicUrl;
     updatePhotoPreview(data.publicUrl);
-    statusEl.textContent = "Photo ajoutée ✓";
+    statusEl.textContent = t('status_photo_added');
   }
 
   // Menu "Ajouter une photo" : Photothèque et Choisir le fichier utilisent
@@ -3970,9 +4028,9 @@
           return;
         }
       }
-      statusEl.textContent = "Aucune image trouvée dans le presse-papiers.";
+      statusEl.textContent = t('error_no_image_clipboard');
     } catch (e) {
-      statusEl.textContent = "Impossible de lire le presse-papiers (autorisation refusée ou indisponible sur ce navigateur).";
+      statusEl.textContent = t('error_clipboard_unavailable');
     }
   }
 
@@ -4086,7 +4144,7 @@
     errEl.textContent = '';
 
     if (!title) {
-      errEl.textContent = "Le titre est obligatoire.";
+      errEl.textContent = t('error_title_required');
       goToWizardStep(2);
       return;
     }
@@ -4124,7 +4182,7 @@
     };
 
     const nextBtn = document.getElementById('wizardNextBtn');
-    nextBtn.textContent = "Enregistrement...";
+    nextBtn.textContent = t('saving_ellipsis');
     nextBtn.disabled = true;
 
     const { error } = editingId
@@ -4134,8 +4192,8 @@
     nextBtn.disabled = false;
 
     if (error) {
-      errEl.textContent = "Erreur lors de l'enregistrement : " + error.message;
-      nextBtn.textContent = "Enregistrer la recette";
+      errEl.textContent = t('error_save_prefix') + error.message;
+      nextBtn.textContent = t('wizard_save_recipe');
       console.error(error);
       return;
     }
@@ -5146,7 +5204,7 @@
     errEl.textContent = '';
 
     if (!email) {
-      errEl.textContent = "Entre ton email ci-dessus, puis reclique sur ce lien.";
+      errEl.textContent = t('error_email_required');
       return;
     }
 
@@ -5159,7 +5217,7 @@
       return;
     }
     errEl.style.color = 'var(--interaction-primary)';
-    errEl.textContent = "Email envoyé ! Vérifie ta boîte de réception (et les spams).";
+    errEl.textContent = t('reset_email_sent');
   };
 
   document.getElementById('resetSubmitBtn').onclick = async () => {
@@ -5169,7 +5227,7 @@
     errEl.textContent = '';
 
     if (!newPassword || newPassword.length < 6) {
-      errEl.textContent = "Le mot de passe doit faire au moins 6 caractères.";
+      errEl.textContent = t('error_password_short');
       return;
     }
 
@@ -5282,7 +5340,7 @@
     errEl.textContent = '';
 
     if (!email || !password) {
-      errEl.textContent = "Email et mot de passe requis.";
+      errEl.textContent = t('error_email_password_required');
       return;
     }
 
@@ -5302,7 +5360,7 @@
     if (authMode === 'signup' && !data.session) {
       setAuthMode('login');
       errEl.style.color = 'var(--interaction-primary)';
-      errEl.textContent = "Compte créé ! Tu peux maintenant te connecter.";
+      errEl.textContent = t('account_created');
       return;
     }
     // Si une session existe déjà (connexion ou inscription sans confirmation email), onAuthStateChange prend le relais.
