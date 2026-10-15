@@ -379,12 +379,14 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   font-size: 16px;
 }
 .course-checkbox-visual i, .course-checkbox-visual svg { visibility: hidden; }
-.course-item.checked .course-checkbox-visual {
+.course-item.checked .course-checkbox-visual,
+.course-checkbox-visual.checked {
   background: var(--interaction-primary);
   border-color: var(--interaction-primary);
   color: var(--text-icon-on-primary);
 }
-.course-item.checked .course-checkbox-visual i, .course-item.checked .course-checkbox-visual svg { visibility: visible; }
+.course-item.checked .course-checkbox-visual i, .course-item.checked .course-checkbox-visual svg,
+.course-checkbox-visual.checked i, .course-checkbox-visual.checked svg { visibility: visible; }
 .course-item-name { color: var(--text-icon-accent); }
 .course-item.checked .course-item-name { color: var(--text-icon-disabled); text-decoration: line-through; }
 .course-qty {

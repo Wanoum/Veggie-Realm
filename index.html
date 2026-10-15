@@ -392,7 +392,7 @@
         <span data-i18n="account_feedback">Envoyer un feedback</span>
         <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
       </button>
-      <button type="button" class="settings-row" onclick="openAccountEdit('language')">
+      <button type="button" class="settings-row" style="border-bottom:none;" onclick="openAccountEdit('language')">
         <span data-i18n="account_language">Langue</span>
         <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
       </button>
@@ -2308,7 +2308,7 @@
         const labelRow = (label) => `
           <button type="button" class="settings-row" data-label-choice="${escapeHtml(label)}">
             <span>${escapeHtml(label)}</span>
-            <svg class="icon-svg" style="${selectedLabels.includes(label) ? '' : 'visibility:hidden;'}"><use href="#icon-check-outline"/></svg>
+            <span class="course-checkbox-visual${selectedLabels.includes(label) ? ' checked' : ''}"><svg class="icon-svg"><use href="#icon-check-outline"/></svg></span>
           </button>`;
         contentEl.innerHTML = `
           <p class="text-body" style="color:var(--text-icon-secondary);margin:0 0 16px;">${t('default_variant_explainer')}</p>
@@ -2319,9 +2319,9 @@
           btn.onclick = () => {
             const label = btn.dataset.labelChoice;
             const idx = selectedLabels.indexOf(label);
-            const svg = btn.querySelector('svg');
-            if (idx === -1) { selectedLabels.push(label); svg.style.visibility = ''; }
-            else { selectedLabels.splice(idx, 1); svg.style.visibility = 'hidden'; }
+            const visual = btn.querySelector('.course-checkbox-visual');
+            if (idx === -1) { selectedLabels.push(label); visual.classList.add('checked'); }
+            else { selectedLabels.splice(idx, 1); visual.classList.remove('checked'); }
             updateAccountEditSaveState();
           };
         });
