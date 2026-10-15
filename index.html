@@ -320,15 +320,15 @@
 
 <div id="recipeSearchBar" class="floating-search glass-surface" style="display:none;">
   <svg class="icon-svg"><use href="#icon-search-outline"/></svg>
-  <input id="recipeSearchInput" placeholder="Recherche" oninput="handleRecipeSearchInput()" />
+  <input id="recipeSearchInput" data-i18n-placeholder="search_placeholder" placeholder="Recherche" oninput="handleRecipeSearchInput()" />
 </div>
 <div id="planSearchBar" class="floating-search glass-surface" style="display:none;">
   <svg class="icon-svg"><use href="#icon-search-outline"/></svg>
-  <input id="planSearchInput" placeholder="Recherche" oninput="handlePlanSearchInput()" />
+  <input id="planSearchInput" data-i18n-placeholder="search_placeholder" placeholder="Recherche" oninput="handlePlanSearchInput()" />
 </div>
 <div id="savedSearchBar" class="floating-search glass-surface" style="display:none;">
   <svg class="icon-svg"><use href="#icon-search-outline"/></svg>
-  <input id="savedSearchInput" placeholder="Recherche" oninput="handleSavedSearchInput()" />
+  <input id="savedSearchInput" data-i18n-placeholder="search_placeholder" placeholder="Recherche" oninput="handleSavedSearchInput()" />
 </div>
 
 <nav id="bottomNav" style="display:none;">
@@ -396,7 +396,9 @@
         <span data-i18n="account_language">Langue</span>
         <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
       </button>
-      <button type="button" class="settings-row" onclick="location.reload()">
+      <!-- Masquée pour le moment (toutes langues) : fait doublon avec le
+           lien "Mettre à jour l'application" juste en dessous. -->
+      <button type="button" class="settings-row" style="display:none;" onclick="location.reload()">
         <span data-i18n="account_update">Mise à jour</span>
         <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
       </button>
@@ -425,28 +427,28 @@
 
 <div id="planningView" style="display:none;">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);position:relative;">
-    <h1 style="margin:0;">Courses</h1>
+    <h1 data-i18n="courses_title" style="margin:0;">Courses</h1>
     <button type="button" class="icon-btn glass-surface" id="coursesMenuBtn" onclick="handleCoursesMenuBtnClick()"><svg class="icon-svg" id="coursesMenuBtnIcon"><use href="#icon-history-outline"/></svg></button>
   </div>
   <div class="subtabs">
-    <button id="subtabRecipes" class="subtab-btn active">Repas prévus</button>
-    <button id="subtabCourses" class="subtab-btn">Liste</button>
+    <button id="subtabRecipes" data-i18n="tab_planned" class="subtab-btn active">Repas prévus</button>
+    <button id="subtabCourses" data-i18n="tab_list" class="subtab-btn">Liste</button>
   </div>
 
   <div id="planningRecipesPanel">
     <div id="plannedRecipeList"></div>
-    <h2 style="margin-top:var(--gap-vertical-section);">Suggestions</h2>
+    <h2 data-i18n="suggestions_title" style="margin-top:var(--gap-vertical-section);">Suggestions</h2>
     <div id="planSuggestionList"></div>
   </div>
 
   <div id="planningCoursesPanel" style="display:none;">
     <div id="coursesSortRow" style="display:none;margin-bottom:var(--gap-default);position:relative;">
       <button type="button" id="coursesSortBtn" style="background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;display:flex;align-items:center;gap:4px;" onclick="toggleCoursesSortMenu()">
-        <span id="coursesSortLabel">Trier : Par rayon</span> <svg class="icon-svg" style="font-size:20px;text-decoration:none;"><use href="#icon-chevron-down-outline"/></svg>
+        <span id="coursesSortLabel"></span> <svg class="icon-svg" style="font-size:20px;text-decoration:none;"><use href="#icon-chevron-down-outline"/></svg>
       </button>
       <div id="coursesSortMenu" class="course-sort-menu" style="display:none;left:0;right:auto;">
-        <button type="button" class="course-sort-menu-item text-body" data-sort-mode="rayon"><span>Par rayon</span><svg class="icon-svg course-sort-menu-check"><use href="#icon-check-outline"/></svg></button>
-        <button type="button" class="course-sort-menu-item text-body" data-sort-mode="recipe"><span>Par recette</span><svg class="icon-svg course-sort-menu-check"><use href="#icon-check-outline"/></svg></button>
+        <button type="button" class="course-sort-menu-item text-body" data-sort-mode="rayon"><span data-i18n="sort_by_rayon">Par rayon</span><svg class="icon-svg course-sort-menu-check"><use href="#icon-check-outline"/></svg></button>
+        <button type="button" class="course-sort-menu-item text-body" data-sort-mode="recipe"><span data-i18n="sort_by_recipe">Par recette</span><svg class="icon-svg course-sort-menu-check"><use href="#icon-check-outline"/></svg></button>
       </div>
     </div>
     <div id="coursesList"></div>
@@ -478,8 +480,8 @@
       <button type="button" class="servings-plus" id="planOccurrencePlus"><svg class="icon-svg"><use href="#icon-plus-outline"/></svg></button>
     </div>
     <button type="button" id="planOccurrenceSaveBtn" class="primary-btn" style="width:100%;margin-top:0;" onclick="savePlanOccurrenceSheet()"><svg class="icon-svg"><use href="#icon-check-outline"/></svg> Enregistrer</button>
-    <button type="button" class="secondary-btn" id="planOccurrenceCookedBtn" style="width:100%;display:none;" onclick="markOccurrenceCooked()"><svg class="icon-svg"><use href="#icon-check-circle-outline"/></svg> Marquer comme cuisiné</button>
-    <button type="button" id="planOccurrenceRemoveBtn" style="display:none;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;" onclick="removePlanOccurrence()"><svg class="icon-svg" style="font-size:20px;text-decoration:none;"><use href="#icon-close-outline"/></svg> Retirer ce repas</button>
+    <button type="button" class="secondary-btn" id="planOccurrenceCookedBtn" style="width:100%;display:none;" onclick="markOccurrenceCooked()"><svg class="icon-svg"><use href="#icon-check-circle-outline"/></svg> <span data-i18n="mark_cooked">Marquer comme cuisiné</span></button>
+    <button type="button" id="planOccurrenceRemoveBtn" style="display:none;align-items:center;gap:6px;margin:16px auto 0;background:none;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;" onclick="removePlanOccurrence()"><svg class="icon-svg" style="font-size:20px;text-decoration:none;"><use href="#icon-close-outline"/></svg> <span data-i18n="remove_meal">Retirer ce repas</span></button>
   </div>
 </div>
 
@@ -584,7 +586,25 @@
       account_recipe_display: 'Affichage recettes', account_language: 'Langue', account_update: 'Mise à jour',
       account_feedback: 'Envoyer un feedback', account_update_app: "Mettre à jour l'application",
       account_version_prefix: 'Version du',
-      lang_french: 'Français', lang_english: 'English'
+      lang_french: 'Français', lang_english: 'English',
+      home_empty_title: 'Ton carnet est encore vide.',
+      home_empty_subtitle: 'Ajoute ta première recette pour commencer.',
+      no_results: 'Aucun résultat pour ces critères.',
+      search_placeholder: 'Recherche',
+      courses_title: 'Courses', tab_planned: 'Repas prévus', tab_list: 'Liste',
+      suggestions_title: 'Suggestions',
+      sort_by_rayon: 'Par rayon', sort_by_recipe: 'Par recette', sort_prefix: 'Trier :',
+      courses_empty: 'Prévois des recettes dans l\'onglet "Repas prévus" pour générer ta liste de courses.',
+      person_singular: 'personne', person_plural: 'personnes',
+      original_label: 'Originale',
+      versions_count: '{n} versions', versions_remaining: '{n} versions restantes',
+      servings_label: 'Nombre de personnes', pieces_label: 'Nombre de pièces',
+      add_to_meals: 'Ajouter aux repas', save_meal: 'Enregistrer',
+      mark_cooked: 'Marquer comme cuisiné', remove_meal: 'Retirer ce repas',
+      toast_added_to_meals: 'Ajouté aux repas', toast_meal_updated: 'Repas mis à jour',
+      toast_removed_from_meals: 'Retiré des repas', toast_marked_cooked: 'Marqué comme cuisiné',
+      toast_already_planned: 'Déjà prévu dans les repas',
+      btn_save: 'Enregistrer', btn_cancel: 'Annuler', btn_undo: 'Annuler', btn_send: 'Envoyer'
     },
     en: {
       nav_recipes: 'Recipes', nav_courses: 'Groceries', nav_add: 'Add', nav_account: 'Account',
@@ -602,7 +622,25 @@
       account_recipe_display: 'Recipe display', account_language: 'Language', account_update: 'Update',
       account_feedback: 'Send feedback', account_update_app: 'Update the app',
       account_version_prefix: 'Version of',
-      lang_french: 'Français', lang_english: 'English'
+      lang_french: 'Français', lang_english: 'English',
+      home_empty_title: 'Your cookbook is still empty.',
+      home_empty_subtitle: 'Add your first recipe to get started.',
+      no_results: 'No results for these criteria.',
+      search_placeholder: 'Search',
+      courses_title: 'Groceries', tab_planned: 'Planned meals', tab_list: 'List',
+      suggestions_title: 'Suggestions',
+      sort_by_rayon: 'By aisle', sort_by_recipe: 'By recipe', sort_prefix: 'Sort:',
+      courses_empty: 'Plan some recipes in the "Planned meals" tab to generate your grocery list.',
+      person_singular: 'person', person_plural: 'people',
+      original_label: 'Original',
+      versions_count: '{n} versions', versions_remaining: '{n} versions left',
+      servings_label: 'Number of servings', pieces_label: 'Number of pieces',
+      add_to_meals: 'Add to meals', save_meal: 'Save',
+      mark_cooked: 'Mark as cooked', remove_meal: 'Remove this meal',
+      toast_added_to_meals: 'Added to meals', toast_meal_updated: 'Meal updated',
+      toast_removed_from_meals: 'Removed from meals', toast_marked_cooked: 'Marked as cooked',
+      toast_already_planned: 'Already planned in meals',
+      btn_save: 'Save', btn_cancel: 'Cancel', btn_undo: 'Undo', btn_send: 'Send'
     }
   };
   function detectDeviceLanguage() {
@@ -612,6 +650,16 @@
   let currentLanguage = detectDeviceLanguage();
   function t(key) {
     return (I18N[currentLanguage] && I18N[currentLanguage][key]) || I18N.fr[key] || key;
+  }
+  // Variante de t() avec un compteur ({n} dans la chaîne, ex. "{n} versions").
+  function tn(key, n) {
+    return t(key).replace('{n}', n);
+  }
+  // Pluriel simple fr/en (une seule forme plurielle, suffisant pour l'app) :
+  // choisit la clé singulier/pluriel selon n, pour accorder "personne" ⇄
+  // "personnes" (pas un simple "s" en anglais, donc pas un format {n}+suffixe).
+  function tcount(n, singularKey, pluralKey) {
+    return `${n} ${n > 1 ? t(pluralKey) : t(singularKey)}`;
   }
   // [data-i18n] remplace le textContent ; [data-i18n-placeholder] le
   // placeholder — couvre le balisage statique sans avoir à dupliquer chaque
@@ -868,13 +916,13 @@
       cardsEl.innerHTML = `
         <div class="empty-state-large">
           <img src="src/groceries.png" alt="" />
-          <p class="text-body" style="margin:0;">Ton carnet est encore vide.</p>
-          <p style="font-size:14px;color:var(--text-icon-secondary);margin:6px 0 0;">Ajoute ta première recette pour commencer.</p>
+          <p class="text-body" style="margin:0;">${t('home_empty_title')}</p>
+          <p style="font-size:14px;color:var(--text-icon-secondary);margin:6px 0 0;">${t('home_empty_subtitle')}</p>
         </div>`;
       return;
     }
     if (filteredIndices.length === 0) {
-      cardsEl.innerHTML = '<div class="empty">Aucun résultat pour ces critères.</div>';
+      cardsEl.innerHTML = `<div class="empty">${t('no_results')}</div>`;
       return;
     }
     cardsEl.innerHTML = filteredIndices.map(i => {
@@ -1259,13 +1307,13 @@
     const isCurrentDetail = recipes[currentDetailIndex] && recipes[currentDetailIndex].id === recipeId;
     const variantLabel = isCurrentDetail ? (selectedVariantLabel || '') : '';
     if (findOccurrence(recipeId, variantLabel)) {
-      showToast('Déjà prévu dans les repas');
+      showToast(t('toast_already_planned'));
       return;
     }
     const preferredServings = isCurrentDetail ? currentServings[currentDetailIndex] : null;
     const servings = preferredServings ?? getServingsPerOccurrence(r);
     upsertMealPlanOccurrence(recipeId, variantLabel, servings).then(() => {
-      showToast('Ajouté aux repas');
+      showToast(t('toast_added_to_meals'));
       if (document.getElementById('planningView').style.display !== 'none') renderPlanningRecipes();
     });
   }
@@ -4114,7 +4162,7 @@
   // mention "pièce" (et son "1 pièce" maladroit au singulier) est réservée
   // au libellé du stepper dans le bottom sheet.
   function occurrenceSubtitle(r, servings) {
-    return `${servings} ${servings > 1 ? 'personnes' : 'personne'}`;
+    return tcount(servings, 'person_singular', 'person_plural');
   }
 
   function renderPlanningRecipes() {
@@ -4145,7 +4193,7 @@
         return sortedOccs.map(o => {
           // "Originale" affichée seulement si la recette a réellement
           // d'autres versions — sinon la précision n'a pas de sens.
-          const versionName = o.variantLabel || (versionOrder.length > 1 ? 'Originale' : '');
+          const versionName = o.variantLabel || (versionOrder.length > 1 ? t('original_label') : '');
           const subtitle = versionName
             ? `${escapeHtml(versionName)} • ${occurrenceSubtitle(r, o.servings)}`
             : occurrenceSubtitle(r, o.servings);
@@ -4187,11 +4235,11 @@
       let subtitleHtml = '';
       if (totalVersions > 1) {
         if (remaining.length === totalVersions) {
-          subtitleHtml = `<div class="text-small" style="color:var(--text-icon-secondary);">${totalVersions} versions</div>`;
+          subtitleHtml = `<div class="text-small" style="color:var(--text-icon-secondary);">${tn('versions_count', totalVersions)}</div>`;
         } else if (remaining.length === 1) {
           subtitleHtml = `<div class="text-small" style="color:var(--text-icon-default);">${escapeHtml(remaining[0])}</div>`;
         } else {
-          subtitleHtml = `<div class="text-small" style="color:var(--text-icon-secondary);">${remaining.length} versions restantes</div>`;
+          subtitleHtml = `<div class="text-small" style="color:var(--text-icon-secondary);">${tn('versions_remaining', remaining.length)}</div>`;
         }
       }
       return `
@@ -4311,12 +4359,12 @@
       }
     }
 
-    document.getElementById('planOccurrenceServingsLabel').textContent = isPieceMode(r) ? 'Nombre de pièces' : 'Nombre de personnes';
+    document.getElementById('planOccurrenceServingsLabel').textContent = isPieceMode(r) ? t('pieces_label') : t('servings_label');
     document.getElementById('planOccurrenceValue').textContent = st.servings;
 
     document.getElementById('planOccurrenceSaveBtn').innerHTML = st.mode === 'edit'
-      ? '<svg class="icon-svg"><use href="#icon-check-outline"/></svg> Enregistrer'
-      : '<svg class="icon-svg"><use href="#icon-plus-outline"/></svg> Ajouter aux repas';
+      ? `<svg class="icon-svg"><use href="#icon-check-outline"/></svg> ${t('save_meal')}`
+      : `<svg class="icon-svg"><use href="#icon-plus-outline"/></svg> ${t('add_to_meals')}`;
     document.getElementById('planOccurrenceRemoveBtn').style.display = st.mode === 'edit' ? 'flex' : 'none';
     document.getElementById('planOccurrenceCookedBtn').style.display = st.mode === 'edit' ? 'flex' : 'none';
   }
@@ -4337,7 +4385,7 @@
     const ok = await upsertMealPlanOccurrence(st.recipeId, st.selectedVersion, st.servings);
     closePlanOccurrenceSheet();
     renderPlanningRecipes();
-    if (ok) showToast(st.mode === 'edit' ? 'Repas mis à jour' : 'Ajouté aux repas');
+    if (ok) showToast(st.mode === 'edit' ? t('toast_meal_updated') : t('toast_added_to_meals'));
     else alert(`Erreur d'enregistrement : ${lastMealPlanError}`);
   }
 
@@ -4354,8 +4402,8 @@
     await deleteMealPlanOccurrence(st.occurrenceId);
     closePlanOccurrenceSheet();
     renderPlanningRecipes();
-    showToast('Retiré des repas', {
-      actionLabel: 'Annuler',
+    showToast(t('toast_removed_from_meals'), {
+      actionLabel: t('btn_undo'),
       onAction: async () => {
         await upsertMealPlanOccurrence(recipeId, restore.variantLabel, restore.servings);
         renderPlanningRecipes();
@@ -4387,8 +4435,8 @@
 
     closePlanOccurrenceSheet();
     renderPlanningRecipes();
-    showToast('Marqué comme cuisiné', {
-      actionLabel: 'Annuler',
+    showToast(t('toast_marked_cooked'), {
+      actionLabel: t('btn_undo'),
       onAction: async () => {
         await upsertMealPlanOccurrence(recipeId, restore.variantLabel, restore.servings);
         if (engagementEventId) {
@@ -4598,10 +4646,15 @@
     menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
   }
 
+  function updateCoursesSortLabel() {
+    document.getElementById('coursesSortLabel').textContent = `${t('sort_prefix')} ${coursesSortMode === 'rayon' ? t('sort_by_rayon') : t('sort_by_recipe')}`;
+  }
+  updateCoursesSortLabel();
+
   document.querySelectorAll('#coursesSortMenu [data-sort-mode]').forEach(btn => {
     btn.onclick = () => {
       coursesSortMode = btn.dataset.sortMode;
-      document.getElementById('coursesSortLabel').textContent = `Trier : ${btn.dataset.sortMode === 'rayon' ? 'Par rayon' : 'Par recette'}`;
+      updateCoursesSortLabel();
       document.getElementById('coursesSortMenu').style.display = 'none';
       renderCoursesList();
     };
@@ -4661,7 +4714,7 @@
       listEl.innerHTML = `
         <div style="text-align:center;padding:64px 24px;">
           <svg class="icon-svg" style="font-size:48px;color:var(--text-icon-secondary);display:block;margin-bottom:16px;"><use href="#icon-groceries-outline"/></svg>
-          <p class="text-body" style="color:var(--text-icon-secondary);margin:0;">Prévois des recettes dans l'onglet "Repas prévus" pour générer ta liste de courses.</p>
+          <p class="text-body" style="color:var(--text-icon-secondary);margin:0;">${t('courses_empty')}</p>
         </div>`;
       return;
     }
