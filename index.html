@@ -511,11 +511,11 @@
   <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay-default);z-index:400;" onclick="closeRecipeActionsMenu()"></div>
   <div class="sheet-panel" style="position:fixed;left:0;right:0;bottom:0;background:var(--interaction-secondary);border-radius:var(--corner-radius-large) var(--corner-radius-large) 0 0;padding:20px var(--padding-horizontal-app) calc(20px + env(safe-area-inset-bottom));z-index:400;">
     <div class="detail-sheet-handle"></div>
-    <button type="button" class="settings-row" onclick="shareRecipeLink()"><span style="display:flex;align-items:center;gap:10px;"><svg class="icon-svg"><use href="#icon-share-outline"/></svg> Partager le lien</span></button>
-    <button type="button" class="settings-row" onclick="exportRecipeAs('pdf')"><span style="display:flex;align-items:center;gap:10px;"><svg class="icon-svg"><use href="#icon-file-pdf-outline"/></svg> Exporter en PDF</span></button>
-    <button type="button" class="settings-row" onclick="exportRecipeAs('docx')"><span style="display:flex;align-items:center;gap:10px;"><svg class="icon-svg"><use href="#icon-file-word-outline"/></svg> Exporter en Word</span></button>
-    <button type="button" class="settings-row" onclick="closeRecipeActionsMenu(); editCurrentRecipe();"><span style="display:flex;align-items:center;gap:10px;"><svg class="icon-svg"><use href="#icon-edit-outline"/></svg> Modifier</span></button>
-    <button type="button" class="settings-row" style="color:var(--text-icon-error);" onclick="closeRecipeActionsMenu(); deleteCurrentRecipe();"><span style="display:flex;align-items:center;gap:10px;"><svg class="icon-svg"><use href="#icon-trash-outline"/></svg> Supprimer</span></button>
+    <button type="button" class="settings-row" onclick="shareRecipeLink()"><span style="display:flex;align-items:center;gap:10px;"><svg class="icon-svg"><use href="#icon-share-outline"/></svg> <span data-i18n="share_link">Partager le lien</span></span></button>
+    <button type="button" class="settings-row" onclick="exportRecipeAs('pdf')"><span style="display:flex;align-items:center;gap:10px;"><svg class="icon-svg"><use href="#icon-file-pdf-outline"/></svg> <span data-i18n="export_pdf">Exporter en PDF</span></span></button>
+    <button type="button" class="settings-row" onclick="exportRecipeAs('docx')"><span style="display:flex;align-items:center;gap:10px;"><svg class="icon-svg"><use href="#icon-file-word-outline"/></svg> <span data-i18n="export_word">Exporter en Word</span></span></button>
+    <button type="button" class="settings-row" onclick="closeRecipeActionsMenu(); editCurrentRecipe();"><span style="display:flex;align-items:center;gap:10px;"><svg class="icon-svg"><use href="#icon-edit-outline"/></svg> <span data-i18n="edit_label">Modifier</span></span></button>
+    <button type="button" class="settings-row" style="color:var(--text-icon-error);" onclick="closeRecipeActionsMenu(); deleteCurrentRecipe();"><span style="display:flex;align-items:center;gap:10px;"><svg class="icon-svg"><use href="#icon-trash-outline"/></svg> <span data-i18n="delete_label">Supprimer</span></span></button>
   </div>
 </div>
 
@@ -609,7 +609,15 @@
       confirm_delete_version: 'Voulez-vous supprimer définitivement la version "{label}" ?',
       confirm_delete_recipe: 'Voulez-vous supprimer définitivement la recette "{title}" ?',
       confirm_reset_list: 'Voulez-vous réinitialiser la liste ? Les cases cochées et les quantités modifiées seront remises à zéro.',
-      confirm_reset_planning: 'Voulez-vous réinitialiser le planning ? Toutes les recettes prévues seront retirées.'
+      confirm_reset_planning: 'Voulez-vous réinitialiser le planning ? Toutes les recettes prévues seront retirées.',
+      ingredients_title: 'Ingrédients', steps_title: 'Étapes',
+      people_label: 'Personnes', pieces_label_short: 'Pièce(s)',
+      version_prefix: 'Version :', base_label: 'Base', create_version: 'Créer une version',
+      share_link: 'Partager le lien', export_pdf: 'Exporter en PDF', export_word: 'Exporter en Word',
+      edit_label: 'Modifier', delete_label: 'Supprimer',
+      toast_recipe_modified: 'Recette modifiée', toast_recipe_saved: 'Recette enregistrée',
+      toast_recipe_deleted: 'Recette supprimée', toast_version_saved: 'Version enregistrée',
+      toast_version_deleted: 'Version supprimée', toast_recipe_removed: 'Recette retirée'
     },
     en: {
       nav_recipes: 'Recipes', nav_courses: 'Groceries', nav_add: 'Add', nav_account: 'Account',
@@ -650,7 +658,15 @@
       confirm_delete_version: 'Permanently delete the "{label}" version?',
       confirm_delete_recipe: 'Permanently delete the "{title}" recipe?',
       confirm_reset_list: 'Reset the list? Checked items and edited quantities will be cleared.',
-      confirm_reset_planning: 'Reset the meal plan? All planned recipes will be removed.'
+      confirm_reset_planning: 'Reset the meal plan? All planned recipes will be removed.',
+      ingredients_title: 'Ingredients', steps_title: 'Steps',
+      people_label: 'Servings', pieces_label_short: 'Piece(s)',
+      version_prefix: 'Version:', base_label: 'Base', create_version: 'Create a version',
+      share_link: 'Share link', export_pdf: 'Export as PDF', export_word: 'Export as Word',
+      edit_label: 'Edit', delete_label: 'Delete',
+      toast_recipe_modified: 'Recipe updated', toast_recipe_saved: 'Recipe saved',
+      toast_recipe_deleted: 'Recipe deleted', toast_version_saved: 'Version saved',
+      toast_version_deleted: 'Version deleted', toast_recipe_removed: 'Recipe removed'
     }
   };
   function detectDeviceLanguage() {
@@ -1245,7 +1261,7 @@
     }).join('');
 
     const stepsHtml = (rView.steps && rView.steps.length > 0)
-      ? '<h2>Étapes</h2><ol>' + rView.steps.map(st => `<li>${escapeHtml(st)}</li>`).join('') + '</ol>'
+      ? `<h2>${t('steps_title')}</h2><ol>` + rView.steps.map(st => `<li>${escapeHtml(st)}</li>`).join('') + '</ol>'
       : '';
 
     const hasSteps = rView.steps && rView.steps.length > 0;
@@ -1256,16 +1272,16 @@
     // cacher uniquement dans un menu.
     const ingredientsHeaderHtml = hasVariants ? `
       <div style="display:flex;align-items:center;justify-content:space-between;">
-        <h2 style="margin:0;">Ingrédients</h2>
+        <h2 style="margin:0;">${t('ingredients_title')}</h2>
         <button type="button" onclick="openVariantPickerSheet(${i})" style="background:none;border:none;padding:0;display:flex;align-items:center;gap:2px;font-family:'Inter',sans-serif;font-size:16px;font-weight:500;color:var(--text-icon-accent);">
-          <span style="text-decoration:underline;">Version : ${escapeHtml(selectedVariantLabel || 'Base')}</span> <svg class="icon-svg" style="font-size:20px;"><use href="#icon-chevron-down-outline"/></svg>
+          <span style="text-decoration:underline;">${t('version_prefix')} ${escapeHtml(selectedVariantLabel || t('base_label'))}</span> <svg class="icon-svg" style="font-size:20px;"><use href="#icon-chevron-down-outline"/></svg>
         </button>
       </div>
     ` : `
       <div style="display:flex;align-items:center;justify-content:space-between;">
-        <h2 style="margin:0;">Ingrédients</h2>
+        <h2 style="margin:0;">${t('ingredients_title')}</h2>
         <button type="button" onclick="createVersionForCurrentRecipe()" style="background:none;border:none;padding:0;display:flex;align-items:center;gap:4px;font-family:'Inter',sans-serif;font-size:16px;font-weight:500;color:var(--text-icon-accent);">
-          <i class="bi bi-plus-circle-fill"></i> <span style="text-decoration:underline;">Créer une version</span>
+          <i class="bi bi-plus-circle-fill"></i> <span style="text-decoration:underline;">${t('create_version')}</span>
         </button>
       </div>
     `;
@@ -1289,7 +1305,7 @@
         <h1 style="margin-bottom:var(--gap-vertical-section);">${escapeHtml(r.title)}</h1>
 
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);">
-          <span class="text-body">${isPieceMode(r) ? 'Pièce(s)' : 'Personnes'}</span>
+          <span class="text-body">${isPieceMode(r) ? t('pieces_label_short') : t('people_label')}</span>
           <div class="servings-stepper">
             <button class="servings-minus" onclick="changeServings(${i}, -1)"><svg class="icon-svg"><use href="#icon-minus-outline"/></svg></button>
             <span class="servings-value">${s}</span>
@@ -3053,7 +3069,7 @@
     resetForm();
     clearWizardDraft();
     showDetail(idx);
-    showToast('Version enregistrée');
+    showToast(t('toast_version_saved'));
   }
 
   function editCurrentRecipe() {
@@ -3205,7 +3221,7 @@
     }
     await loadRecipes();
     showHome();
-    showToast('Recette supprimée');
+    showToast(t('toast_recipe_deleted'));
   }
 
   // ---- Normalisation ingrédients / unités ----
@@ -4064,10 +4080,10 @@
 
     if (wasEditing) {
       const idx = recipes.findIndex(r => r.id === wasEditing);
-      if (idx !== -1) { showDetail(idx); showToast('Recette modifiée'); return; }
+      if (idx !== -1) { showDetail(idx); showToast(t('toast_recipe_modified')); return; }
     }
     showHome();
-    showToast('Recette enregistrée');
+    showToast(t('toast_recipe_saved'));
   }
 
   resetForm();
@@ -5348,13 +5364,13 @@
       if (error) { alert("Erreur : " + error.message); btn.disabled = false; return; }
       btn.dataset.saved = 'false';
       icon.querySelector('use').setAttribute('href', '#icon-bookmark-outline');
-      showToast('Recette retirée');
+      showToast(t('toast_recipe_removed'));
     } else {
       const { error } = await sb.from('saved_recipes').insert({ user_id: currentUser.id, recipe_id: recipeId });
       if (error) { alert("Erreur : " + error.message); btn.disabled = false; return; }
       btn.dataset.saved = 'true';
       icon.querySelector('use').setAttribute('href', '#icon-bookmark-filled');
-      showToast('Recette enregistrée');
+      showToast(t('toast_recipe_saved'));
     }
 
     btn.disabled = false;
