@@ -646,7 +646,11 @@
       toast_step_removed: 'Étape "{label}" supprimée',
       version_field_label: 'Version', quantity_label: 'Quantité', qty_example_placeholder: 'ex: 500 g',
       reset_this_qty: 'Réinitialiser cette quantité', reset_quantities: 'Réinitialiser les quantités',
-      edit_mode_done: 'Terminer', toast_list_reset: 'Liste réinitialisée', toast_planning_reset: 'Planning réinitialisé'
+      edit_mode_done: 'Terminer', toast_list_reset: 'Liste réinitialisée', toast_planning_reset: 'Planning réinitialisé',
+      meal_type_breakfast: 'Petit-déj', meal_type_lunch: 'Déjeuner', meal_type_dinner: 'Dîner', meal_type_snack: 'Encas',
+      rayon_produce: 'Fruits & légumes', rayon_dairy: 'Produits laitiers & oeufs', rayon_bakery: 'Boulangerie',
+      rayon_frozen: 'Surgelés', rayon_drinks: 'Boissons', rayon_sweet_pantry: 'Épicerie sucrée',
+      rayon_savory_pantry: 'Épicerie salée', rayon_other: 'Autres'
     },
     en: {
       nav_recipes: 'Recipes', nav_courses: 'Groceries', nav_add: 'Add', nav_account: 'Account',
@@ -724,7 +728,11 @@
       toast_step_removed: 'Step "{label}" removed',
       version_field_label: 'Version', quantity_label: 'Quantity', qty_example_placeholder: 'e.g.: 500 g',
       reset_this_qty: 'Reset this quantity', reset_quantities: 'Reset quantities',
-      edit_mode_done: 'Done', toast_list_reset: 'List reset', toast_planning_reset: 'Meal plan reset'
+      edit_mode_done: 'Done', toast_list_reset: 'List reset', toast_planning_reset: 'Meal plan reset',
+      meal_type_breakfast: 'Breakfast', meal_type_lunch: 'Lunch', meal_type_dinner: 'Dinner', meal_type_snack: 'Snack',
+      rayon_produce: 'Fruits & vegetables', rayon_dairy: 'Dairy & eggs', rayon_bakery: 'Bakery',
+      rayon_frozen: 'Frozen', rayon_drinks: 'Drinks', rayon_sweet_pantry: 'Sweet pantry',
+      rayon_savory_pantry: 'Savory pantry', rayon_other: 'Other'
     }
   };
   function detectDeviceLanguage() {
@@ -936,8 +944,8 @@
   let activeTagFilter = null;
   function renderTagFilters() {
     const container = document.getElementById('tagFilters');
-    container.innerHTML = MEAL_TYPES.map(t => `
-      <button type="button" class="filter-chip filter-chip-vertical ${activeTagFilter === t ? 'active' : ''}" data-tag="${t}"><svg class="icon-svg" style="font-size:24px;"><use href="#${MEAL_TYPE_ICONS[t]}"/></svg>${t}</button>
+    container.innerHTML = MEAL_TYPES.map(mt => `
+      <button type="button" class="filter-chip filter-chip-vertical ${activeTagFilter === mt ? 'active' : ''}" data-tag="${mt}"><svg class="icon-svg" style="font-size:24px;"><use href="#${MEAL_TYPE_ICONS[mt]}"/></svg>${escapeHtml(mealTypeLabel(mt))}</button>
     `).join('');
     container.querySelectorAll('.filter-chip').forEach(chip => {
       chip.onclick = () => {
@@ -2870,14 +2878,24 @@
     'Dîner': 'icon-dinner-outline',
     'Encas': 'icon-snack-outline'
   };
+  // Les tags eux-mêmes (MEAL_TYPES, stockés dans recipe.tags) restent les
+  // clés françaises canoniques — changer la langue ne doit pas réécrire les
+  // recettes existantes. Seul l'affichage passe par cette table.
+  const MEAL_TYPE_I18N_KEYS = {
+    'Petit-déj': 'meal_type_breakfast',
+    'Déjeuner': 'meal_type_lunch',
+    'Dîner': 'meal_type_dinner',
+    'Encas': 'meal_type_snack'
+  };
+  function mealTypeLabel(tag) { return t(MEAL_TYPE_I18N_KEYS[tag] || tag); }
   let selectedMealTypes = [];
 
   // Tags de type de repas d'une recette, toujours dans l'ordre canonique
   // (Petit-déj, Déjeuner, Dîner, Encas), avec la même icône que partout
   // ailleurs dans l'app, à la taille standard des tags.
   function mealTypeTagsHtml(r) {
-    return MEAL_TYPES.filter(t => (r.tags || []).includes(t)).map(t => `
-      <span class="tag"><svg class="icon-svg" style="font-size:14px;"><use href="#${MEAL_TYPE_ICONS[t]}"/></svg>${escapeHtml(t)}</span>
+    return MEAL_TYPES.filter(mt => (r.tags || []).includes(mt)).map(mt => `
+      <span class="tag"><svg class="icon-svg" style="font-size:14px;"><use href="#${MEAL_TYPE_ICONS[mt]}"/></svg>${escapeHtml(mealTypeLabel(mt))}</span>
     `).join('');
   }
 
@@ -2889,8 +2907,8 @@
   }
 
   function renderMealTypeToggles() {
-    document.getElementById('f_mealTypes').innerHTML = MEAL_TYPES.map(t => `
-      <button type="button" class="filter-chip filter-chip-vertical ${selectedMealTypes.includes(t) ? 'active' : ''}" data-meal-type="${t}"><svg class="icon-svg" style="font-size:24px;"><use href="#${MEAL_TYPE_ICONS[t]}"/></svg>${escapeHtml(t)}</button>
+    document.getElementById('f_mealTypes').innerHTML = MEAL_TYPES.map(mt => `
+      <button type="button" class="filter-chip filter-chip-vertical ${selectedMealTypes.includes(mt) ? 'active' : ''}" data-meal-type="${mt}"><svg class="icon-svg" style="font-size:24px;"><use href="#${MEAL_TYPE_ICONS[mt]}"/></svg>${escapeHtml(mealTypeLabel(mt))}</button>
     `).join('');
     document.querySelectorAll('[data-meal-type]').forEach(btn => {
       btn.onclick = () => {
@@ -4680,6 +4698,19 @@
     ['Épicerie salée', ['pates', 'riz', 'quinoa', 'lentille', 'pois chiche', 'haricot rouge', 'haricot blanc', 'huile', 'vinaigre', 'sel', 'poivre', 'epice', 'curry', 'cumin', 'paprika', 'bouillon', 'sauce soja', 'moutarde', 'ketchup', 'mayonnaise', 'conserve', 'coulis', 'tofu', 'seitan', 'proteine de soja', 'noix', 'amande', 'noisette', 'graine', 'sesame', 'pignon', 'cacahuete', 'olive', 'capre', 'biscotte', 'chapelure']],
   ];
   const RAYON_FALLBACK = 'Autres';
+  // Les clés de rayon restent françaises (utilisées pour le regroupement, le
+  // repli/dépli mémorisé, le tri) — seul l'affichage du libellé change.
+  const RAYON_I18N_KEYS = {
+    'Fruits & légumes': 'rayon_produce',
+    'Produits laitiers & oeufs': 'rayon_dairy',
+    'Boulangerie': 'rayon_bakery',
+    'Surgelés': 'rayon_frozen',
+    'Boissons': 'rayon_drinks',
+    'Épicerie sucrée': 'rayon_sweet_pantry',
+    'Épicerie salée': 'rayon_savory_pantry',
+    'Autres': 'rayon_other'
+  };
+  function rayonLabel(rayon) { return t(RAYON_I18N_KEYS[rayon] || rayon); }
 
   // Exceptions vérifiées manuellement : un mot-clé de rayon peut être un mot
   // entier valide dans une expression qui appartient en réalité à un autre
@@ -4932,7 +4963,7 @@
       });
       const rayonOrder = [...RAYON_KEYWORDS.map(([r]) => r), RAYON_FALLBACK];
       bodyHtml = rayonOrder.filter(rayon => byRayon[rayon]?.length)
-        .map(rayon => renderGroup(rayon, rayon, byRayon[rayon]))
+        .map(rayon => renderGroup(rayon, rayonLabel(rayon), byRayon[rayon]))
         .join('');
     }
 
