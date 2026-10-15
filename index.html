@@ -5005,7 +5005,13 @@
   }
 
   async function loadUserDefaultServings() {
-    const { data, error } = await sb.from('profiles').select('default_servings, default_variant_label, language').eq('id', currentUser.id).maybeSingle();
+    // select('*') plutôt qu'une liste de colonnes : une colonne encore
+    // absente côté base (ex. "language", avant exécution du SQL associé)
+    // ferait sinon échouer toute la requête d'un coup — et avec elle la
+    // lecture de default_servings/default_variant_label, qui n'ont rien à
+    // voir. Chaque réglage doit pouvoir continuer à se charger même si un
+    // autre, plus récent, n'est pas encore migré en base.
+    const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
     if (error) { console.error('loadUserDefaultServings a échoué (droit de lecture manquant ?)', error); return; }
     userDefaultServings = data?.default_servings || 4;
     userDefaultVariantLabel = data?.default_variant_label || '';
