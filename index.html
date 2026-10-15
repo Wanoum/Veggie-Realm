@@ -99,38 +99,38 @@
   <symbol id="icon-trash-outline" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M16.580 21.980L7.420 21.982L6.980 21.904L6.580 21.749L6.220 21.527L6.023 21.360L5.834 21.160L5.598 20.820L5.431 20.460L5.334 20.100L5.298 19.780L4.471 6.920L4.460 6.900L3.100 6.889L2.960 6.848L2.800 6.766L2.695 6.680L2.613 6.580L2.534 6.440L2.492 6.300L2.476 6.160L2.490 6.000L2.533 5.860L2.613 5.720L2.720 5.597L2.800 5.530L2.940 5.454L3.080 5.414L3.240 5.400L8.300 5.393L8.318 5.380L8.330 3.980L8.412 3.560L8.577 3.160L8.815 2.800L9.120 2.495L9.340 2.337L9.560 2.214L9.920 2.072L10.180 2.015L10.360 1.998L13.460 1.990L13.760 2.013L13.980 2.055L14.240 2.135L14.460 2.233L14.860 2.495L15.147 2.780L15.308 3.000L15.505 3.380L15.626 3.800L15.661 4.200L15.662 5.380L15.680 5.393L20.740 5.400L20.900 5.414L21.040 5.454L21.180 5.530L21.285 5.620L21.447 5.860L21.489 6.000L21.504 6.160L21.488 6.300L21.446 6.440L21.367 6.580L21.280 6.685L21.180 6.767L21.020 6.848L20.880 6.889L19.520 6.900L19.509 6.920L18.685 19.740L18.646 20.100L18.588 20.340L18.465 20.660L18.268 21.000L18.100 21.213L17.860 21.446L17.560 21.663L17.180 21.846L16.920 21.924L16.580 21.980ZM14.162 5.380L14.149 4.060L14.105 3.920L14.005 3.760L13.860 3.619L13.700 3.532L13.440 3.490L10.420 3.494L10.280 3.532L10.100 3.634L9.930 3.820L9.854 3.980L9.818 4.200L9.818 5.380L9.840 5.393L14.140 5.393L14.162 5.380ZM16.509 20.480L16.640 20.449L16.780 20.382L16.914 20.280L17.026 20.160L17.147 19.920L17.183 19.720L18.000 6.911L5.980 6.911L6.795 19.700L6.832 19.920L6.877 20.040L6.952 20.160L7.120 20.328L7.240 20.404L7.400 20.466L7.600 20.490L16.509 20.480ZM10.180 18.085L9.900 18.086L9.760 18.042L9.620 17.966L9.520 17.886L9.353 17.640L9.310 17.500L9.291 17.340L9.291 10.040L9.311 9.880L9.356 9.740L9.420 9.623L9.520 9.506L9.640 9.412L9.760 9.349L9.880 9.313L10.040 9.294L10.220 9.314L10.340 9.354L10.581 9.520L10.665 9.620L10.745 9.780L10.791 10.060L10.789 17.400L10.730 17.640L10.666 17.760L10.569 17.880L10.360 18.025L10.180 18.085ZM14.080 18.086L13.800 18.087L13.620 18.026L13.420 17.889L13.314 17.760L13.250 17.640L13.200 17.480L13.188 17.340L13.192 9.980L13.242 9.760L13.315 9.620L13.400 9.518L13.640 9.353L13.780 9.312L13.940 9.294L14.100 9.313L14.240 9.358L14.460 9.506L14.560 9.623L14.624 9.740L14.669 9.880L14.688 10.040L14.687 17.360L14.666 17.520L14.627 17.640L14.466 17.880L14.260 18.021L14.080 18.086Z"/></symbol>
 </svg><div id="authView" style="display:none;padding-top:60px;">
   <h1 class="serif" style="font-size:30px;text-align:center;">Blou Mint</h1>
-  <p style="text-align:center;color:var(--text-icon-default);margin-bottom:24px;">Connecte-toi pour retrouver tes recettes</p>
+  <p data-i18n="auth_subtitle" style="text-align:center;color:var(--text-icon-default);margin-bottom:24px;">Connecte-toi pour retrouver tes recettes</p>
 
   <div>
     <div class="subtabs">
-      <button type="button" id="authTabLogin" class="subtab-btn active">Connexion</button>
-      <button type="button" id="authTabSignup" class="subtab-btn">Inscription</button>
+      <button type="button" id="authTabLogin" data-i18n="auth_tab_login" class="subtab-btn active">Connexion</button>
+      <button type="button" id="authTabSignup" data-i18n="auth_tab_signup" class="subtab-btn">Inscription</button>
     </div>
 
-    <label class="field-label">Email</label>
+    <label class="field-label" data-i18n="auth_email_label">Email</label>
     <input id="auth_email" class="field-input" type="email" placeholder="toi@exemple.com" autocomplete="email" />
 
-    <label class="field-label">Mot de passe</label>
+    <label class="field-label" data-i18n="auth_password_label">Mot de passe</label>
     <input id="auth_password" class="field-input" type="password" placeholder="••••••••" autocomplete="current-password" />
 
     <p id="authError" style="color:var(--text-icon-error);font-size:14px;margin-top:10px;"></p>
 
-    <button type="button" id="authSubmitBtn" class="primary-btn">Se connecter</button>
-    <button type="button" id="forgotPasswordBtn" style="width:100%;background:none;border:none;padding:14px;color:var(--text-icon-default);font-size:14px;">Mot de passe oublié ?</button>
+    <button type="button" id="authSubmitBtn" data-i18n="auth_submit" class="primary-btn">Se connecter</button>
+    <button type="button" id="forgotPasswordBtn" data-i18n="auth_forgot" style="width:100%;background:none;border:none;padding:14px;color:var(--text-icon-default);font-size:14px;">Mot de passe oublié ?</button>
   </div>
 </div>
 
 <div id="resetPasswordView" style="display:none;padding-top:60px;">
-  <h1 class="serif" style="font-size:30px;text-align:center;">Nouveau mot de passe</h1>
-  <p style="text-align:center;color:var(--text-icon-default);margin-bottom:24px;">Choisis un nouveau mot de passe pour ton compte</p>
+  <h1 class="serif" data-i18n="reset_title" style="font-size:30px;text-align:center;">Nouveau mot de passe</h1>
+  <p data-i18n="reset_subtitle" style="text-align:center;color:var(--text-icon-default);margin-bottom:24px;">Choisis un nouveau mot de passe pour ton compte</p>
 
   <div>
-    <label class="field-label">Nouveau mot de passe</label>
+    <label class="field-label" data-i18n="reset_password_label">Nouveau mot de passe</label>
     <input id="reset_password" class="field-input" type="password" placeholder="••••••••" autocomplete="new-password" />
 
     <p id="resetError" style="color:var(--text-icon-error);font-size:14px;margin-top:10px;"></p>
 
-    <button type="button" id="resetSubmitBtn" class="primary-btn">Enregistrer le mot de passe</button>
+    <button type="button" id="resetSubmitBtn" data-i18n="reset_submit" class="primary-btn">Enregistrer le mot de passe</button>
   </div>
 </div>
 
@@ -141,7 +141,7 @@
 <div id="savedRecipesView" class="page-fullbleed" style="display:none;">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--gap-vertical-section);">
     <button type="button" class="icon-btn icon-btn-lg glass-surface" onclick="playBackButtonAnimation('savedRecipesView')"><svg class="icon-svg icon"><use href="#icon-arrow-left-outline"/></svg></button>
-    <h1 class="text-headline" style="margin:0;">Recettes partagées</h1>
+    <h1 class="text-headline" data-i18n="saved_recipes_title" style="margin:0;">Recettes partagées</h1>
   </div>
   <div id="savedRecipesList" style="display:grid;grid-template-columns:1fr;gap:var(--gap-large);"></div>
 </div>
@@ -158,7 +158,7 @@
     <button type="button" onclick="showSavedRecipes()" style="display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;">Recettes partagées <svg class="icon-svg" style="font-size:20px;text-decoration:none;"><use href="#icon-chevron-right-outline"/></svg></button>
   </div>
 
-  <p class="count" id="count">Chargement...</p>
+  <p class="count" id="count" data-i18n="home_loading">Chargement...</p>
   <div id="cards" style="display:grid;grid-template-columns:1fr;gap:var(--gap-large);"></div>
 </div>
 
@@ -334,77 +334,77 @@
 <nav id="bottomNav" style="display:none;">
   <button id="navHome" class="nav-btn active">
     <span class="nav-icon-wrap"><svg class="icon-svg nav-icon" data-outline="icon-recipes-outline" data-filled="icon-recipes-filled"><use href="#icon-recipes-outline"/></svg></span>
-    <span class="nav-label">Recettes</span>
+    <span class="nav-label" data-i18n="nav_recipes">Recettes</span>
   </button>
   <button id="navPlanning" class="nav-btn">
     <span class="nav-icon-wrap"><svg class="icon-svg nav-icon" data-outline="icon-calendar-outline" data-filled="icon-calendar-filled"><use href="#icon-calendar-outline"/></svg></span>
-    <span class="nav-label">Courses</span>
+    <span class="nav-label" data-i18n="nav_courses">Courses</span>
   </button>
   <button id="navAdd" class="nav-btn">
     <span class="nav-icon-wrap"><svg class="icon-svg nav-icon" data-outline="icon-create-outline" data-filled="icon-create-filled"><use href="#icon-create-outline"/></svg></span>
-    <span class="nav-label">Ajouter</span>
+    <span class="nav-label" data-i18n="nav_add">Ajouter</span>
   </button>
   <button id="navAccount" class="nav-btn">
     <span class="nav-icon-wrap"><svg class="icon-svg nav-icon" data-outline="icon-account-outline" data-filled="icon-account-filled"><use href="#icon-account-outline"/></svg></span>
-    <span class="nav-label">Compte</span>
+    <span class="nav-label" data-i18n="nav_account">Compte</span>
   </button>
 </nav>
 
 <div id="accountView" style="display:none;">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);">
-    <h1 style="margin:0;">Compte</h1>
+    <h1 data-i18n="account_title" style="margin:0;">Compte</h1>
     <button type="button" id="logoutBtn" class="icon-btn icon-btn-lg glass-surface" style="color:var(--text-icon-error);"><svg class="icon-svg icon"><use href="#icon-logout-outline"/></svg></button>
   </div>
-  <p class="text-small" style="color:var(--text-icon-secondary);margin:0 0 var(--gap-vertical-section);">Version du <span id="appBuildTime"></span></p>
+  <p class="text-small" style="color:var(--text-icon-secondary);margin:0 0 var(--gap-vertical-section);"><span data-i18n="account_version_prefix">Version du</span> <span id="appBuildTime"></span></p>
   <div>
     <div class="settings-list">
       <button type="button" class="settings-row" onclick="openAccountEdit('email')">
-        <span>Email</span>
+        <span data-i18n="account_email">Email</span>
         <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
       </button>
       <button type="button" class="settings-row" onclick="openAccountEdit('display_name')">
-        <span>Pseudo</span>
+        <span data-i18n="account_pseudo">Pseudo</span>
         <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
       </button>
       <button type="button" class="settings-row" onclick="openAccountEdit('password')">
-        <span>Mot de passe</span>
+        <span data-i18n="account_password">Mot de passe</span>
         <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
       </button>
     </div>
 
     <div class="settings-list">
       <button type="button" class="settings-row" onclick="openAccountEdit('default_servings')">
-        <span>Personnes par défaut</span>
+        <span data-i18n="account_default_servings">Personnes par défaut</span>
         <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
       </button>
       <button type="button" class="settings-row" onclick="openAccountEdit('default_variant_label')">
-        <span>Version préférée</span>
+        <span data-i18n="account_default_variant">Version préférée</span>
         <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
       </button>
       <button type="button" class="settings-row" onclick="openAccountEdit('recipe_display')">
-        <span>Affichage recettes</span>
+        <span data-i18n="account_recipe_display">Affichage recettes</span>
         <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
       </button>
     </div>
 
     <div class="settings-list">
       <button type="button" class="settings-row" onclick="openAccountEdit('feedback')">
-        <span>Envoyer un feedback</span>
+        <span data-i18n="account_feedback">Envoyer un feedback</span>
         <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
       </button>
       <button type="button" class="settings-row" onclick="openAccountEdit('language')">
-        <span>Langue</span>
+        <span data-i18n="account_language">Langue</span>
         <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
       </button>
       <button type="button" class="settings-row" onclick="location.reload()">
-        <span>Mise à jour</span>
+        <span data-i18n="account_update">Mise à jour</span>
         <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
       </button>
     </div>
 
     <p style="text-align:center;margin-top:16px;">
       <button type="button" onclick="location.reload()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;">
-        <svg class="icon-svg" style="font-size:20px;"><use href="#icon-refresh-outline"/></svg> Mettre à jour l'application
+        <svg class="icon-svg" style="font-size:20px;"><use href="#icon-refresh-outline"/></svg> <span data-i18n="account_update_app">Mettre à jour l'application</span>
       </button>
     </p>
   </div>
@@ -560,6 +560,71 @@
       fetch: (url, options = {}) => fetch(url, { ...options, cache: 'no-store' })
     }
   });
+
+  // ---- Langue (fr/en) ----
+  // Ne traduit que l'interface de l'app (boutons, titres d'écran, messages) —
+  // jamais le contenu des recettes (titre/ingrédients/étapes/notes), qui
+  // reste tel qu'écrit par l'utilisateur, quelle que soit la langue choisie.
+  // Mémorisée dans profiles.language (comme les autres réglages du compte) ;
+  // tant que rien n'est enregistré, on part de la langue de l'appareil.
+  const I18N = {
+    fr: {
+      nav_recipes: 'Recettes', nav_courses: 'Courses', nav_add: 'Ajouter', nav_account: 'Compte',
+      auth_subtitle: 'Connecte-toi pour retrouver tes recettes',
+      auth_tab_login: 'Connexion', auth_tab_signup: 'Inscription',
+      auth_email_label: 'Email', auth_password_label: 'Mot de passe',
+      auth_submit: 'Se connecter', auth_submit_signup: "S'inscrire", auth_forgot: 'Mot de passe oublié ?',
+      reset_title: 'Nouveau mot de passe', reset_subtitle: 'Choisis un nouveau mot de passe pour ton compte',
+      reset_password_label: 'Nouveau mot de passe', reset_submit: 'Enregistrer le mot de passe',
+      saved_recipes_title: 'Recettes partagées',
+      home_loading: 'Chargement...',
+      account_title: 'Compte',
+      account_email: 'Email', account_pseudo: 'Pseudo', account_password: 'Mot de passe',
+      account_default_servings: 'Personnes par défaut', account_default_variant: 'Version préférée',
+      account_recipe_display: 'Affichage recettes', account_language: 'Langue', account_update: 'Mise à jour',
+      account_feedback: 'Envoyer un feedback', account_update_app: "Mettre à jour l'application",
+      account_version_prefix: 'Version du',
+      lang_french: 'Français', lang_english: 'English'
+    },
+    en: {
+      nav_recipes: 'Recipes', nav_courses: 'Groceries', nav_add: 'Add', nav_account: 'Account',
+      auth_subtitle: 'Sign in to find your recipes again',
+      auth_tab_login: 'Log in', auth_tab_signup: 'Sign up',
+      auth_email_label: 'Email', auth_password_label: 'Password',
+      auth_submit: 'Log in', auth_submit_signup: 'Sign up', auth_forgot: 'Forgot your password?',
+      reset_title: 'New password', reset_subtitle: 'Choose a new password for your account',
+      reset_password_label: 'New password', reset_submit: 'Save password',
+      saved_recipes_title: 'Shared recipes',
+      home_loading: 'Loading...',
+      account_title: 'Account',
+      account_email: 'Email', account_pseudo: 'Username', account_password: 'Password',
+      account_default_servings: 'Default servings', account_default_variant: 'Preferred version',
+      account_recipe_display: 'Recipe display', account_language: 'Language', account_update: 'Update',
+      account_feedback: 'Send feedback', account_update_app: 'Update the app',
+      account_version_prefix: 'Version of',
+      lang_french: 'Français', lang_english: 'English'
+    }
+  };
+  function detectDeviceLanguage() {
+    const lang = (navigator.language || navigator.userLanguage || 'fr').toLowerCase();
+    return lang.startsWith('en') ? 'en' : 'fr';
+  }
+  let currentLanguage = detectDeviceLanguage();
+  function t(key) {
+    return (I18N[currentLanguage] && I18N[currentLanguage][key]) || I18N.fr[key] || key;
+  }
+  // [data-i18n] remplace le textContent ; [data-i18n-placeholder] le
+  // placeholder — couvre le balisage statique sans avoir à dupliquer chaque
+  // bout de JS qui le construit déjà dynamiquement avec t().
+  function applyI18n() {
+    document.documentElement.lang = currentLanguage;
+    document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+  }
+  // Dès le chargement du script : l'écran de connexion (avant tout profil
+  // connu) doit déjà respecter la langue de l'appareil. loadUserDefaultServings()
+  // réappliquera avec le choix enregistré en compte, une fois connecté.
+  applyI18n();
 
   // Hauteur réelle de l'écran, mesurée en JS plutôt que confiée à 100vh/
   // 100dvh/-webkit-fill-available : en PWA installée (écran d'accueil) sur
@@ -1968,9 +2033,28 @@
         <input id="accountEdit_variantLabel" class="field-input" placeholder="Ex. Sans gluten (laisse vide pour la version Base)" value="${escapeHtml(initialValue)}" />
       `;
       getCurrentValue = () => document.getElementById('accountEdit_variantLabel').value;
-    } else if (field === 'recipe_display' || field === 'language') {
-      titleEl.textContent = field === 'recipe_display' ? 'Affichage recettes' : 'Langue';
+    } else if (field === 'recipe_display') {
+      titleEl.textContent = t('account_recipe_display');
       contentEl.innerHTML = `<p class="text-body" style="color:var(--text-icon-secondary);">Pas encore disponible.</p>`;
+    } else if (field === 'language') {
+      titleEl.textContent = t('account_language');
+      initialValue = currentLanguage;
+      contentEl.dataset.selectedLanguage = currentLanguage;
+      const languageRow = (code, label) => `
+        <button type="button" class="settings-row" data-lang-choice="${code}">
+          <span>${escapeHtml(label)}</span>
+          <svg class="icon-svg" style="${currentLanguage === code ? '' : 'visibility:hidden;'}"><use href="#icon-check-outline"/></svg>
+        </button>`;
+      contentEl.innerHTML = `<div class="settings-list">${languageRow('fr', t('lang_french'))}${languageRow('en', t('lang_english'))}</div>`;
+      getCurrentValue = () => contentEl.dataset.selectedLanguage;
+      contentEl.querySelectorAll('[data-lang-choice]').forEach(btn => {
+        btn.onclick = () => {
+          contentEl.dataset.selectedLanguage = btn.dataset.langChoice;
+          contentEl.querySelectorAll('[data-lang-choice] svg').forEach(svg => { svg.style.visibility = 'hidden'; });
+          btn.querySelector('svg').style.visibility = '';
+          updateAccountEditSaveState();
+        };
+      });
     } else if (field === 'feedback') {
       titleEl.textContent = 'Envoyer un feedback';
       initialValue = '';
@@ -1978,7 +2062,7 @@
       getCurrentValue = () => document.getElementById('accountEdit_feedback').value;
     }
 
-    const notYetAvailable = field === 'email' || field === 'recipe_display' || field === 'language';
+    const notYetAvailable = field === 'email' || field === 'recipe_display';
     saveBtn.textContent = field === 'feedback' ? 'Envoyer' : 'Enregistrer';
     window.updateAccountEditSaveState = () => {
       // Jamais vraiment "disabled" ici : le bouton doit rester cliquable
@@ -2030,6 +2114,17 @@
     } else if (field === 'default_variant_label') {
       const label = document.getElementById('accountEdit_variantLabel').value.trim();
       await setUserDefaultVariantLabel(label);
+    } else if (field === 'language') {
+      const language = document.getElementById('accountEditContent').dataset.selectedLanguage;
+      const { error } = await sb.from('profiles').update({ language }).eq('id', currentUser.id);
+      if (error) { errEl.textContent = error.message; return; }
+      // Rechargement plutôt que de retraduire l'écran courant à la volée :
+      // trop d'écrans construisent déjà leur contenu en JS (toasts, listes,
+      // sheets) pour patcher chaque élément en place sans risquer d'en
+      // oublier ; recharger garantit un affichage cohérent partout.
+      currentLanguage = language;
+      location.reload();
+      return;
     } else if (field === 'feedback') {
       const message = document.getElementById('accountEdit_feedback').value.trim();
       if (!message) { errEl.textContent = "Écris un message avant d'envoyer."; return; }
@@ -4910,17 +5005,21 @@
   }
 
   async function loadUserDefaultServings() {
-    const { data, error } = await sb.from('profiles').select('default_servings, default_variant_label').eq('id', currentUser.id).maybeSingle();
+    const { data, error } = await sb.from('profiles').select('default_servings, default_variant_label, language').eq('id', currentUser.id).maybeSingle();
     if (error) { console.error('loadUserDefaultServings a échoué (droit de lecture manquant ?)', error); return; }
     userDefaultServings = data?.default_servings || 4;
     userDefaultVariantLabel = data?.default_variant_label || '';
+    // Rien d'enregistré : on garde la langue de l'appareil détectée au
+    // chargement du script (déjà appliquée à l'écran de connexion avant même
+    // que le profil ne soit connu).
+    if (data?.language) { currentLanguage = data.language; applyI18n(); }
   }
 
   function setAuthMode(mode) {
     authMode = mode;
     document.getElementById('authTabLogin').classList.toggle('active', mode === 'login');
     document.getElementById('authTabSignup').classList.toggle('active', mode === 'signup');
-    document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Se connecter' : "S'inscrire";
+    document.getElementById('authSubmitBtn').textContent = mode === 'login' ? t('auth_submit') : t('auth_submit_signup');
     document.getElementById('authError').textContent = '';
   }
 
