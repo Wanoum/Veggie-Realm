@@ -679,7 +679,22 @@
       error_upload_prefix: "Erreur d'envoi : ",
       status_photo_added: 'Photo ajoutée ✓',
       error_no_image_clipboard: 'Aucune image trouvée dans le presse-papiers.',
-      error_clipboard_unavailable: 'Impossible de lire le presse-papiers (autorisation refusée ou indisponible sur ce navigateur).'
+      error_clipboard_unavailable: 'Impossible de lire le presse-papiers (autorisation refusée ou indisponible sur ce navigateur).',
+      error_delete_prefix: 'Erreur lors de la suppression : ',
+      error_create_link_prefix: 'Erreur lors de la création du lien : ',
+      error_network_prefix: 'Erreur réseau : ',
+      error_generic_prefix: 'Erreur : ',
+      shared_recipe_banner_with_author: 'Recette partagée par {name} ✨',
+      shared_recipe_banner_no_author: 'Recette partagée avec toi ✨',
+      shared_recipe_create_account: 'Créer mon compte',
+      shared_recipe_shared_by: 'Partagée par {name}',
+      recipe_not_yet_available: 'Pas encore disponible.',
+      shared_recipe_unavailable: "Cette recette n'est plus disponible.",
+      source_label_prefix: 'Source : ',
+      error_invalid_server_response: 'Réponse invalide du serveur.',
+      error_import_generic: "Erreur lors de l'import.",
+      account_feature_not_yet_available: "Cette fonctionnalité n'est pas encore disponible",
+      toast_changes_saved: 'Modifications enregistrées'
     },
     en: {
       nav_recipes: 'Recipes', nav_courses: 'Groceries', nav_add: 'Add', nav_account: 'Account',
@@ -790,7 +805,22 @@
       error_upload_prefix: 'Upload error: ',
       status_photo_added: 'Photo added ✓',
       error_no_image_clipboard: 'No image found in the clipboard.',
-      error_clipboard_unavailable: 'Could not read the clipboard (permission denied or unavailable in this browser).'
+      error_clipboard_unavailable: 'Could not read the clipboard (permission denied or unavailable in this browser).',
+      error_delete_prefix: 'Error while deleting: ',
+      error_create_link_prefix: 'Error while creating the link: ',
+      error_network_prefix: 'Network error: ',
+      error_generic_prefix: 'Error: ',
+      shared_recipe_banner_with_author: 'Recipe shared by {name} ✨',
+      shared_recipe_banner_no_author: 'Recipe shared with you ✨',
+      shared_recipe_create_account: 'Create my account',
+      shared_recipe_shared_by: 'Shared by {name}',
+      recipe_not_yet_available: 'Not available yet.',
+      shared_recipe_unavailable: 'This recipe is no longer available.',
+      source_label_prefix: 'Source: ',
+      error_invalid_server_response: 'Invalid server response.',
+      error_import_generic: 'Error while importing.',
+      account_feature_not_yet_available: 'This feature is not available yet',
+      toast_changes_saved: 'Changes saved'
     }
   };
   function detectDeviceLanguage() {
@@ -1188,7 +1218,7 @@
 
     const updatedVariants = (r.variants || []).filter(v => v.label !== label);
     const { error } = await sb.from('recipes').update({ variants: updatedVariants }).eq('id', recipeId);
-    if (error) { alert("Erreur lors de la suppression : " + error.message); return; }
+    if (error) { alert(t("error_delete_prefix") + error.message); return; }
     r.variants = updatedVariants;
     if (wasSelected) selectedVariantLabel = '';
     if (wasDefault) await setUserDefaultVariantLabels(userDefaultVariantLabels.filter(l => l !== label));
@@ -1992,12 +2022,12 @@
       try {
         data = await response.json();
       } catch {
-        throw new Error("Réponse invalide du serveur.");
+        throw new Error(t("error_invalid_server_response"));
       }
 
       if (!response.ok) {
         statusEl.style.color = 'var(--text-icon-error)';
-        statusEl.textContent = data.error || "Erreur lors de l'import.";
+        statusEl.textContent = data.error || t("error_import_generic");
         btn.disabled = false;
         return;
       }
@@ -2051,11 +2081,11 @@
       try {
         data = await response.json();
       } catch {
-        throw new Error("Réponse invalide du serveur.");
+        throw new Error(t("error_invalid_server_response"));
       }
 
       if (!response.ok) {
-        const message = data.error || "Erreur lors de l'import.";
+        const message = data.error || t("error_import_generic");
         statusEl.style.color = 'var(--text-icon-error)';
         statusEl.textContent = message;
         alert(message);
@@ -2298,7 +2328,7 @@
       }
     } else if (field === 'recipe_display') {
       titleEl.textContent = t('account_recipe_display');
-      contentEl.innerHTML = `<p class="text-body" style="color:var(--text-icon-secondary);">Pas encore disponible.</p>`;
+      contentEl.innerHTML = `<p class="text-body" style="color:var(--text-icon-secondary);">${t('recipe_not_yet_available')}</p>`;
     } else if (field === 'language') {
       titleEl.textContent = t('account_language');
       initialValue = currentLanguage;
@@ -2326,7 +2356,7 @@
     }
 
     const notYetAvailable = field === 'email' || field === 'recipe_display';
-    saveBtn.textContent = field === 'feedback' ? 'Envoyer' : 'Enregistrer';
+    saveBtn.textContent = field === 'feedback' ? t('btn_send') : t('btn_save');
     // Exposée pour saveAccountEdit (défini plus bas) : les champs qui n'ont
     // pas un unique <input> à relire directement (ex. la liste à cases à
     // cocher de default_variant_label) n'ont que cette fermeture pour
@@ -2340,7 +2370,7 @@
     };
     saveBtn.classList.toggle('disabled-look', notYetAvailable);
     saveBtn.onclick = notYetAvailable
-      ? () => showToast("Cette fonctionnalité n'est pas encore disponible")
+      ? () => showToast(t('account_feature_not_yet_available'))
       : () => saveAccountEdit(field);
     if (getCurrentValue) {
       contentEl.addEventListener('input', updateAccountEditSaveState);
@@ -2403,7 +2433,7 @@
     }
 
     closeAccountEdit();
-    showToast('Modifications enregistrées');
+    showToast(t('toast_changes_saved'));
   }
 
   document.getElementById('navHome').onclick = showHome;
@@ -3280,7 +3310,7 @@
       token = crypto.randomUUID();
       const { error } = await sb.from('recipes').update({ share_token: token }).eq('id', r.id);
       if (error) {
-        alert("Erreur lors de la création du lien : " + error.message);
+        alert(t("error_create_link_prefix") + error.message);
         return;
       }
       r.share_token = token;
@@ -3337,7 +3367,7 @@
       a.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      alert("Erreur réseau : " + err.message);
+      alert(t("error_network_prefix") + err.message);
     }
   }
 
@@ -3346,7 +3376,7 @@
     if (!(await showConfirmDialog({ message: tf('confirm_delete_recipe', { title: r.title }), confirmLabel: t('btn_delete'), confirmIcon: 'trash-outline' }))) return;
     const { error } = await sb.from('recipes').delete().eq('id', r.id);
     if (error) {
-      alert("Erreur lors de la suppression : " + error.message);
+      alert(t("error_delete_prefix") + error.message);
       return;
     }
     if (r.photo_url) {
@@ -3943,8 +3973,8 @@
     if (!raw) return '';
     const url = safeUrl(raw);
     const inner = url
-      ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="color:var(--text-icon-accent);">Source : ${escapeHtml(sourceLinkLabel(raw))}</a>`
-      : `Source : ${escapeHtml(raw)}`;
+      ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="color:var(--text-icon-accent);">${t('source_label_prefix')}${escapeHtml(sourceLinkLabel(raw))}</a>`
+      : `${t('source_label_prefix')}${escapeHtml(raw)}`;
     return `<p style="margin-top:var(--gap-vertical-section);font-size:14px;">${inner}</p>`;
   }
 
@@ -5401,7 +5431,7 @@
     // migration SQL associée).
     const { data, error } = await sb.rpc('get_shared_recipe', { p_token: token }).single();
     if (error || !data) {
-      document.getElementById('sharedRecipeContent').innerHTML = '<div class="empty" style="padding-top:60px;padding-left:var(--padding-horizontal-app);padding-right:var(--padding-horizontal-app);">Cette recette n\'est plus disponible.</div>';
+      document.getElementById('sharedRecipeContent').innerHTML = `<div class="empty" style="padding-top:60px;padding-left:var(--padding-horizontal-app);padding-right:var(--padding-horizontal-app);">${t('shared_recipe_unavailable')}</div>`;
       document.getElementById('sharedRecipeView').style.display = 'block';
       return;
     }
@@ -5425,7 +5455,7 @@
         <span class="ing-row-qty">${ing.quantity ?? ''} ${escapeHtml(ing.unit)}</span>
       </div>`).join('');
     const stepsHtml = (r.steps && r.steps.length > 0)
-      ? '<h2>Étapes</h2><ol>' + r.steps.map(st => `<li>${escapeHtml(st)}</li>`).join('') + '</ol>'
+      ? `<h2>${t('steps_title')}</h2><ol>` + r.steps.map(st => `<li>${escapeHtml(st)}</li>`).join('') + '</ol>'
       : '';
 
     const isOwnRecipe = currentUser && currentUser.id === r.user_id;
@@ -5435,13 +5465,13 @@
     if (!currentUser) {
       banner = `
         <div style="background:var(--surface-lowest);color:var(--text-icon-default);border-radius:var(--corner-radius-large);padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-          <span style="font-size:14px;">Recette partagée${authorName ? ' par ' + escapeHtml(authorName) : ' avec toi'} ✨</span>
-          <button type="button" onclick="location.href = location.pathname;" style="background:var(--interaction-primary);color:var(--text-icon-on-primary);border:none;border-radius:var(--corner-radius-default);padding:8px 12px;font-size:12px;font-weight:600;white-space:nowrap;">Créer mon compte</button>
+          <span style="font-size:14px;">${authorName ? tf('shared_recipe_banner_with_author', { name: escapeHtml(authorName) }) : t('shared_recipe_banner_no_author')}</span>
+          <button type="button" onclick="location.href = location.pathname;" style="background:var(--interaction-primary);color:var(--text-icon-on-primary);border:none;border-radius:var(--corner-radius-default);padding:8px 12px;font-size:12px;font-weight:600;white-space:nowrap;">${t('shared_recipe_create_account')}</button>
         </div>`;
     } else if (!isOwnRecipe) {
       const { data: existing } = await sb.from('saved_recipes').select('id').eq('user_id', currentUser.id).eq('recipe_id', r.id).maybeSingle();
       isSaved = !!existing;
-      banner = authorName ? `<p style="font-size:14px;color:var(--text-icon-default);margin:0 0 12px;"><svg class="icon-svg"><use href="#icon-account-outline"/></svg> Partagée par ${escapeHtml(authorName)}</p>` : '';
+      banner = authorName ? `<p style="font-size:14px;color:var(--text-icon-default);margin:0 0 12px;"><svg class="icon-svg"><use href="#icon-account-outline"/></svg> ${tf('shared_recipe_shared_by', { name: escapeHtml(authorName) })}</p>` : '';
     }
 
     const metaPills = buildMetaPills(r);
@@ -5473,7 +5503,7 @@
           ${mealTypeTagsHtml(r)}
         </div>
         <h1 style="margin-bottom:var(--gap-vertical-section);">${escapeHtml(r.title)}</h1>
-        <h2>Ingrédients</h2>
+        <h2>${t('ingredients_title')}</h2>
         ${ingredientsHtml}
         ${r.notes ? `<div class="notice" style="margin-top:16px;">${escapeHtml(r.notes)}</div>` : ''}
         ${stepsHtml}
@@ -5508,13 +5538,13 @@
 
     if (currentlySaved) {
       const { error } = await sb.from('saved_recipes').delete().eq('user_id', currentUser.id).eq('recipe_id', recipeId);
-      if (error) { alert("Erreur : " + error.message); btn.disabled = false; return; }
+      if (error) { alert(t("error_generic_prefix") + error.message); btn.disabled = false; return; }
       btn.dataset.saved = 'false';
       icon.querySelector('use').setAttribute('href', '#icon-bookmark-outline');
       showToast(t('toast_recipe_removed'));
     } else {
       const { error } = await sb.from('saved_recipes').insert({ user_id: currentUser.id, recipe_id: recipeId });
-      if (error) { alert("Erreur : " + error.message); btn.disabled = false; return; }
+      if (error) { alert(t("error_generic_prefix") + error.message); btn.disabled = false; return; }
       btn.dataset.saved = 'true';
       icon.querySelector('use').setAttribute('href', '#icon-bookmark-filled');
       showToast(t('toast_recipe_saved'));
@@ -5537,7 +5567,7 @@
       const alreadySaved = btn?.dataset.saved === 'true';
       if (!alreadySaved) {
         const { error } = await sb.from('saved_recipes').insert({ user_id: currentUser.id, recipe_id: r.id });
-        if (error && error.code !== '23505') { alert("Erreur : " + error.message); return; }
+        if (error && error.code !== '23505') { alert(t("error_generic_prefix") + error.message); return; }
         if (btn) { btn.dataset.saved = 'true'; document.getElementById('saveSharedIcon').querySelector('use').setAttribute('href', '#icon-bookmark-filled'); }
         await loadSavedRecipes();
       }
