@@ -47,9 +47,34 @@ function extractCookingInfoFromSteps(steps) {
   return { cookTimeMinutes, ovenTemp };
 }
 
+// Certains sites (notamment les plugins recette WordPress) échappent le
+// texte en HTML jusque dans le JSON-LD lui-même (ex: "l&#8217;eau", "200
+// g&nbsp;de farine", "180&deg;C") — le JSON.parse ne décode que la syntaxe
+// JSON, pas ces entités HTML, qui ressortaient donc telles quelles dans les
+// étapes/ingrédients importés.
+const HTML_ENTITIES = {
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
+  eacute: 'é', egrave: 'è', ecirc: 'ê', euml: 'ë',
+  agrave: 'à', acirc: 'â', auml: 'ä',
+  icirc: 'î', iuml: 'ï',
+  ocirc: 'ô', ouml: 'ö',
+  ucirc: 'û', ugrave: 'ù', uuml: 'ü',
+  ccedil: 'ç', ntilde: 'ñ', oelig: 'œ', aelig: 'æ',
+  deg: '°', hellip: '…', rsquo: '’', lsquo: '‘',
+  rdquo: '”', ldquo: '“', ndash: '–', mdash: '—',
+  frac12: '½', frac14: '¼', frac34: '¾', times: '×'
+};
+function decodeHtmlEntities(str) {
+  if (!str) return str;
+  return str
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)))
+    .replace(/&([a-zA-Z]+);/g, (full, name) => HTML_ENTITIES[name] ?? full);
+}
+
 function extractText(x) {
-  if (typeof x === 'string') return x;
-  if (x && typeof x.text === 'string') return x.text;
+  if (typeof x === 'string') return decodeHtmlEntities(x);
+  if (x && typeof x.text === 'string') return decodeHtmlEntities(x.text);
   return '';
 }
 
@@ -344,7 +369,7 @@ export default async function handler(req, res) {
       .filter(Boolean);
 
     const rawIngredients = recipe.recipeIngredient || recipe.ingredients || [];
-    const ingredients = rawIngredients.map(parseIngredientLine).filter(ing => ing.name);
+    const ingredients = rawIngredients.map(decodeHtmlEntities).map(parseIngredientLine).filter(ing => ing.name);
 
     let image = recipe.image || null;
     if (Array.isArray(image)) image = image[0];
@@ -360,7 +385,7 @@ export default async function handler(req, res) {
     const { cookTimeMinutes, ovenTemp } = extractCookingInfoFromSteps(steps);
 
     return res.status(200).json({
-      title: recipe.name || '',
+      title: decodeHtmlEntities(recipe.name) || '',
       photo_url: image,
       servings,
       cook_time_minutes: parseIsoDuration(recipe.cookTime) ?? cookTimeMinutes,
