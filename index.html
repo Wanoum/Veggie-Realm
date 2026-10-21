@@ -174,11 +174,17 @@
       <p id="cookingRecipeTitle" style="font-family:'Inter',sans-serif;font-size:20px;line-height:120%;font-weight:600;margin:0 0 2px;"></p>
       <p id="cookingRecipeServings" style="font-family:'Inter',sans-serif;font-size:14px;line-height:120%;color:rgba(255,255,255,0.7);margin:0;"></p>
     </div>
-    <button class="icon-btn icon-btn-borderless" onclick="closeCookingMode()"><svg class="icon-svg icon"><use href="#icon-close-outline"/></svg></button>
+    <button class="icon-btn icon-btn-borderless" onclick="closeCookingMode()" data-i18n-aria-label="cooking_close"><svg class="icon-svg icon"><use href="#icon-close-outline"/></svg></button>
   </div>
-  <div id="cookingScroll" class="cooking-scroll" style="flex:1;">
-    <p id="cookingStepText" class="cooking-step-text"></p>
-    <div id="cookingStepIngredients" class="cooking-step-ingredients"></div>
+  <div id="cookingStage" class="cooking-stage" style="flex:1;">
+    <div id="cookingTrack" class="cooking-track"></div>
+  </div>
+  <div class="cooking-footer">
+    <span id="cookingCounter" class="cooking-counter"></span>
+    <div class="cooking-nav-pill">
+      <button type="button" class="cooking-nav-btn" onclick="prevCookingStep()" data-i18n-aria-label="cooking_prev_step"><svg class="icon-svg"><use href="#icon-chevron-up-outline"/></svg></button>
+      <button type="button" class="cooking-nav-btn" onclick="nextCookingStep()" data-i18n-aria-label="cooking_next_step"><svg class="icon-svg"><use href="#icon-chevron-down-outline"/></svg></button>
+    </div>
   </div>
 </div>
 
@@ -691,6 +697,10 @@
       recipe_not_yet_available: 'Pas encore disponible.',
       shared_recipe_unavailable: "Cette recette n'est plus disponible.",
       source_label_prefix: 'Source : ',
+      cooking_close: 'Fermer le mode cuisine',
+      cooking_prev_step: 'Étape précédente',
+      cooking_next_step: 'Étape suivante',
+      cooking_step_counter: 'Étapes {current}/{total}',
       error_invalid_server_response: 'Réponse invalide du serveur.',
       error_import_generic: "Erreur lors de l'import.",
       account_feature_not_yet_available: "Cette fonctionnalité n'est pas encore disponible",
@@ -817,6 +827,10 @@
       recipe_not_yet_available: 'Not available yet.',
       shared_recipe_unavailable: 'This recipe is no longer available.',
       source_label_prefix: 'Source: ',
+      cooking_close: 'Close cook mode',
+      cooking_prev_step: 'Previous step',
+      cooking_next_step: 'Next step',
+      cooking_step_counter: 'Steps {current}/{total}',
       error_invalid_server_response: 'Invalid server response.',
       error_import_generic: 'Error while importing.',
       account_feature_not_yet_available: 'This feature is not available yet',
@@ -855,6 +869,7 @@
     document.documentElement.lang = currentLanguage;
     document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+    document.querySelectorAll('[data-i18n-aria-label]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel)); });
   }
   // Dès le chargement du script : l'écran de connexion (avant tout profil
   // connu) doit déjà respecter la langue de l'appareil. loadUserDefaultServings()
@@ -1547,6 +1562,12 @@
   let cookingServings = null;
   let wakeLock = null;
   let cookingCompletionLogged = false;
+  // Verrou + accumulateur molette/swipe : un seul changement d'étape par
+  // geste (un défilement un peu long ne doit pas en faire sauter plusieurs),
+  // le temps que la transition .cooking-track se termine.
+  let cookingLocked = false;
+  let cookingWheelAccum = 0;
+  let cookingTouchStartY = null;
 
   // Prend la recette et le nombre de portions/pièces affiché directement
   // (plutôt qu'un index dans `recipes`) pour fonctionner aussi bien depuis
@@ -1626,93 +1647,115 @@
     }).join('');
   }
 
-  const COOKING_FADE_MS = 200;
-  let cookingFadeTimeout = null;
-
+  // Toutes les étapes restent dans le DOM en permanence (voir .cooking-track
+  // dans pages.css) — seuls le style actif/dimmed d'une étape et la
+  // position du conteneur changent d'un pas à l'autre. Le HTML n'est donc
+  // reconstruit qu'ici, à l'ouverture, jamais à chaque changement d'étape.
   function renderCookingSteps() {
-    showCookingStep(0, false);
+    const track = document.getElementById('cookingTrack');
+    track.innerHTML = cookingSteps.map((step, idx) => `
+      <button type="button" class="cooking-step-btn" data-step="${idx}" onclick="goToCookingStep(${idx})">
+        <p class="cooking-step-text"></p>
+        <div class="cooking-step-ingredients">${ingredientChipsForStep(step)}</div>
+      </button>
+    `).join('');
+    track.querySelectorAll('[data-step]').forEach((btn, idx) => {
+      btn.querySelector('.cooking-step-text').textContent = cookingSteps[idx];
+    });
+    updateCookingStepStyles();
+    // Double rAF : laisse le premier rendu (police, tailles) se poser avant
+    // de mesurer les hauteurs réelles des étapes.
+    requestAnimationFrame(() => requestAnimationFrame(() => recomputeCookingTrackPosition()));
   }
 
-  // Une seule étape affichée à la fois (style h1 par défaut). Le changement
-  // d'étape se fait par un simple fondu (tout s'efface, le contenu est
-  // remplacé, tout réapparaît), pas de défilement ni de mise à l'échelle.
-  function showCookingStep(idx, animate = true) {
-    idx = Math.max(0, Math.min(cookingSteps.length - 1, idx));
+  function updateCookingStepStyles() {
+    document.querySelectorAll('#cookingTrack [data-step]').forEach((btn) => {
+      const idx = Number(btn.dataset.step);
+      const isActive = idx === cookingStepIndex;
+      const textEl = btn.querySelector('.cooking-step-text');
+      textEl.classList.toggle('active', isActive);
+      textEl.classList.toggle('dimmed', !isActive);
+      btn.querySelector('.cooking-step-ingredients').style.display = isActive ? '' : 'none';
+    });
+    document.getElementById('cookingCounter').textContent = tf('cooking_step_counter', { current: cookingStepIndex + 1, total: cookingSteps.length });
+  }
 
-    // Complétion journalisée seulement en cas de vraie navigation vers la
-    // dernière étape (pas à l'ouverture du cook mode sur une recette d'une
-    // seule étape, qui n'implique aucun engagement réel).
-    if (animate && idx === cookingSteps.length - 1 && !cookingCompletionLogged && cookingRecipe) {
+  // Recentre verticalement l'étape active : mesure sa position réelle
+  // (hauteur variable selon la longueur du texte) plutôt que de supposer
+  // une hauteur fixe par étape.
+  function recomputeCookingTrackPosition() {
+    const stage = document.getElementById('cookingStage');
+    const track = document.getElementById('cookingTrack');
+    const activeBtn = track.querySelector(`[data-step="${cookingStepIndex}"]`);
+    if (!stage || !track || !activeBtn) return;
+    const stageHeight = stage.clientHeight;
+    const activeCenter = activeBtn.offsetTop + activeBtn.offsetHeight / 2;
+    const offset = stageHeight / 2 - activeCenter;
+    track.style.transform = `translateY(${offset}px)`;
+  }
+
+  // Point d'entrée unique pour changer d'étape (molette/swipe, flèches, tap
+  // direct sur une étape) : anime la position, verrouille le temps de la
+  // transition et journalise la complétion une fois la dernière étape
+  // atteinte par une vraie navigation.
+  function goToCookingStep(idx) {
+    idx = Math.max(0, Math.min(cookingSteps.length - 1, idx));
+    if (idx === cookingStepIndex) return;
+    cookingStepIndex = idx;
+
+    if (idx === cookingSteps.length - 1 && !cookingCompletionLogged && cookingRecipe) {
       cookingCompletionLogged = true;
       logRecipeEngagement(cookingRecipe.id, 'cook_mode_completed');
     }
 
-    const textEl = document.getElementById('cookingStepText');
-    const chipsEl = document.getElementById('cookingStepIngredients');
-
-    const applyContent = () => {
-      cookingStepIndex = idx;
-      textEl.textContent = cookingSteps[idx];
-      chipsEl.innerHTML = ingredientChipsForStep(cookingSteps[idx]);
-    };
-
-    if (cookingFadeTimeout) { clearTimeout(cookingFadeTimeout); cookingFadeTimeout = null; }
-
-    if (!animate) {
-      applyContent();
-      textEl.style.opacity = '1';
-      chipsEl.style.opacity = '1';
-      return;
-    }
-
-    textEl.style.opacity = '0';
-    chipsEl.style.opacity = '0';
-    cookingFadeTimeout = setTimeout(() => {
-      applyContent();
-      textEl.style.opacity = '1';
-      chipsEl.style.opacity = '1';
-      cookingFadeTimeout = null;
-    }, COOKING_FADE_MS);
+    cookingLocked = true;
+    updateCookingStepStyles();
+    recomputeCookingTrackPosition();
+    setTimeout(() => { cookingLocked = false; }, 460);
   }
 
   function nextCookingStep() {
-    if (cookingStepIndex < cookingSteps.length - 1) showCookingStep(cookingStepIndex + 1);
+    if (!cookingLocked) goToCookingStep(cookingStepIndex + 1);
   }
 
   function prevCookingStep() {
-    if (cookingStepIndex > 0) showCookingStep(cookingStepIndex - 1);
+    if (!cookingLocked) goToCookingStep(cookingStepIndex - 1);
   }
 
-  // Scroller/balayer verticalement passe à l'étape suivante ou précédente,
-  // avec le fondu ci-dessus. Un seul changement par geste (verrou le temps
-  // du geste, sinon un balayage un peu long ferait défiler plusieurs étapes).
+  // Un geste (molette ou swipe) = une étape, avec la transition animée de
+  // .cooking-track — jamais de défilement libre entre deux étapes.
   (function setupCookingStepNav() {
-    const area = document.getElementById('cookingScroll');
-    const SWIPE_THRESHOLD = 40;
-    let startY = null;
-    let locked = false;
+    const stage = document.getElementById('cookingStage');
 
-    area.addEventListener('touchstart', (e) => {
-      startY = e.touches[0].clientY;
-      locked = false;
+    stage.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (cookingLocked) return;
+      cookingWheelAccum += e.deltaY;
+      const THRESHOLD = 22;
+      if (Math.abs(cookingWheelAccum) > THRESHOLD) {
+        const dir = cookingWheelAccum > 0 ? 1 : -1;
+        cookingWheelAccum = 0;
+        goToCookingStep(cookingStepIndex + dir);
+      }
+    }, { passive: false });
+
+    stage.addEventListener('touchstart', (e) => {
+      cookingTouchStartY = e.touches[0].clientY;
     }, { passive: true });
 
-    area.addEventListener('touchmove', (e) => {
-      if (locked || startY == null) return;
-      const diff = e.touches[0].clientY - startY;
-      if (Math.abs(diff) < SWIPE_THRESHOLD) return;
-      locked = true;
-      if (diff < 0) nextCookingStep(); else prevCookingStep();
-    }, { passive: true });
+    stage.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+    }, { passive: false });
 
-    area.addEventListener('touchend', () => { startY = null; locked = false; });
-
-    let wheelLocked = false;
-    area.addEventListener('wheel', (e) => {
-      if (wheelLocked || Math.abs(e.deltaY) < 20) return;
-      wheelLocked = true;
-      if (e.deltaY > 0) nextCookingStep(); else prevCookingStep();
-      setTimeout(() => { wheelLocked = false; }, 400);
+    stage.addEventListener('touchend', (e) => {
+      if (cookingTouchStartY == null) return;
+      const dy = cookingTouchStartY - e.changedTouches[0].clientY;
+      cookingTouchStartY = null;
+      if (cookingLocked) return;
+      const THRESHOLD = 28;
+      if (Math.abs(dy) > THRESHOLD) {
+        goToCookingStep(cookingStepIndex + (dy > 0 ? 1 : -1));
+      }
     }, { passive: true });
   })();
 

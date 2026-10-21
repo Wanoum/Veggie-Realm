@@ -57,29 +57,99 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   margin-top: var(--gap-vertical-section);
 }
 
-/* ---- Mode cuisine ---- */
-.cooking-scroll {
+/* ---- Mode cuisine ----
+   Toutes les étapes restent visibles (celles au-dessus/en dessous en
+   réduit), façon paroles synchronisées : un geste (molette/swipe) ou un
+   tap sur une étape avance exactement d'une étape, jamais un défilement
+   libre. .cooking-track se déplace en translateY (calculé en JS à partir
+   de la position réelle de l'étape active, voir recomputeCookingTrackPosition())
+   pour la garder centrée verticalement quelle que soit sa longueur.
+   La taille du texte ne change JAMAIS (toujours celle de l'étape active,
+   30px/1.3) — seul un transform:scale() anime le passage petit/grand :
+   animer font-size redéclenche la mise en page à chaque frame (retours à
+   la ligne qui changent en cours d'animation), ce qui donnait un rendu
+   saccadé. Réduire (scale < 1) ne déborde jamais de sa boîte d'origine,
+   contrairement à agrandir — on part donc toujours de la taille active et
+   on réduit les étapes non actives, jamais l'inverse. */
+.cooking-stage {
+  touch-action: none;
+  overflow: hidden;
+  position: relative;
+}
+.cooking-track {
+  position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 20px;
-  padding: 24px 28px;
-  overflow: hidden;
+  gap: 16px;
+  padding: 0 28px;
+  transform: translateY(0);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.cooking-step-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
 }
 .cooking-step-text {
-  font-family: 'Krylon', Georgia, serif;
-  font-size: 36px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 28px;
   line-height: 1.3;
   margin: 0;
-  color: var(--text-icon-on-primary);
-  transition: opacity 0.25s ease;
+  transform-origin: left center;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s ease;
 }
+.cooking-step-text.active { transform: scale(1); color: var(--text-icon-on-primary); }
+.cooking-step-text.dimmed { transform: scale(0.78); color: rgba(255, 255, 255, 0.4); }
 .cooking-step-ingredients {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  transition: opacity 0.25s ease;
+  margin-top: 16px;
 }
+.cooking-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 24px;
+  flex-shrink: 0;
+}
+.cooking-counter {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+.cooking-nav-pill {
+  display: flex;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: var(--corner-radius-round);
+  padding: 4px;
+  gap: 2px;
+}
+.cooking-nav-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: none;
+  border-radius: var(--corner-radius-round);
+  color: var(--text-icon-on-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.cooking-nav-btn:active { background: rgba(255, 255, 255, 0.22); }
 .detail-footer { align-items: flex-end; }
 
 /* ---- Formulaire d'ajout / édition de recette ---- */
