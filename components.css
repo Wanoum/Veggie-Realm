@@ -562,6 +562,35 @@
 .nav-label { font-size: 14px; line-height: 120%; font-weight: 400; color: var(--text-icon-secondary); }
 .nav-btn.active .nav-label { font-weight: 500; color: var(--text-icon-accent); }
 
+/* Bouton réglages : accès direct, plus de menu à révéler — flotte au-dessus
+   du contenu, pas dans #bottomNav (Compte n'est plus un onglet). */
+.nav-settings-btn {
+  position: fixed;
+  top: calc(var(--padding-horizontal-app) + env(safe-area-inset-top));
+  right: var(--padding-horizontal-app);
+  z-index: 100;
+}
+
+/* Bouton flottant "Ajouter" : remplace l'ancien onglet #navAdd, posé
+   au-dessus de #bottomNav comme #recipeSearchBar (.floating-search). */
+.fab-add {
+  position: fixed;
+  right: var(--padding-horizontal-app);
+  bottom: calc(var(--height-default) + 12px + env(safe-area-inset-bottom) + 8px);
+  width: 56px;
+  height: 56px;
+  border-radius: var(--corner-radius-round);
+  background: var(--interaction-primary);
+  color: var(--text-icon-on-primary);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  z-index: 90;
+}
+.fab-add .icon-svg { font-size: 26px; }
+
 /* ---- États vides ---- */
 .empty { text-align: center; color: var(--text-icon-secondary); padding: 40px 0; font-size: 14px; grid-column: 1 / -1; }
 .empty-state-large {
