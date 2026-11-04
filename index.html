@@ -447,7 +447,7 @@
 
 <div id="planningView" style="display:none;">
   <div id="planningViewTitleRow" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);position:relative;">
-    <h1 data-i18n="courses_title" style="margin:0;">Courses</h1>
+    <h1 style="margin:0;">Blou Mint</h1>
     <button type="button" class="icon-btn glass-surface" id="coursesMenuBtn" onclick="openCoursesActionsSheet()"><svg class="icon-svg"><use href="#icon-more-horizontal-outline"/></svg></button>
   </div>
 
@@ -464,7 +464,7 @@
 </div>
 
 <div id="cuisinerView" style="display:none;">
-  <h1 id="cuisinerViewTitle" data-i18n="cuisiner_title" style="margin:0 0 var(--gap-vertical-section);">Cuisiner</h1>
+  <h1 id="cuisinerViewTitle" style="margin:0 0 var(--gap-vertical-section);">Blou Mint</h1>
   <div id="cuisinerList"></div>
 </div>
 
@@ -4573,8 +4573,8 @@
                 ${ready ? `<div class="cuisiner-ready-badge">${t('cuisiner_ingredients_ready')}</div>` : ''}
               </div>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <button type="button" class="icon-pill-btn" data-mark-cooked-occ="${escapeHtml(o.id)}" data-mark-cooked-recipe="${r.id}" data-mark-cooked-variant="${escapeHtml(o.variantLabel || '')}" aria-label="${escapeHtml(t('mark_cooked'))}"><svg class="icon-svg"><use href="#icon-check-circle-outline"/></svg></button>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <button type="button" style="background:none;border:none;padding:0;" data-mark-cooked-occ="${escapeHtml(o.id)}" data-mark-cooked-recipe="${r.id}" data-mark-cooked-variant="${escapeHtml(o.variantLabel || '')}" aria-label="${escapeHtml(t('mark_cooked'))}"><span class="course-checkbox-visual"><svg class="icon-svg"><use href="#icon-check-outline"/></svg></span></button>
               <button type="button" class="icon-pill-btn icon-pill-btn-accent" data-cook-occ="${escapeHtml(o.id)}" data-cook-recipe="${r.id}" data-cook-variant="${escapeHtml(o.variantLabel || '')}" data-cook-servings="${o.servings}" aria-label="${escapeHtml(t('cuisiner_cook_btn'))}"><svg class="icon-svg"><use href="#icon-play-outline"/></svg></button>
             </div>
           </div>

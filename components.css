@@ -541,7 +541,13 @@
   display: flex;
   align-items: center;
   gap: var(--gap-xsmall);
-  margin-bottom: var(--gap-vertical-section);
+  background: var(--surface-high);
+  /* Marge négative = largeur de l'écran, pas celle du conteneur : annule le
+     padding horizontal du body pour que le fond s'étende bord à bord, et le
+     repose en padding propre pour que les 3 boutons restent bien espacés
+     des bords. */
+  margin: 0 calc(-1 * var(--padding-horizontal-app)) var(--gap-vertical-section);
+  padding: 6px var(--padding-horizontal-app);
 }
 .nav-btn {
   flex: 1;
