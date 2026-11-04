@@ -291,26 +291,28 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 .wizard-source-row > svg:last-child { color: var(--text-icon-default); font-size: 24px; flex-shrink: 0; }
 
 /* #formView a son propre padding-bottom (110px) calibré pour dégager
-   #wizardFooter, qui remplace #bottomNav pendant tout le wizard. La marge
-   négative annule le padding bas du body (calibré pour #bottomNav, caché
-   ici) qui s'ajoutait sinon en plus, créant un vide bien trop grand sous
-   les champs quand le contenu remplit l'écran. */
+   #wizardFooter, qui remplace le bouton bas pendant tout le wizard. La
+   marge négative annule le padding bas du body qui s'ajoutait sinon en
+   plus, créant un vide bien trop grand sous les champs quand le contenu
+   remplit l'écran. */
 #formView {
-  margin-bottom: calc(-1 * (var(--height-default) + 12px + env(safe-area-inset-bottom) + var(--padding-vertical-large)));
+  margin-bottom: calc(-1 * (env(safe-area-inset-bottom) + var(--padding-vertical-large)));
 }
 
 /* Sous-page de réglage du compte : même bascule que #formView, puisque
-   #bottomNav est masqué au profit de #accountEditFooter (bouton retour +
-   enregistrer fixe). */
+   #accountEditFooter (bouton retour + enregistrer fixe) remplace le bas
+   habituel. */
 #accountEditView {
-  margin-bottom: calc(-1 * (var(--height-default) + 12px + env(safe-area-inset-bottom) + var(--padding-vertical-large)));
+  margin-bottom: calc(-1 * (env(safe-area-inset-bottom) + var(--padding-vertical-large)));
 }
 
 /* Étape 2 du wizard ("Informations") : même structure que la fiche recette
    (encart plein écran sans marge en haut, contenu avec son propre padding
-   en dessous) — la marge négative annule le padding horizontal du body. */
+   en dessous) — la marge négative annule tout le padding haut du body (la
+   tab bar étant masquée à cette étape, voir goToWizardStep) ainsi que le
+   padding horizontal. */
 #wizardStep2 {
-  margin: calc(-1 * (var(--padding-horizontal-app) + env(safe-area-inset-top))) calc(-1 * var(--padding-horizontal-app)) 0;
+  margin: calc(-1 * (var(--height-default) + 12px + env(safe-area-inset-top) + var(--padding-horizontal-app))) calc(-1 * var(--padding-horizontal-app)) 0;
 }
 .form-photo-hero {
   width: 100%;

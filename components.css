@@ -20,7 +20,7 @@
    geste. Le bas n'est pas touché (chaque page gère sa propre marge basse,
    ou compte sur celle du body si elle n'a pas de footer fixe). */
 .page-fullbleed {
-  margin: calc(-1 * (var(--padding-horizontal-app) + env(safe-area-inset-top))) calc(-1 * var(--padding-horizontal-app)) 0;
+  margin: calc(-1 * (var(--height-default) + 12px + env(safe-area-inset-top) + var(--padding-horizontal-app))) calc(-1 * var(--padding-horizontal-app)) 0;
   padding-top: calc(var(--padding-horizontal-app) + env(safe-area-inset-top));
   padding-left: var(--padding-horizontal-app);
   padding-right: var(--padding-horizontal-app);
@@ -34,7 +34,7 @@
    bon — c'est l'effacement qui causait la marge verte visible autour de
    la fiche, reproductible même hors PWA. */
 .detail-view-fullbleed {
-  margin: calc(-1 * (var(--padding-horizontal-app) + env(safe-area-inset-top))) calc(-1 * var(--padding-horizontal-app)) 0;
+  margin: calc(-1 * (var(--height-default) + 12px + env(safe-area-inset-top) + var(--padding-horizontal-app))) calc(-1 * var(--padding-horizontal-app)) 0;
 }
 
 /* ---- Boutons ---- */
@@ -525,10 +525,10 @@
    dans un <span> avec leur libellé et donc non ciblées ici. */
 .settings-row > svg { color: var(--text-icon-default); font-size: 14px; }
 
-/* ---- Navigation basse ---- */
+/* ---- Tab bar (haut) ---- */
 #bottomNav {
   position: fixed;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
   display: flex;
@@ -536,8 +536,8 @@
   gap: var(--gap-xsmall);
   min-height: var(--height-default);
   background: var(--surface-high);
-  border-top: 1px solid var(--border-divider);
-  padding: 6px var(--padding-horizontal-app) calc(6px + env(safe-area-inset-bottom));
+  border-bottom: 1px solid var(--border-divider);
+  padding: calc(6px + env(safe-area-inset-top)) var(--padding-horizontal-app) 6px;
   z-index: 100;
 }
 .nav-btn {
@@ -562,21 +562,22 @@
 .nav-label { font-size: 14px; line-height: 120%; font-weight: 400; color: var(--text-icon-secondary); }
 .nav-btn.active .nav-label { font-weight: 500; color: var(--text-icon-accent); }
 
-/* Bouton réglages : accès direct, plus de menu à révéler — flotte au-dessus
-   du contenu, pas dans #bottomNav (Compte n'est plus un onglet). */
+/* Bouton réglages : accès direct, plus de menu à révéler — flotte sous la
+   tab bar #bottomNav (Compte n'est plus un onglet), aligné avec le début
+   du contenu. */
 .nav-settings-btn {
   position: fixed;
-  top: calc(var(--padding-horizontal-app) + env(safe-area-inset-top));
+  top: calc(var(--height-default) + 12px + env(safe-area-inset-top) + var(--padding-horizontal-app));
   right: var(--padding-horizontal-app);
   z-index: 100;
 }
 
-/* Bouton flottant "Ajouter" : remplace l'ancien onglet #navAdd, posé
-   au-dessus de #bottomNav comme #recipeSearchBar (.floating-search). */
+/* Bouton flottant "Ajouter" : remplace l'ancien onglet #navAdd, flotte en
+   bas (la tab bar étant désormais en haut, voir #bottomNav). */
 .fab-add {
   position: fixed;
   right: var(--padding-horizontal-app);
-  bottom: calc(var(--height-default) + 12px + env(safe-area-inset-bottom) + 8px);
+  bottom: calc(env(safe-area-inset-bottom) + var(--padding-vertical-large));
   width: 56px;
   height: 56px;
   border-radius: var(--corner-radius-round);
