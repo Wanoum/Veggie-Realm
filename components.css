@@ -20,7 +20,7 @@
    geste. Le bas n'est pas touché (chaque page gère sa propre marge basse,
    ou compte sur celle du body si elle n'a pas de footer fixe). */
 .page-fullbleed {
-  margin: calc(-1 * (var(--height-default) + 12px + env(safe-area-inset-top) + var(--padding-horizontal-app))) calc(-1 * var(--padding-horizontal-app)) 0;
+  margin: calc(-1 * (var(--padding-horizontal-app) + env(safe-area-inset-top))) calc(-1 * var(--padding-horizontal-app)) 0;
   padding-top: calc(var(--padding-horizontal-app) + env(safe-area-inset-top));
   padding-left: var(--padding-horizontal-app);
   padding-right: var(--padding-horizontal-app);
@@ -34,7 +34,7 @@
    bon — c'est l'effacement qui causait la marge verte visible autour de
    la fiche, reproductible même hors PWA. */
 .detail-view-fullbleed {
-  margin: calc(-1 * (var(--height-default) + 12px + env(safe-area-inset-top) + var(--padding-horizontal-app))) calc(-1 * var(--padding-horizontal-app)) 0;
+  margin: calc(-1 * (var(--padding-horizontal-app) + env(safe-area-inset-top))) calc(-1 * var(--padding-horizontal-app)) 0;
 }
 
 /* ---- Boutons ---- */
@@ -525,24 +525,20 @@
    dans un <span> avec leur libellé et donc non ciblées ici. */
 .settings-row > svg { color: var(--text-icon-default); font-size: 14px; }
 
-/* ---- Tab bar (haut) ---- */
+/* ---- Tab bar ---- */
+/* En flux normal (plus fixe) : un seul élément #bottomNav partagé par les
+   3 écrans, déplacé juste après le titre de l'écran actif à chaque
+   affichage (voir placeAndShowNav dans index.html) plutôt qu'épinglé en
+   haut de l'écran. */
 #bottomNav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
   display: flex;
   align-items: center;
   gap: var(--gap-xsmall);
-  min-height: var(--height-default);
-  background: var(--surface-high);
-  border-bottom: 1px solid var(--border-divider);
-  padding: calc(6px + env(safe-area-inset-top)) var(--padding-horizontal-app) 6px;
-  z-index: 100;
+  margin-bottom: var(--gap-vertical-section);
 }
 .nav-btn {
   flex: 1;
-  height: 100%;
+  height: var(--height-default);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -562,18 +558,17 @@
 .nav-label { font-size: 14px; line-height: 120%; font-weight: 400; color: var(--text-icon-secondary); }
 .nav-btn.active .nav-label { font-weight: 500; color: var(--text-icon-accent); }
 
-/* Bouton réglages : accès direct, plus de menu à révéler — flotte sous la
-   tab bar #bottomNav (Compte n'est plus un onglet), aligné avec le début
-   du contenu. */
+/* Bouton réglages : accès direct, plus de menu à révéler — flotte au-dessus
+   du contenu, pas dans #bottomNav (Compte n'est plus un onglet). */
 .nav-settings-btn {
   position: fixed;
-  top: calc(var(--height-default) + 12px + env(safe-area-inset-top) + var(--padding-horizontal-app));
+  top: calc(var(--padding-horizontal-app) + env(safe-area-inset-top));
   right: var(--padding-horizontal-app);
   z-index: 100;
 }
 
 /* Bouton flottant "Ajouter" : remplace l'ancien onglet #navAdd, flotte en
-   bas (la tab bar étant désormais en haut, voir #bottomNav). */
+   bas de l'écran. */
 .fab-add {
   position: fixed;
   right: var(--padding-horizontal-app);

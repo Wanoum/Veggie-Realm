@@ -308,11 +308,9 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 
 /* Étape 2 du wizard ("Informations") : même structure que la fiche recette
    (encart plein écran sans marge en haut, contenu avec son propre padding
-   en dessous) — la marge négative annule tout le padding haut du body (la
-   tab bar étant masquée à cette étape, voir goToWizardStep) ainsi que le
-   padding horizontal. */
+   en dessous) — la marge négative annule le padding horizontal du body. */
 #wizardStep2 {
-  margin: calc(-1 * (var(--height-default) + 12px + env(safe-area-inset-top) + var(--padding-horizontal-app))) calc(-1 * var(--padding-horizontal-app)) 0;
+  margin: calc(-1 * (var(--padding-horizontal-app) + env(safe-area-inset-top))) calc(-1 * var(--padding-horizontal-app)) 0;
 }
 .form-photo-hero {
   width: 100%;

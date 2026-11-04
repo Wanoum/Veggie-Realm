@@ -158,12 +158,10 @@ body {
   margin: 0;
   min-height: 100vh;
   min-height: 100dvh;
-  /* Haut : dégage la tab bar fixe (hauteur var(--height-default) + son
-     propre padding vertical de 6px/6px) puis ajoute l'espace habituel
-     avant le titre (padding-horizontal-app). Bas : juste l'espace demandé
-     une fois le contenu terminé (padding-vertical-large), la nav n'étant
-     plus en bas. */
-  padding: calc(var(--height-default) + 12px + env(safe-area-inset-top) + var(--padding-horizontal-app)) var(--padding-horizontal-app) calc(env(safe-area-inset-bottom) + var(--padding-vertical-large));
+  /* La tab bar (#bottomNav) est désormais en flux normal, insérée après le
+     titre de chaque écran (voir placeAndShowNav dans index.html) plutôt que
+     fixe : elle occupe son propre espace, pas besoin de l'en réserver ici. */
+  padding: calc(var(--padding-horizontal-app) + env(safe-area-inset-top)) var(--padding-horizontal-app) calc(env(safe-area-inset-bottom) + var(--padding-vertical-large));
 }
 .serif { font-family: 'Krylon', Georgia, serif; }
 h1 { font-family: 'Krylon', Georgia, serif; font-size: 48px; line-height: 100%; font-weight: 400; margin: 0 0 var(--gap-vertical-section); color: var(--text-icon-default); }
