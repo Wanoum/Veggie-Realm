@@ -442,6 +442,13 @@
 .floating-search input:focus { outline: none; }
 .floating-search input::placeholder { color: var(--text-icon-default); }
 
+/* Recherche de Choisir : même bas et même hauteur que .fab-add (juste à
+   côté) pour que les deux soient centrés sur le même axe horizontal. */
+#recipeSearchBar {
+  height: 56px;
+  bottom: calc(env(safe-area-inset-bottom) + var(--padding-vertical-large));
+}
+
 /* ---- Champs de formulaire ---- */
 .field-label { display:block; font-size:14px; color:var(--text-icon-secondary); margin:14px 0 4px; }
 .field-input {
@@ -686,6 +693,32 @@
   line-height: 1.15;
   font-weight: 700;
   color: var(--text-icon-on-primary);
+}
+
+/* Card de la grille "Mes recettes" (Choisir, #cards, 2 colonnes) : photo
+   carrée au-dessus, titre en dessous en flux normal — contrairement à
+   .card-v2 (pleine largeur), le titre superposé sur la moitié de la photo
+   serait illisible une fois la carte réduite à la moitié de l'écran. */
+.card-grid { cursor: pointer; }
+.card-grid-photo {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--corner-radius-xlarge) var(--corner-radius-default) var(--corner-radius-xlarge) var(--corner-radius-default);
+  overflow: hidden;
+  background: var(--surface-low);
+}
+.card-grid-photo img { width: 100%; height: 100%; object-fit: cover; }
+.card-grid-title {
+  margin: 8px 0 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--text-icon-default);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* ---- Autocomplete (suggestions d'ingrédients) ---- */

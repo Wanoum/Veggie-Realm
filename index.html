@@ -163,6 +163,8 @@
     <div id="plannedRecipeList"></div>
   </div>
 
+  <h2 data-i18n="my_recipes_title" style="margin:0 0 12px;">Mes recettes</h2>
+
   <div id="tagFilters" class="tag-filters"></div>
 
   <div id="savedRecipesSection" style="display:none;margin-bottom:20px;">
@@ -170,7 +172,7 @@
   </div>
 
   <p class="count" id="count" data-i18n="home_loading">Chargement...</p>
-  <div id="cards" style="display:grid;grid-template-columns:1fr;gap:var(--gap-large);"></div>
+  <div id="cards" style="display:grid;grid-template-columns:repeat(2, 1fr);gap:var(--gap-large);"></div>
 </div>
 
 <div id="edgeSwipeScrim" style="display:none;position:fixed;inset:0;min-height:-webkit-fill-available;height:var(--app-height, 100dvh);background:rgba(0,0,0,0.35);z-index:290;pointer-events:none;"></div>
@@ -603,6 +605,8 @@
       home_empty_subtitle: 'Ajoute ta première recette pour commencer.',
       no_results: 'Aucun résultat pour ces critères.',
       search_placeholder: 'Recherche',
+      my_recipes_title: 'Mes recettes',
+      cuisiner_cooked_title: 'Déjà cuisiné',
       courses_title: 'Courses', tab_planned: 'Repas prévus', tab_list: 'Liste',
       suggestions_title: 'Suggestions',
       sort_by_rayon: 'Par rayon', sort_by_recipe: 'Par recette', sort_prefix: 'Trier :',
@@ -734,6 +738,8 @@
       home_empty_subtitle: 'Add your first recipe to get started.',
       no_results: 'No results for these criteria.',
       search_placeholder: 'Search',
+      my_recipes_title: 'My recipes',
+      cuisiner_cooked_title: 'Already cooked',
       courses_title: 'Groceries', tab_planned: 'Planned meals', tab_list: 'List',
       suggestions_title: 'Suggestions',
       sort_by_rayon: 'By aisle', sort_by_recipe: 'By recipe', sort_prefix: 'Sort:',
@@ -1114,7 +1120,7 @@
 
     if (!recipesLoaded) {
       cardsEl.innerHTML = Array.from({ length: 4 }).map(() => `
-        <div class="card-v2 skeleton-block"></div>
+        <div class="card-grid-photo skeleton-block"></div>
       `).join('');
       return;
     }
@@ -1137,19 +1143,13 @@
     cardsEl.innerHTML = filteredIndices.map(i => {
       const r = recipes[i];
       return `
-      <div class="card-v2" onclick="openRecipeDetail(${i})">
-        <div class="card-v2-photo">
+      <div class="card-grid" onclick="openRecipeDetail(${i})">
+        <div class="card-grid-photo">
           ${safeUrl(r.photo_url)
             ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML=emptyPhotoHtml('${r.id}','big','background:var(--grey-700);')" />`
             : emptyPhotoHtml(r.id, 'big', 'background:var(--grey-700);')}
         </div>
-        <div class="card-v2-textwrap">
-          <!-- Flou d'arrière-plan progressif désactivé pour le moment (voir progressiveBlurLayersHtml, commentée plus haut) -->
-          <div class="card-v2-gradient"></div>
-        </div>
-        <div class="card-v2-content">
-          <h3>${escapeHtml(r.title)}</h3>
-        </div>
+        <h3 class="card-grid-title">${escapeHtml(r.title)}</h3>
       </div>
     `;
     }).join('');
@@ -4348,6 +4348,13 @@
   // personnes plutôt que de dupliquer l'entrée.
   let mealPlan = {};
 
+  // "Déjà cuisiné" sur Cuisiner : une recette marquée cuisinée disparaît de
+  // mealPlan (voir markOccurrenceCookedCore), donc impossible de continuer à
+  // l'afficher depuis là — on garde un instantané juste pour l'affichage,
+  // propre à la session (pas persisté), vidé seulement par l'annulation
+  // depuis le toast. [{ recipeId, occurrenceId, variantLabel, servings, title, photo_url }]
+  let cuisinerCooked = [];
+
   async function loadMealPlan() {
     const { data, error } = await sb.from('meal_plan').select('*');
     if (error) { console.error(error); return; }
@@ -4535,12 +4542,10 @@
     planned.sort((a, b) => a.title.localeCompare(b.title, 'fr'));
 
     const listEl = document.getElementById('cuisinerList');
-    if (planned.length === 0) {
-      listEl.innerHTML = `<div class="empty">${t('cuisiner_empty')}</div>`;
-      return;
-    }
 
-    listEl.innerHTML = planned.map(r => {
+    const plannedHtml = planned.length === 0
+      ? `<div class="empty">${t('cuisiner_empty')}</div>`
+      : planned.map(r => {
       const occs = getOccurrences(r.id);
       const versionOrder = recipeVersionLabels(r);
       const sortedOccs = [...occs].sort((a, b) => versionOrder.indexOf(a.variantLabel) - versionOrder.indexOf(b.variantLabel));
@@ -4581,6 +4586,24 @@
       // wireframes Cuisiner-detail.
       return sortedOccs.length > 1 ? `<div class="settings-list">${rows}</div>` : rows;
     }).join('');
+
+    const cookedHtml = cuisinerCooked.length === 0 ? '' : `
+      <h2 style="margin-top:var(--gap-vertical-section);">${t('cuisiner_cooked_title')}</h2>
+      ${cuisinerCooked.map(entry => `
+        <div class="plan-recipe-row">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:72px;height:72px;border-radius:var(--corner-radius-large);overflow:hidden;background:var(--surface-lowest);flex-shrink:0;display:flex;align-items:center;justify-content:center;opacity:0.5;">
+              ${safeUrl(entry.photo_url)
+                ? `<img src="${escapeHtml(safeUrl(entry.photo_url))}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />`
+                : emptyPhotoHtml(entry.recipeId, 'small')}
+            </div>
+            <div class="plan-recipe-name" style="text-decoration:line-through;color:var(--text-icon-secondary);">${escapeHtml(entry.title)}</div>
+          </div>
+        </div>
+      `).join('')}
+    `;
+
+    listEl.innerHTML = plannedHtml + cookedHtml;
 
     listEl.querySelectorAll('[data-cook-occ]').forEach(btn => {
       btn.onclick = () => {
@@ -4749,7 +4772,7 @@
   // (markOccurrenceCooked, depuis Choisir) et le bouton direct sur une ligne
   // de Cuisiner (markOccurrenceCookedDirect) — même action, même toast
   // Annuler, juste la source de l'occurrence à retirer qui diffère.
-  async function markOccurrenceCookedCore(recipeId, occurrenceId, restore) {
+  async function markOccurrenceCookedCore(recipeId, occurrenceId, restore, snapshot) {
     await deleteMealPlanOccurrence(occurrenceId);
     let engagementEventId = null;
     const { data, error } = await sb.from('recipe_engagement_events')
@@ -4759,6 +4782,9 @@
       engagementEventId = data.id;
       cookCounts[recipeId] = (cookCounts[recipeId] || 0) + 1;
     }
+
+    const cookedEntry = { recipeId, occurrenceId, variantLabel: restore.variantLabel, servings: restore.servings, title: snapshot.title, photo_url: snapshot.photo_url };
+    cuisinerCooked.push(cookedEntry);
 
     renderPlanningRecipes();
     renderCuisinerList();
@@ -4770,6 +4796,7 @@
           await sb.from('recipe_engagement_events').delete().eq('id', engagementEventId);
           cookCounts[recipeId] = Math.max(0, (cookCounts[recipeId] || 1) - 1);
         }
+        cuisinerCooked = cuisinerCooked.filter(e => e !== cookedEntry);
         renderPlanningRecipes();
         renderCuisinerList();
       }
@@ -4780,9 +4807,10 @@
   async function markOccurrenceCooked() {
     const st = planSheetState;
     if (!st || st.mode !== 'edit') return;
+    const r = allRecipesForPlanning().find(x => x.id === st.recipeId);
     const restore = { variantLabel: st.selectedVersion, servings: st.servings };
     closePlanOccurrenceSheet();
-    await markOccurrenceCookedCore(st.recipeId, st.occurrenceId, restore);
+    await markOccurrenceCookedCore(st.recipeId, st.occurrenceId, restore, { title: r ? r.title : '', photo_url: r ? r.photo_url : null });
   }
 
   // Depuis Cuisiner : marquer directement une occurrence comme cuisinée sans
@@ -4790,7 +4818,8 @@
   async function markOccurrenceCookedDirect(recipeId, occurrenceId, variantLabel) {
     const occ = getOccurrences(recipeId).find(o => o.id === occurrenceId);
     if (!occ) return;
-    await markOccurrenceCookedCore(recipeId, occurrenceId, { variantLabel, servings: occ.servings });
+    const r = recipes.find(x => x.id === recipeId) || (savedRecipes.find(row => row.recipe.id === recipeId) || {}).recipe;
+    await markOccurrenceCookedCore(recipeId, occurrenceId, { variantLabel, servings: occ.servings }, { title: r ? r.title : '', photo_url: r ? r.photo_url : null });
   }
 
   // ---- Bottom sheet d'édition manuelle d'une quantité de la liste de courses ----
