@@ -354,21 +354,19 @@
 
 <nav id="bottomNav" style="display:none;">
   <button id="navHome" class="nav-btn active">
-    <span class="nav-icon-wrap"><svg class="icon-svg nav-icon" data-outline="icon-recipes-outline" data-filled="icon-recipes-filled"><use href="#icon-recipes-outline"/></svg></span>
+    <span class="nav-seg"></span>
     <span class="nav-label" data-i18n="nav_choose">Choisir</span>
   </button>
   <button id="navPlanning" class="nav-btn">
-    <span class="nav-icon-wrap"><svg class="icon-svg nav-icon" data-outline="icon-calendar-outline" data-filled="icon-calendar-filled"><use href="#icon-calendar-outline"/></svg></span>
+    <span class="nav-seg"></span>
     <span class="nav-label" data-i18n="nav_buy">Acheter</span>
   </button>
   <button id="navCuisiner" class="nav-btn">
-    <span class="nav-icon-wrap"><svg class="icon-svg nav-icon" data-outline="icon-cooking-time-outline" data-filled="icon-cooking-time-filled"><use href="#icon-cooking-time-outline"/></svg></span>
+    <span class="nav-seg"></span>
     <span class="nav-label" data-i18n="nav_cook">Cuisiner</span>
   </button>
 </nav>
-<button id="navAccount" class="icon-btn glass-surface nav-settings-btn" style="display:none;" data-i18n-aria-label="nav_settings">
-  <svg class="icon-svg icon"><use href="#icon-settings-outline"/></svg>
-</button>
+<button id="navAccount" class="settings-pill-btn nav-settings-btn" style="display:none;" data-i18n="nav_settings">Réglages</button>
 <button id="navAdd" class="fab-add" style="display:none;" data-i18n-aria-label="nav_add">
   <svg class="icon-svg"><use href="#icon-create-outline"/></svg>
 </button>
@@ -1794,12 +1792,6 @@
     if (wakeLock) { wakeLock.release(); wakeLock = null; }
   }
 
-  function updateNavIcons() {
-    document.querySelectorAll('.nav-btn .nav-icon').forEach(icon => {
-      icon.querySelector('use').setAttribute('href', `#${icon.dataset.outline}`);
-    });
-  }
-
   function hideAllViews() {
     discardAbandonedUploads();
     document.body.style.background = '';
@@ -1922,7 +1914,6 @@
     document.getElementById('navAccount').style.display = 'flex';
     document.getElementById('navAdd').style.display = 'flex';
     document.getElementById('navHome').classList.add('active');
-    updateNavIcons();
     renderList();
     renderPlanningRecipes();
     sessionStorage.setItem('lastView', 'home');
@@ -1939,7 +1930,6 @@
     window.scrollTo(0, 0);
     hideAllViews();
     document.getElementById('formView').style.display = 'block';
-    updateNavIcons();
     resetForm();
     clearWizardDraft();
     goToWizardStep(1);
@@ -1953,7 +1943,6 @@
     window.scrollTo(0, 0);
     hideAllViews();
     document.getElementById('formView').style.display = 'block';
-    updateNavIcons();
     resetForm();
     editingId = draft.editingId || null;
     originalPhotoUrlForSession = draft.originalPhotoUrlForSession || null;
@@ -2258,7 +2247,6 @@
     document.getElementById('navAccount').style.display = 'flex';
     document.getElementById('navAdd').style.display = 'flex';
     document.getElementById('navPlanning').classList.add('active');
-    updateNavIcons();
     renderCoursesList();
     sessionStorage.setItem('lastView', 'planning');
   }
@@ -2271,7 +2259,6 @@
     document.getElementById('navAccount').style.display = 'flex';
     document.getElementById('navAdd').style.display = 'flex';
     document.getElementById('navCuisiner').classList.add('active');
-    updateNavIcons();
     renderCuisinerList();
     sessionStorage.setItem('lastView', 'cuisiner');
   }
