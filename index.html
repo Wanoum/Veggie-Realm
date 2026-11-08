@@ -921,13 +921,14 @@
   // qu'on ait à y penser, contrairement à une valeur tapée à la main qui
   // peut être oubliée ou mal recopiée.
   {
-    // jj/mm/aaaa plutôt que le format dépendant de la locale du navigateur
-    // que renvoie directement document.lastModified (ex: m/j/aaaa en
-    // anglais US) — toujours lisible pareil, quel que soit l'appareil.
+    // jj/mm/aaaa hh:mm plutôt que le format dépendant de la locale du
+    // navigateur que renvoie directement document.lastModified (ex:
+    // m/j/aaaa en anglais US) — toujours lisible pareil, quel que soit
+    // l'appareil.
     const buildDate = new Date(document.lastModified);
     const pad2 = n => String(n).padStart(2, '0');
     document.getElementById('appBuildTime').textContent =
-      `${pad2(buildDate.getDate())}/${pad2(buildDate.getMonth() + 1)}/${buildDate.getFullYear()}`;
+      `${pad2(buildDate.getDate())}/${pad2(buildDate.getMonth() + 1)}/${buildDate.getFullYear()} ${pad2(buildDate.getHours())}:${pad2(buildDate.getMinutes())}`;
   }
 
   // Champ de recherche flottant : "hug" sur le texte du placeholder. Deux
