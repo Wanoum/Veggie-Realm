@@ -614,10 +614,10 @@
   font-size: 12px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--text-icon-secondary);
 }
-.nav-btn.active .nav-label { font-weight: 500; color: var(--interaction-inverted); }
+.nav-btn.active .nav-label { color: var(--interaction-inverted); }
 
 /* Bouton réglages : texte Plex Mono majuscule comme sur Variant27, mais
    plein (fond vert, texte blanc — retour du 2026-11-08) plutôt que
