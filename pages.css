@@ -7,6 +7,16 @@
    planning, formulaire d'ajout).
    ========================================================================== */
 
+/* ---- Choisir (accueil) ---- */
+/* "Blou Mint" est le seul h1 de l'app qui est aussi le logo — contrairement
+   aux titres d'écran classiques ("Compte", "Nouvelle recette"...), qui
+   restent droits. Italique + resserré, repris de l'exploration Variant27
+   (où le même choix a été fait directement sur ce titre). */
+#listViewTitle {
+  font-style: italic;
+  letter-spacing: 1px;
+}
+
 /* ---- Fiche recette ---- */
 .detail-photo {
   position: fixed;

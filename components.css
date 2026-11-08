@@ -88,6 +88,23 @@
   pointer-events: none;
 }
 
+/* ---- Bouton texte, action secondaire ----
+   "Réserver le soulignement à la navigation [...] bouton texte non
+   souligné pour une action secondaire" (retour d'audit figé dans
+   CLAUDE.md) : une pastille colorée avec icône (ex: "modifier" sur un
+   repas prévu, avant ce changement) se lit comme une action à elle seule,
+   pas une variante plus discrète d'un simple texte. */
+.text-link-action {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-icon-accent);
+  flex-shrink: 0;
+}
+
 /* ---- Repère de section (eyebrow discret au-dessus d'une liste) ----
    Un <h2> de section ("Repas prévus", "Mes recettes"...) a la même taille/
    couleur que les titres du contenu en dessous (titre de recette sur une
@@ -547,17 +564,16 @@
    3 écrans, déplacé juste après le titre de l'écran actif à chaque
    affichage (voir placeAndShowNav dans index.html) plutôt qu'épinglé en
    haut de l'écran. */
+/* Retour du 2026-11-08 : "la tab bar en fond, qui n'existe pas dans le
+   design" — V27 n'a aucune bande de fond sous son équivalent (step bar),
+   juste le fond de la page. Plus de fond ni de débord bord-à-bord (qui
+   n'avait de sens que pour ce fond) : #bottomNav reste dans le flux normal
+   de la page, padding simple. */
 #bottomNav {
   display: flex;
   align-items: center;
   gap: var(--gap-xsmall);
-  background: var(--surface-high);
-  /* Marge négative = largeur de l'écran, pas celle du conteneur : annule le
-     padding horizontal du body pour que le fond s'étende bord à bord, et le
-     repose en padding propre pour que les 3 boutons restent bien espacés
-     des bords. */
-  margin: 0 calc(-1 * var(--padding-horizontal-app)) var(--gap-vertical-section);
-  padding: 6px var(--padding-horizontal-app);
+  margin: 0 0 var(--gap-vertical-section);
 }
 .nav-btn {
   flex: 1;
