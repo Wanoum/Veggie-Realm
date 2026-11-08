@@ -88,6 +88,21 @@
   pointer-events: none;
 }
 
+/* ---- Repère de section (eyebrow discret au-dessus d'une liste) ----
+   Un <h2> de section ("Repas prévus", "Mes recettes"...) a la même taille/
+   couleur que les titres du contenu en dessous (titre de recette sur une
+   carte, par ex.) — les deux se valent visuellement alors que le repère de
+   section devrait s'effacer derrière le contenu qu'il introduit. Réutilise
+   .text-small-medium (déjà définie, jamais encore appliquée) + le token de
+   couleur "secondaire" existant plutôt que d'en ajouter un nouveau. */
+.section-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 120%;
+  font-weight: 500;
+  color: var(--text-icon-secondary);
+}
+
 /* ---- Pastille d'action colorée (icône seule, fond teinté arrondi) ----
    Un seul composant, décliné en 2 variantes de couleur : danger (supprimer)
    et accent (modifier/ajouter) — utilisé aussi bien pour une icône dans une
