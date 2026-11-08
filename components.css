@@ -20,8 +20,8 @@
    geste. Le bas n'est pas touché (chaque page gère sa propre marge basse,
    ou compte sur celle du body si elle n'a pas de footer fixe). */
 .page-fullbleed {
-  margin: calc(-1 * (var(--padding-horizontal-app) + env(safe-area-inset-top))) calc(-1 * var(--padding-horizontal-app)) 0;
-  padding-top: calc(var(--padding-horizontal-app) + env(safe-area-inset-top));
+  margin: calc(-1 * (var(--padding-horizontal-app) + env(safe-area-inset-top) + 8px)) calc(-1 * var(--padding-horizontal-app)) 0;
+  padding-top: calc(var(--padding-horizontal-app) + env(safe-area-inset-top) + 8px);
   padding-left: var(--padding-horizontal-app);
   padding-right: var(--padding-horizontal-app);
 }
@@ -34,7 +34,7 @@
    bon — c'est l'effacement qui causait la marge verte visible autour de
    la fiche, reproductible même hors PWA. */
 .detail-view-fullbleed {
-  margin: calc(-1 * (var(--padding-horizontal-app) + env(safe-area-inset-top))) calc(-1 * var(--padding-horizontal-app)) 0;
+  margin: calc(-1 * (var(--padding-horizontal-app) + env(safe-area-inset-top) + 8px)) calc(-1 * var(--padding-horizontal-app)) 0;
 }
 
 /* ---- Boutons ---- */

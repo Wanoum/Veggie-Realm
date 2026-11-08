@@ -6,16 +6,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 /* IBM Plex Mono (Display Numeric, Quantity Mono) */
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap');
-
-/* @import doit précéder toute autre règle (sauf @charset) — @font-face
-   passe donc après, sans quoi les imports ci-dessus sont ignorés par les
-   navigateurs stricts (Safari/WebKit) et les polices retombent sur leur
-   fallback (monospace générique pour IBM Plex Mono par exemple). */
-@font-face {
-  font-family: 'Krylon';
-  src: url('Krylon.otf') format('opentype');
-  font-display: swap;
-}
+/* Spectral (H1 — remplace Krylon, reprise de Variant27) */
+@import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,500;1,600&display=swap');
 
 :root {
   /* ---- Primitives ---- */
@@ -93,7 +85,7 @@
 
 /* ---- Text styles ----
    Format : taille / line-height (% de la taille)
-   H1              : 40px, 100%   — Krylon
+   H1              : 40px, 100%   — Spectral
    Display Numeric : 40px, 40%    — IBM Plex Mono
    Headline        : 20px, 100%   — Inter, 600
    Body            : 16px, 120%   — Inter, 400
@@ -106,7 +98,7 @@
    ce qui écraserait le texte. On applique 120% comme les autres styles Inter
    pour rester lisible — à corriger si une autre valeur était voulue.
 */
-.text-h1 { font-family: 'Krylon', Georgia, serif; font-size: 48px; line-height: 100%; font-weight: 400; }
+.text-h1 { font-family: 'Spectral', Georgia, serif; font-size: 48px; line-height: 100%; font-weight: 400; }
 .text-display-numeric { font-family: 'IBM Plex Mono', monospace; font-size: 40px; line-height: 40%; font-weight: 400; }
 .text-headline { font-family: 'Inter', sans-serif; font-size: 24px; line-height: 100%; font-weight: 600; }
 .text-body { font-family: 'Inter', sans-serif; font-size: 18px; line-height: 120%; font-weight: 400; }
@@ -161,9 +153,9 @@ body {
   /* La tab bar (#bottomNav) est désormais en flux normal, insérée après le
      titre de chaque écran (voir placeAndShowNav dans index.html) plutôt que
      fixe : elle occupe son propre espace, pas besoin de l'en réserver ici. */
-  padding: calc(var(--padding-horizontal-app) + env(safe-area-inset-top)) var(--padding-horizontal-app) calc(env(safe-area-inset-bottom) + var(--padding-vertical-large));
+  padding: calc(var(--padding-horizontal-app) + env(safe-area-inset-top) + 8px) var(--padding-horizontal-app) calc(env(safe-area-inset-bottom) + var(--padding-vertical-large));
 }
-.serif { font-family: 'Krylon', Georgia, serif; }
-h1 { font-family: 'Krylon', Georgia, serif; font-size: 48px; line-height: 100%; font-weight: 400; margin: 0 0 var(--gap-vertical-section); color: var(--text-icon-default); }
+.serif { font-family: 'Spectral', Georgia, serif; }
+h1 { font-family: 'Spectral', Georgia, serif; font-size: 48px; line-height: 100%; font-weight: 400; margin: 0 0 var(--gap-vertical-section); color: var(--text-icon-default); }
 h2 { font-family: 'Inter', sans-serif; font-size: 24px; line-height: 120%; font-weight: 600; margin: var(--gap-vertical-section) 0 12px; color: var(--text-icon-default); }
 .count { font-size: 14px; color: var(--text-icon-secondary); margin-bottom: 14px; }
