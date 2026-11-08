@@ -167,10 +167,6 @@
 
   <div id="tagFilters" class="tag-filters"></div>
 
-  <div id="savedRecipesSection" style="display:none;margin-bottom:20px;">
-    <button type="button" onclick="showSavedRecipes()" style="display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;">Recettes partagées <svg class="icon-svg" style="font-size:20px;text-decoration:none;"><use href="#icon-chevron-right-outline"/></svg></button>
-  </div>
-
   <p class="count" id="count" data-i18n="home_loading">Chargement...</p>
   <div id="cards" style="display:grid;grid-template-columns:repeat(2, 1fr);gap:var(--gap-large);"></div>
 </div>
@@ -596,7 +592,7 @@
       auth_submit: 'Se connecter', auth_submit_signup: "S'inscrire", auth_forgot: 'Mot de passe oublié ?',
       reset_title: 'Nouveau mot de passe', reset_subtitle: 'Choisis un nouveau mot de passe pour ton compte',
       reset_password_label: 'Nouveau mot de passe', reset_submit: 'Enregistrer le mot de passe',
-      saved_recipes_title: 'Recettes partagées',
+      saved_recipes_title: 'Recettes partagées', saved_recipes_chip: 'Partagées',
       home_loading: 'Chargement...',
       account_title: 'Compte',
       account_email: 'Email', account_pseudo: 'Pseudo', account_password: 'Mot de passe',
@@ -731,7 +727,7 @@
       auth_submit: 'Log in', auth_submit_signup: 'Sign up', auth_forgot: 'Forgot your password?',
       reset_title: 'New password', reset_subtitle: 'Choose a new password for your account',
       reset_password_label: 'New password', reset_submit: 'Save password',
-      saved_recipes_title: 'Shared recipes',
+      saved_recipes_title: 'Shared recipes', saved_recipes_chip: 'Shared',
       home_loading: 'Loading...',
       account_title: 'Account',
       account_email: 'Email', account_pseudo: 'Username', account_password: 'Password',
@@ -1077,16 +1073,21 @@
   let activeTagFilter = null;
   function renderTagFilters() {
     const container = document.getElementById('tagFilters');
+    const sharedChip = savedRecipes.length > 0
+      ? `<button type="button" class="filter-chip" data-shared="1"><svg class="icon-svg" style="font-size:18px;"><use href="#icon-share-outline"/></svg>${escapeHtml(t('saved_recipes_chip'))}</button>`
+      : '';
     container.innerHTML = MEAL_TYPES.map(mt => `
       <button type="button" class="filter-chip ${activeTagFilter === mt ? 'active' : ''}" data-tag="${mt}"><svg class="icon-svg" style="font-size:18px;"><use href="#${MEAL_TYPE_ICONS[mt]}"/></svg>${escapeHtml(mealTypeLabel(mt))}</button>
-    `).join('');
-    container.querySelectorAll('.filter-chip').forEach(chip => {
+    `).join('') + sharedChip;
+    container.querySelectorAll('.filter-chip[data-tag]').forEach(chip => {
       chip.onclick = () => {
         const tag = chip.dataset.tag;
         activeTagFilter = (activeTagFilter === tag) ? null : tag;
         renderList();
       };
     });
+    const shared = container.querySelector('[data-shared]');
+    if (shared) shared.onclick = showSavedRecipes;
   }
 
   function matchesQuery(r, query) {
@@ -5765,8 +5766,13 @@
     renderPlanningRecipes();
   }
 
+  // "Recettes partagées" vit maintenant comme chip dans #tagFilters (voir
+  // renderTagFilters), plus dans sa propre section à part — on relance
+  // juste ce rendu pour que la chip apparaisse/disparaisse une fois
+  // savedRecipes chargé (son nombre n'est pas connu au premier rendu de
+  // la grille, qui a lieu avant la fin de loadSavedRecipes).
   function renderSavedRecipesSection() {
-    document.getElementById('savedRecipesSection').style.display = savedRecipes.length === 0 ? 'none' : 'block';
+    renderTagFilters();
   }
 
   // ---- Point d'entrée ----

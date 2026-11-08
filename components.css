@@ -245,6 +245,12 @@
   gap: 4px;
   margin: 0 0 var(--gap-vertical-section);
 }
+/* .tag-filters a un nombre variable de chips (4 types de repas, + la chip
+   "Partagées" si l'utilisatrice a des recettes partagées) : défile plutôt
+   que force un flex:1 à 5 colonnes égales, trop étroit pour "Petit-déj"
+   comme pour "Partagées". */
+.tag-filters { overflow-x: auto; }
+.tag-filters .filter-chip { flex: 0 0 auto; }
 .subtab-btn, .filter-chip {
   flex: 1;
   height: 48px;
@@ -269,6 +275,10 @@
   border-radius: var(--corner-radius-round);
   font-weight: 500;
 }
+/* Retour du 2026-11-08 : "arrondir les angles à fond des chips" — pilule
+   complète même non actif, pas seulement à l'état actif (scope à
+   .filter-chip seul, .subtab-btn garde son rayon par défaut). */
+.filter-chip { border-radius: var(--corner-radius-round); }
 /* ---- Stepper (portions / quantité) ---- */
 .servings-stepper { display: flex; gap: 2px; }
 .servings-stepper button {
