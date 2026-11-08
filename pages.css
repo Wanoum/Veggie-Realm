@@ -501,15 +501,34 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 }
 
 /* ---- Planning ---- */
+/* Retour du 2026-11-08 : "reprends la ligne entre chaque recette" — trait
+   comme sur Variant27 (.entry::after), qui passe sous la miniature
+   (inset à sa largeur + l'écart) jusqu'au bord droit, sous le bouton
+   "modifier" compris (même choix que sur Variant27 : la ligne qui
+   s'arrêtait avant le bouton donnait l'impression de s'arrêter trop tôt).
+   Remplace l'espacement par margin (plus de ligne du tout) par le même
+   padding+trait que la liste de courses/entry list. */
 .plan-recipe-row {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: none;
   border: none;
   border-radius: 0;
-  margin-bottom: 16px;
+  padding: 12px 0;
 }
+.plan-recipe-row::after {
+  content: '';
+  position: absolute;
+  left: 84px;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--border-divider);
+}
+.plan-recipe-row:first-child { padding-top: 0; }
+.plan-recipe-row:last-child::after { display: none; }
 .plan-recipe-row .plan-recipe-name { font-size: 16px; font-weight: 500; }
 .plan-recipe-row .plan-recipe-tags { font-size: 14px; color: var(--text-icon-default); margin-top: 2px; }
 

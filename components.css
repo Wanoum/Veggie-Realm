@@ -789,7 +789,10 @@
 .card-grid-photo {
   position: relative;
   aspect-ratio: 1;
-  border-radius: var(--corner-radius-xlarge) var(--corner-radius-default) var(--corner-radius-xlarge) var(--corner-radius-default);
+  /* Retour du 2026-11-08 : "reprends le corner radius de la maquette" —
+     6px uniforme comme sur Variant27 (.card), plus l'alternance large/
+     défaut héritée d'avant cette série de retours. */
+  border-radius: 6px;
   overflow: hidden;
   background: var(--surface-low);
 }
@@ -797,30 +800,35 @@
 .card-grid-scrim {
   position: absolute;
   left: 0; right: 0; bottom: 0;
-  height: 60%;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.65), transparent);
+  height: 55%;
+  /* Teinté ink (interaction-inverted) plutôt que noir neutre, comme sur
+     Variant27 (.card .scrim) : reste dans la famille de couleurs de la
+     marque. */
+  background: linear-gradient(to top, rgba(41, 59, 46, 0.75), transparent);
   pointer-events: none;
 }
 .card-grid-badge,
 .card-grid-plus {
   position: absolute;
   top: 8px; right: 8px;
-  width: 28px; height: 28px;
   border-radius: var(--corner-radius-round);
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
 }
-.card-grid-badge { background: var(--interaction-inverted); color: var(--text-icon-on-primary); }
-.card-grid-badge svg, .card-grid-plus svg { font-size: 16px; }
-.card-grid-plus { background: var(--interaction-secondary); color: var(--interaction-inverted); }
+/* Tailles reprises telles quelles de Variant27 (.badge 22px, .plusBtn
+   26px — pas la même, volontairement). */
+.card-grid-badge { width: 22px; height: 22px; background: var(--interaction-inverted); color: var(--text-icon-on-primary); }
+.card-grid-badge svg { font-size: 12px; }
+.card-grid-plus { width: 26px; height: 26px; background: var(--interaction-secondary); color: var(--interaction-inverted); }
+.card-grid-plus svg { font-size: 14px; }
 .card-grid-title {
   position: absolute;
   left: 10px; right: 10px; bottom: 9px;
   margin: 0;
   font-family: 'Inter', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.25;
   font-weight: 600;
   color: var(--text-icon-on-primary);
