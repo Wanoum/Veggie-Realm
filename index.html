@@ -153,7 +153,9 @@
 </div>
 
 <div id="listView" style="display:none;">
-  <h1 id="listViewTitle">Blou Mint</h1>
+  <div id="listViewTitleRow" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);">
+    <h1 id="listViewTitle" style="margin:0;">Blou Mint</h1>
+  </div>
 
   <div id="plannedMealsSection" style="display:none;margin-bottom:var(--gap-vertical-section);">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -362,7 +364,7 @@
     <span class="nav-label" data-i18n="nav_cook">Cuisiner</span>
   </button>
 </nav>
-<button id="navAccount" class="settings-pill-btn nav-settings-btn" style="display:none;" data-i18n="nav_settings">Réglages</button>
+<button id="navAccount" class="settings-pill-btn" style="display:none;" data-i18n="nav_settings">Réglages</button>
 <button id="navAdd" class="fab-add" style="display:none;" data-i18n-aria-label="nav_add">
   <svg class="icon-svg"><use href="#icon-create-outline"/></svg>
 </button>
@@ -448,7 +450,9 @@
 <div id="planningView" style="display:none;">
   <div id="planningViewTitleRow" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);position:relative;">
     <h1 style="margin:0;">Blou Mint</h1>
-    <button type="button" class="icon-btn glass-surface" id="coursesMenuBtn" onclick="openCoursesActionsSheet()"><svg class="icon-svg"><use href="#icon-more-horizontal-outline"/></svg></button>
+    <div id="planningViewActions" style="display:flex;align-items:center;gap:8px;">
+      <button type="button" class="icon-btn glass-surface" id="coursesMenuBtn" onclick="openCoursesActionsSheet()"><svg class="icon-svg"><use href="#icon-more-horizontal-outline"/></svg></button>
+    </div>
   </div>
 
   <div id="coursesSortRow" style="display:none;margin-bottom:var(--gap-default);position:relative;">
@@ -464,7 +468,9 @@
 </div>
 
 <div id="cuisinerView" style="display:none;">
-  <h1 id="cuisinerViewTitle" style="margin:0 0 var(--gap-vertical-section);">Blou Mint</h1>
+  <div id="cuisinerViewTitleRow" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);">
+    <h1 id="cuisinerViewTitle" style="margin:0;">Blou Mint</h1>
+  </div>
   <div id="cuisinerList"></div>
 </div>
 
@@ -1583,8 +1589,8 @@
       showCuisiner();
     } else {
       document.getElementById('listView').style.display = 'block';
-      placeAndShowNav('listViewTitle');
-      document.getElementById('navAccount').style.display = 'flex';
+      placeAndShowNav('listViewTitleRow');
+      showSettingsBtn('listViewTitleRow');
       document.getElementById('navAdd').style.display = 'flex';
       document.getElementById('navHome').classList.add('active');
       sessionStorage.setItem('lastView', 'home');
@@ -1914,6 +1920,17 @@
     nav.style.display = 'flex';
   }
 
+  // Retour du 2026-11-08 : "aligner réglages avec Blou Mint, si Blou Mint
+  // scroll, réglages aussi" — #navAccount est un seul élément partagé par
+  // les 3 écrans principaux (comme #bottomNav), réinséré dans la ligne de
+  // titre de l'écran affiché plutôt que laissé en position:fixed, pour
+  // qu'il défile avec elle au lieu de rester flottant par-dessus.
+  function showSettingsBtn(containerId) {
+    const btn = document.getElementById('navAccount');
+    document.getElementById(containerId).appendChild(btn);
+    btn.style.display = 'flex';
+  }
+
   function showHome() {
     window.scrollTo(0, 0);
     hideAllViews();
@@ -1923,8 +1940,8 @@
     // contenu (y compris le miroir de mesure) renvoie toujours 0 : il faut
     // remesurer une fois qu'elle est effectivement affichée.
     sizeFloatingSearchInputs();
-    placeAndShowNav('listViewTitle');
-    document.getElementById('navAccount').style.display = 'flex';
+    placeAndShowNav('listViewTitleRow');
+    showSettingsBtn('listViewTitleRow');
     document.getElementById('navAdd').style.display = 'flex';
     document.getElementById('navHome').classList.add('active');
     renderList();
@@ -2257,7 +2274,7 @@
     hideAllViews();
     document.getElementById('planningView').style.display = 'block';
     placeAndShowNav('planningViewTitleRow');
-    document.getElementById('navAccount').style.display = 'flex';
+    showSettingsBtn('planningViewActions');
     document.getElementById('navAdd').style.display = 'flex';
     document.getElementById('navPlanning').classList.add('active');
     renderCoursesList();
@@ -2268,8 +2285,8 @@
     window.scrollTo(0, 0);
     hideAllViews();
     document.getElementById('cuisinerView').style.display = 'block';
-    placeAndShowNav('cuisinerViewTitle');
-    document.getElementById('navAccount').style.display = 'flex';
+    placeAndShowNav('cuisinerViewTitleRow');
+    showSettingsBtn('cuisinerViewTitleRow');
     document.getElementById('navAdd').style.display = 'flex';
     document.getElementById('navCuisiner').classList.add('active');
     renderCuisinerList();

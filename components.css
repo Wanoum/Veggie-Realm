@@ -248,8 +248,23 @@
 /* .tag-filters a un nombre variable de chips (4 types de repas, + la chip
    "Partagées" si l'utilisatrice a des recettes partagées) : défile plutôt
    que force un flex:1 à 5 colonnes égales, trop étroit pour "Petit-déj"
-   comme pour "Partagées". */
-.tag-filters { overflow-x: auto; }
+   comme pour "Partagées".
+   Retour du 2026-11-08 : "les chips ne doivent pas être coupés à droite
+   par le padding de l'app" — marge négative = largeur du padding de
+   l'app, reposée en padding interne (même technique que .page-fullbleed) :
+   la zone qui défile va jusqu'au bord réel de l'écran, donc la dernière
+   chip n'est plus coupée pile au bord du padding visuel. "Ne pas afficher
+   la scrollbar" : masquée sur les deux moteurs (Firefox/Chromium-WebKit),
+   le défilement tactile reste possible, juste invisible. */
+.tag-filters {
+  overflow-x: auto;
+  margin-left: calc(-1 * var(--padding-horizontal-app));
+  margin-right: calc(-1 * var(--padding-horizontal-app));
+  padding-left: var(--padding-horizontal-app);
+  padding-right: var(--padding-horizontal-app);
+  scrollbar-width: none;
+}
+.tag-filters::-webkit-scrollbar { display: none; }
 .tag-filters .filter-chip { flex: 0 0 auto; }
 .subtab-btn, .filter-chip {
   flex: 1;
@@ -279,6 +294,13 @@
    complète même non actif, pas seulement à l'état actif (scope à
    .filter-chip seul, .subtab-btn garde son rayon par défaut). */
 .filter-chip { border-radius: var(--corner-radius-round); }
+/* Retour du 2026-11-08 : "les chips utilisent le même fond que les tabs
+   non sélectionnés. Si sélectionné, même vert que le tab sélectionné,
+   texte blanc (même style que réglages)" — neutre (surface-high, comme
+   les boutons icône non colorés) plutôt que le vert pâle
+   interaction-tertiary ; l'état actif (vert plein + texte blanc) était
+   déjà exactement ça. */
+.filter-chip { background: var(--surface-high); }
 /* ---- Stepper (portions / quantité) ---- */
 .servings-stepper { display: flex; gap: 2px; }
 .servings-stepper button {
@@ -647,8 +669,12 @@
   line-height: 1;
 }
 
-/* Bouton réglages : accès direct, plus de menu à révéler — flotte au-dessus
-   du contenu, pas dans #bottomNav (Compte n'est plus un onglet). */
+/* Positionnement flottant top-right générique — utilisé par le bouton de
+   fermeture du formulaire d'ajout (#wizardCloseBtn), qui n'a pas de ligne
+   de titre avec qui s'aligner. Retour du 2026-11-08 : "aligner réglages
+   avec Blou Mint, si Blou Mint scroll, réglages aussi" — #navAccount
+   n'utilise plus cette classe, il est désormais réinséré en flux normal
+   à côté du titre de chaque écran (voir showSettingsBtn). */
 .nav-settings-btn {
   position: fixed;
   top: calc(var(--padding-horizontal-app) + env(safe-area-inset-top));
