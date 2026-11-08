@@ -778,10 +778,13 @@
   color: var(--text-icon-on-primary);
 }
 
-/* Card de la grille "Mes recettes" (Choisir, #cards, 2 colonnes) : photo
-   carrée au-dessus, titre en dessous en flux normal — contrairement à
-   .card-v2 (pleine largeur), le titre superposé sur la moitié de la photo
-   serait illisible une fois la carte réduite à la moitié de l'écran. */
+/* Card de la grille "Mes recettes" (Choisir, #cards, 2 colonnes) : titre
+   superposé en bas de la photo (dégradé sombre dédié pour rester lisible
+   quelle que soit la photo, voir .card-grid-scrim), plus badge "déjà
+   planifiée" ou bouton "+" rapide en haut à droite — repris de Variant27.
+   Jusqu'ici le titre était en flux normal sous la photo (la carte n'avait
+   pas de dégradé pour le garantir lisible en overlay) ; le scrim lève ce
+   problème sans perdre la place gagnée pour la photo. */
 .card-grid { cursor: pointer; }
 .card-grid-photo {
   position: relative;
@@ -791,13 +794,36 @@
   background: var(--surface-low);
 }
 .card-grid-photo img { width: 100%; height: 100%; object-fit: cover; }
+.card-grid-scrim {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 60%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.65), transparent);
+  pointer-events: none;
+}
+.card-grid-badge,
+.card-grid-plus {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 28px; height: 28px;
+  border-radius: var(--corner-radius-round);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+.card-grid-badge { background: var(--interaction-inverted); color: var(--text-icon-on-primary); }
+.card-grid-badge svg, .card-grid-plus svg { font-size: 16px; }
+.card-grid-plus { background: var(--interaction-secondary); color: var(--interaction-inverted); }
 .card-grid-title {
-  margin: 8px 0 0;
+  position: absolute;
+  left: 10px; right: 10px; bottom: 9px;
+  margin: 0;
   font-family: 'Inter', sans-serif;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.25;
   font-weight: 600;
-  color: var(--text-icon-default);
+  color: var(--text-icon-on-primary);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;

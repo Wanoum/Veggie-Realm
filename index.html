@@ -1159,14 +1159,19 @@
     }
     cardsEl.innerHTML = filteredIndices.map(i => {
       const r = recipes[i];
+      const planned = getOccurrences(r.id).length > 0;
       return `
       <div class="card-grid" onclick="openRecipeDetail(${i})">
         <div class="card-grid-photo">
           ${safeUrl(r.photo_url)
             ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML=emptyPhotoHtml('${r.id}','big','background:var(--interaction-primary);color:var(--text-icon-on-primary);')" />`
             : emptyPhotoHtml(r.id, 'big', 'background:var(--interaction-primary);color:var(--text-icon-on-primary);')}
+          <div class="card-grid-scrim"></div>
+          ${planned
+            ? `<span class="card-grid-badge" aria-label="${escapeHtml(t('toast_already_planned'))}"><svg class="icon-svg"><use href="#icon-check-outline"/></svg></span>`
+            : `<button type="button" class="card-grid-plus" aria-label="${escapeHtml(t('card_quick_plan'))}" onclick="event.stopPropagation(); addCurrentRecipeToPlanning('${r.id}')"><svg class="icon-svg"><use href="#icon-plus-outline"/></svg></button>`}
+          <h3 class="card-grid-title">${escapeHtml(r.title)}</h3>
         </div>
-        <h3 class="card-grid-title">${escapeHtml(r.title)}</h3>
       </div>
     `;
     }).join('');
@@ -1541,7 +1546,12 @@
     const servings = preferredServings ?? getServingsPerOccurrence(r);
     upsertMealPlanOccurrence(recipeId, variantLabel, servings).then(() => {
       showToast(t('toast_added_to_meals'));
-      if (document.getElementById('listView').style.display !== 'none') renderPlanningRecipes();
+      if (document.getElementById('listView').style.display !== 'none') {
+        renderPlanningRecipes();
+        // Bascule le bouton "+" de la carte (grille "Mes recettes") en
+        // badge "déjà planifiée" sans attendre un prochain chargement.
+        renderList();
+      }
     });
   }
 
