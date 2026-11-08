@@ -158,7 +158,7 @@
   <div id="plannedMealsSection" style="display:none;margin-bottom:var(--gap-vertical-section);">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <h2 data-i18n="tab_planned" class="section-label" style="margin:0;">Repas prévus</h2>
-      <button type="button" class="icon-btn glass-surface" onclick="resetMealPlanning()" data-i18n-aria-label="btn_reset"><svg class="icon-svg"><use href="#icon-history-outline"/></svg></button>
+      <button type="button" class="text-link-action" onclick="resetMealPlanning()" data-i18n="btn_clear_planned">Vider</button>
     </div>
     <div id="plannedRecipeList"></div>
   </div>
@@ -626,7 +626,7 @@
       toast_already_planned: 'Déjà prévu dans les repas',
       card_quick_plan: 'Planifier ce repas',
       btn_save: 'Enregistrer', btn_cancel: 'Annuler', btn_undo: 'Annuler', btn_send: 'Envoyer',
-      btn_delete: 'Supprimer', btn_reset: 'Réinitialiser', btn_confirm: 'Confirmer',
+      btn_delete: 'Supprimer', btn_reset: 'Réinitialiser', btn_confirm: 'Confirmer', btn_clear_planned: 'Vider',
       confirm_delete_version: 'Voulez-vous supprimer définitivement la version "{label}" ?',
       confirm_delete_recipe: 'Voulez-vous supprimer définitivement la recette "{title}" ?',
       confirm_reset_list: 'Voulez-vous réinitialiser la liste ? Les cases cochées et les quantités modifiées seront remises à zéro.',
@@ -761,7 +761,7 @@
       toast_already_planned: 'Already planned in meals',
       card_quick_plan: 'Plan this meal',
       btn_save: 'Save', btn_cancel: 'Cancel', btn_undo: 'Undo', btn_send: 'Send',
-      btn_delete: 'Delete', btn_reset: 'Reset', btn_confirm: 'Confirm',
+      btn_delete: 'Delete', btn_reset: 'Reset', btn_confirm: 'Confirm', btn_clear_planned: 'Clear',
       confirm_delete_version: 'Permanently delete the "{label}" version?',
       confirm_delete_recipe: 'Permanently delete the "{title}" recipe?',
       confirm_reset_list: 'Reset the list? Checked items and edited quantities will be cleared.',
