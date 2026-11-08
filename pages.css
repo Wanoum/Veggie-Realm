@@ -435,6 +435,10 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
    elle-même, pour laisser passer celui du bouton de quantité sans
    cocher/décocher par erreur. */
 .course-item input[type="checkbox"] { display: none; }
+/* Cercle plutôt que carré, anneau "ink" (interaction-inverted) même à
+   l'état non coché plutôt qu'une bordure grise discrète — repris de
+   l'exploration Variant27 (duoton : anneau franc + remplissage clair,
+   garantit un contraste constant), tokens déjà définis réutilisés. */
 .course-checkbox-visual {
   width: 24px;
   height: 24px;
@@ -443,17 +447,17 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   align-items: center;
   justify-content: center;
   background: var(--surface-highest);
-  border: 1px solid var(--border-default);
-  border-radius: var(--corner-radius-small);
-  color: var(--interaction-primary);
+  border: 1.5px solid var(--interaction-inverted);
+  border-radius: var(--corner-radius-round);
+  color: var(--interaction-inverted);
   font-size: 16px;
 }
 .course-checkbox-visual i, .course-checkbox-visual svg { visibility: hidden; }
 .course-item.checked .course-checkbox-visual,
 .course-checkbox-visual.checked {
-  background: var(--interaction-primary);
-  border-color: var(--interaction-primary);
-  color: var(--text-icon-on-primary);
+  background: var(--interaction-inverted);
+  border-color: var(--interaction-inverted);
+  color: var(--interaction-secondary);
 }
 .course-item.checked .course-checkbox-visual i, .course-item.checked .course-checkbox-visual svg,
 .course-checkbox-visual.checked i, .course-checkbox-visual.checked svg { visibility: visible; }

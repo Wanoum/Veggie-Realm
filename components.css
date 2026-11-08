@@ -580,11 +580,17 @@
   padding: 2px 8px;
   border-radius: var(--corner-radius-round);
 }
-.nav-btn.active .nav-icon-wrap { background: var(--interaction-tertiary); padding: 2px 12px; }
+/* Pastille active : interaction-secondary (green-200, le ton le plus vif
+   de la famille verte, cf. .checkbox.checked ci-dessus) plutôt que
+   interaction-tertiary (green-100, trop proche du fond pour se voir) +
+   texte/icône en interaction-inverted (ink) plutôt qu'accent — même
+   logique duoton "pastille claire et vive + contenu sombre" reprise de
+   l'exploration Variant27. */
+.nav-btn.active .nav-icon-wrap { background: var(--interaction-secondary); padding: 2px 12px; }
 .nav-icon { font-size: 24px; line-height: 1; color: var(--text-icon-secondary); }
-.nav-btn.active .nav-icon { color: var(--text-icon-accent); }
+.nav-btn.active .nav-icon { color: var(--interaction-inverted); }
 .nav-label { font-size: 14px; line-height: 120%; font-weight: 400; color: var(--text-icon-secondary); }
-.nav-btn.active .nav-label { font-weight: 500; color: var(--text-icon-accent); }
+.nav-btn.active .nav-label { font-weight: 500; color: var(--interaction-inverted); }
 
 /* Bouton réglages : accès direct, plus de menu à révéler — flotte au-dessus
    du contenu, pas dans #bottomNav (Compte n'est plus un onglet). */
@@ -596,7 +602,11 @@
 }
 
 /* Bouton flottant "Ajouter" : remplace l'ancien onglet #navAdd, flotte en
-   bas de l'écran. */
+   bas de l'écran. Duoton (fond clair + anneau ink) plutôt qu'un aplat
+   plein : il flotte au-dessus d'un contenu qui défile (cartes, photos),
+   un remplissage plein de la même famille de verts peut s'y fondre selon
+   ce qu'il y a en dessous — même raisonnement que Variant27 pour ses
+   boutons flottants. */
 .fab-add {
   position: fixed;
   right: var(--padding-horizontal-app);
@@ -604,9 +614,10 @@
   width: 56px;
   height: 56px;
   border-radius: var(--corner-radius-round);
-  background: var(--interaction-primary);
-  color: var(--text-icon-on-primary);
-  border: none;
+  background: var(--surface-highest);
+  color: var(--interaction-inverted);
+  border: 1.5px solid var(--interaction-inverted);
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;

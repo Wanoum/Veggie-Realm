@@ -920,7 +920,15 @@
   // fichier servi, pas l'heure actuelle) : fiable et toujours à jour sans
   // qu'on ait à y penser, contrairement à une valeur tapée à la main qui
   // peut être oubliée ou mal recopiée.
-  document.getElementById('appBuildTime').textContent = document.lastModified;
+  {
+    // jj/mm/aaaa plutôt que le format dépendant de la locale du navigateur
+    // que renvoie directement document.lastModified (ex: m/j/aaaa en
+    // anglais US) — toujours lisible pareil, quel que soit l'appareil.
+    const buildDate = new Date(document.lastModified);
+    const pad2 = n => String(n).padStart(2, '0');
+    document.getElementById('appBuildTime').textContent =
+      `${pad2(buildDate.getDate())}/${pad2(buildDate.getMonth() + 1)}/${buildDate.getFullYear()}`;
+  }
 
   // Champ de recherche flottant : "hug" sur le texte du placeholder. Deux
   // approches essayées avant ont échoué de façon récurrente : l'attribut
@@ -1146,8 +1154,8 @@
       <div class="card-grid" onclick="openRecipeDetail(${i})">
         <div class="card-grid-photo">
           ${safeUrl(r.photo_url)
-            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML=emptyPhotoHtml('${r.id}','big','background:var(--grey-700);')" />`
-            : emptyPhotoHtml(r.id, 'big', 'background:var(--grey-700);')}
+            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML=emptyPhotoHtml('${r.id}','big','background:var(--interaction-primary);')" />`
+            : emptyPhotoHtml(r.id, 'big', 'background:var(--interaction-primary);')}
         </div>
         <h3 class="card-grid-title">${escapeHtml(r.title)}</h3>
       </div>
@@ -2279,8 +2287,8 @@
       <div class="card-v2" onclick="loadSharedRecipe('${r.share_token}', 'saved')">
         <div class="card-v2-photo">
           ${safeUrl(r.photo_url)
-            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML=emptyPhotoHtml('${r.id}','big','background:var(--grey-700);')" />`
-            : emptyPhotoHtml(r.id, 'big', 'background:var(--grey-700);')}
+            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML=emptyPhotoHtml('${r.id}','big','background:var(--interaction-primary);')" />`
+            : emptyPhotoHtml(r.id, 'big', 'background:var(--interaction-primary);')}
         </div>
         <div class="card-v2-textwrap">
           <div class="card-v2-gradient"></div>
