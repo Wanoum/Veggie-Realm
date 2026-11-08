@@ -93,13 +93,18 @@
    souligné pour une action secondaire" (retour d'audit figé dans
    CLAUDE.md) : une pastille colorée avec icône (ex: "modifier" sur un
    repas prévu, avant ce changement) se lit comme une action à elle seule,
-   pas une variante plus discrète d'un simple texte. */
+   pas une variante plus discrète d'un simple texte. Police Plex Mono
+   majuscule comme sur Variant27 (.entryEdit) — réservée aux éléments
+   cliquables (même règle que la nav) — sans son soulignement, remplacé
+   par la règle ci-dessus. */
 .text-link-action {
   background: none;
   border: none;
   padding: 0;
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   font-weight: 500;
   color: var(--text-icon-accent);
   flex-shrink: 0;
@@ -587,7 +592,11 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  /* Retour du 2026-11-08 : "le texte doit être aligné avec sa barre à
+     gauche" — le label commence au même bord que son segment, pas centré
+     dans la colonne (V27 ne pose aucun text-align sur .stepLabels span,
+     donc hérite de l'alignement par défaut à gauche). */
+  align-items: flex-start;
   gap: 6px;
   background: none;
   border: none;
@@ -602,7 +611,7 @@
 .nav-btn.active .nav-seg { background: var(--interaction-primary); }
 .nav-label {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   font-weight: 400;
@@ -610,19 +619,19 @@
 }
 .nav-btn.active .nav-label { font-weight: 500; color: var(--interaction-inverted); }
 
-/* Bouton réglages : même traitement que .settingsBtn sur Variant27 (texte
-   Plex Mono majuscule, anneau ink, pas de fond) plutôt que l'icône seule
-   en verre — flotte toujours au-dessus du contenu via .nav-settings-btn
-   (position), juste son propre style ici. */
+/* Bouton réglages : texte Plex Mono majuscule comme sur Variant27, mais
+   plein (fond vert, texte blanc — retour du 2026-11-08) plutôt que
+   l'anneau ink à vide de la maquette, même paire couleurs que .primary-btn
+   pour rester cohérent avec les autres actions pleines de l'app. */
 .settings-pill-btn {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   font-weight: 600;
-  color: var(--interaction-inverted);
-  background: none;
-  border: 1.5px solid var(--interaction-inverted);
+  color: var(--text-icon-on-primary);
+  background: var(--interaction-primary);
+  border: none;
   border-radius: var(--corner-radius-round);
   padding: 9px 14px;
   line-height: 1;
