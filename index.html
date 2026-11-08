@@ -202,6 +202,12 @@
 </div>
 
 <div id="formView" class="page-fullbleed" style="display:none;padding-bottom:110px;">
+  <!-- Bouton de fermeture : étape 1 n'a aucun autre moyen de quitter le
+       parcours (pas de "précédent" avant la première étape, edge-swipe-back
+       volontairement désactivé ici, voir setupEdgeSwipeBack) — sans lui,
+       une recette en cours ne peut pas être abandonnée. Visible à toutes
+       les étapes pour rester prévisible, pas seulement la 1ʳᵉ. -->
+  <button type="button" id="wizardCloseBtn" class="icon-btn glass-surface nav-settings-btn" onclick="closeWizard()" data-i18n-aria-label="wizard_close"><svg class="icon-svg icon"><use href="#icon-close-outline"/></svg></button>
   <h1 id="formTitle" data-i18n="wizard_new_recipe_title" style="margin-bottom:var(--gap-vertical-section);">Nouvelle recette</h1>
 
   <!-- Étape 1 : source -->
@@ -708,6 +714,7 @@
       shared_recipe_unavailable: "Cette recette n'est plus disponible.",
       source_label_prefix: 'Source : ',
       cooking_close: 'Fermer le mode cuisine',
+      wizard_close: "Fermer l'ajout de recette",
       cooking_prev_step: 'Étape précédente',
       cooking_next_step: 'Étape suivante',
       cooking_step_counter: 'Étapes {current}/{total}',
@@ -841,6 +848,7 @@
       shared_recipe_unavailable: 'This recipe is no longer available.',
       source_label_prefix: 'Source: ',
       cooking_close: 'Close cook mode',
+      wizard_close: 'Close add recipe',
       cooking_prev_step: 'Previous step',
       cooking_next_step: 'Next step',
       cooking_step_counter: 'Steps {current}/{total}',
@@ -1070,7 +1078,7 @@
   function renderTagFilters() {
     const container = document.getElementById('tagFilters');
     container.innerHTML = MEAL_TYPES.map(mt => `
-      <button type="button" class="filter-chip filter-chip-vertical ${activeTagFilter === mt ? 'active' : ''}" data-tag="${mt}"><svg class="icon-svg" style="font-size:24px;"><use href="#${MEAL_TYPE_ICONS[mt]}"/></svg>${escapeHtml(mealTypeLabel(mt))}</button>
+      <button type="button" class="filter-chip ${activeTagFilter === mt ? 'active' : ''}" data-tag="${mt}"><svg class="icon-svg" style="font-size:18px;"><use href="#${MEAL_TYPE_ICONS[mt]}"/></svg>${escapeHtml(mealTypeLabel(mt))}</button>
     `).join('');
     container.querySelectorAll('.filter-chip').forEach(chip => {
       chip.onclick = () => {
@@ -1155,8 +1163,8 @@
       <div class="card-grid" onclick="openRecipeDetail(${i})">
         <div class="card-grid-photo">
           ${safeUrl(r.photo_url)
-            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML=emptyPhotoHtml('${r.id}','big','background:var(--interaction-primary);')" />`
-            : emptyPhotoHtml(r.id, 'big', 'background:var(--interaction-primary);')}
+            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML=emptyPhotoHtml('${r.id}','big','background:var(--interaction-primary);color:var(--text-icon-on-primary);')" />`
+            : emptyPhotoHtml(r.id, 'big', 'background:var(--interaction-primary);color:var(--text-icon-on-primary);')}
         </div>
         <h3 class="card-grid-title">${escapeHtml(r.title)}</h3>
       </div>
@@ -2040,6 +2048,22 @@
     if (wizardStep > 1) goToWizardStep(wizardStep - 1);
   }
 
+  // Abandonne tout le parcours (pas juste une étape, contrairement à
+  // wizardGoBack) — bouton de fermeture en haut à droite, seul moyen de
+  // quitter depuis l'étape 1. Revient à la fiche en édition/création de
+  // version, sinon à l'accueil, comme le fait déjà wizardGoBack() depuis
+  // l'étape 2 dans ces mêmes contextes.
+  function closeWizard() {
+    const idx = creatingVariantFor
+      ? recipes.findIndex(x => x.id === creatingVariantFor.id)
+      : (editingId ? currentDetailIndex : null);
+    discardAbandonedUploads();
+    resetForm();
+    clearWizardDraft();
+    if (idx != null && idx !== -1) showDetail(idx);
+    else showHome();
+  }
+
   function chooseNewRecipe() {
     goToWizardStep(2);
   }
@@ -2288,8 +2312,8 @@
       <div class="card-v2" onclick="loadSharedRecipe('${r.share_token}', 'saved')">
         <div class="card-v2-photo">
           ${safeUrl(r.photo_url)
-            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML=emptyPhotoHtml('${r.id}','big','background:var(--interaction-primary);')" />`
-            : emptyPhotoHtml(r.id, 'big', 'background:var(--interaction-primary);')}
+            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML=emptyPhotoHtml('${r.id}','big','background:var(--interaction-primary);color:var(--text-icon-on-primary);')" />`
+            : emptyPhotoHtml(r.id, 'big', 'background:var(--interaction-primary);color:var(--text-icon-on-primary);')}
         </div>
         <div class="card-v2-textwrap">
           <div class="card-v2-gradient"></div>
@@ -3094,7 +3118,7 @@
 
   function renderMealTypeToggles() {
     document.getElementById('f_mealTypes').innerHTML = MEAL_TYPES.map(mt => `
-      <button type="button" class="filter-chip filter-chip-vertical ${selectedMealTypes.includes(mt) ? 'active' : ''}" data-meal-type="${mt}"><svg class="icon-svg" style="font-size:24px;"><use href="#${MEAL_TYPE_ICONS[mt]}"/></svg>${escapeHtml(mealTypeLabel(mt))}</button>
+      <button type="button" class="filter-chip ${selectedMealTypes.includes(mt) ? 'active' : ''}" data-meal-type="${mt}"><svg class="icon-svg" style="font-size:18px;"><use href="#${MEAL_TYPE_ICONS[mt]}"/></svg>${escapeHtml(mealTypeLabel(mt))}</button>
     `).join('');
     document.querySelectorAll('[data-meal-type]').forEach(btn => {
       btn.onclick = () => {

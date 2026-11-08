@@ -238,6 +238,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   white-space: nowrap;
 }
 .subtab-btn.active, .filter-chip.active {
@@ -246,12 +247,6 @@
   border-radius: var(--corner-radius-round);
   font-weight: 500;
 }
-.filter-chip-vertical {
-  flex-direction: column;
-  height: 68px;
-  gap: 4px;
-}
-
 /* ---- Stepper (portions / quantité) ---- */
 .servings-stepper { display: flex; gap: 2px; }
 .servings-stepper button {
@@ -676,9 +671,15 @@
 .photo-empty {
   width: 100%; height: 100%;
   background: var(--surface-lowest);
+  color: var(--text-icon-secondary);
   display: flex; align-items: center; justify-content: center;
 }
-.photo-empty i, .photo-empty svg { font-size: 32px; color: var(--text-icon-secondary); }
+/* Couleur sur .photo-empty (ci-dessus), pas directement sur l'icône : un
+   style inline ajouté sur .photo-empty (ex: fond vert de marque pour les
+   grandes vignettes sans photo) doit pouvoir changer aussi la couleur de
+   l'icône par simple héritage — une règle ici qui la fixerait directement
+   sur le svg primerait toujours sur ce style inline du parent. */
+.photo-empty i, .photo-empty svg { font-size: 32px; }
 .card h3 { margin: 0 0 6px; font-family: 'Inter', sans-serif; font-size: 18px; line-height: 120%; font-weight: 500; color: var(--text-icon-default); }
 .card-thumb { display: none; }
 
