@@ -2560,9 +2560,13 @@
           <button type="button" class="primary-btn" style="margin-top:0;width:auto;padding-left:20px;padding-right:20px;">Bouton primaire</button>
           <button type="button" class="primary-btn primary-btn-danger" style="margin-top:0;width:auto;padding-left:20px;padding-right:20px;">Bouton destructif</button>
           <button type="button" class="secondary-btn" style="margin-top:0;width:auto;padding-left:20px;padding-right:20px;">Bouton secondaire</button>
-          <button type="button" class="settings-pill-btn">Réglages</button>
+        </div>
+
+        ${subLabel('settings-pill-btn (icône seule, icône + texte, ou texte seul)')}
+        <div style="display:flex;gap:8px;align-items:center;">
           <button type="button" class="settings-pill-btn"><svg class="icon-svg icon"><use href="#icon-settings-outline"/></svg></button>
-          <button type="button" class="settings-pill-btn" aria-label="Lancer le mode cuisine"><svg class="icon-svg icon"><use href="#icon-play-outline"/></svg></button>
+          <button type="button" class="settings-pill-btn"><svg class="icon-svg icon"><use href="#icon-play-outline"/></svg> Lancer</button>
+          <button type="button" class="settings-pill-btn">Réglages</button>
         </div>
 
         ${subLabel('Liens (soulignés, navigation) vs actions texte (Plex Mono, pas de soulignement)')}

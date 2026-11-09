@@ -695,10 +695,11 @@
   /* Retour du 2026-11-09 : "icon-btn glass-surface / icon-pill-btn-accent
      remplacé par settings-pill-btn" — cette classe sert maintenant aussi
      des boutons icône seule (pas seulement "Réglages" en texte), d'où le
-     centrage flex en plus. */
+     centrage flex en plus ; gap pour la variante icône + texte. */
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
 }
 
 /* Positionnement flottant top-right générique — utilisé par le bouton de
