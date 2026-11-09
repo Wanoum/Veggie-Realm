@@ -410,6 +410,13 @@
     </div>
 
     <div class="settings-list">
+      <button type="button" class="settings-row" onclick="showStyleGuide()">
+        <span data-i18n="account_design_system">Design system</span>
+        <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
+      </button>
+    </div>
+
+    <div class="settings-list">
       <button type="button" class="settings-row" onclick="openAccountEdit('feedback')">
         <span data-i18n="account_feedback">Envoyer un feedback</span>
         <svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg>
@@ -432,6 +439,14 @@
       </button>
     </p>
   </div>
+</div>
+
+<div id="styleGuideView" class="page-fullbleed" style="display:none;padding-bottom:40px;">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--gap-vertical-section);">
+    <button type="button" class="icon-btn icon-btn-lg glass-surface" onclick="playBackButtonAnimation('styleGuideView')"><svg class="icon-svg icon"><use href="#icon-arrow-left-outline"/></svg></button>
+    <h1 data-i18n="design_system_title" style="margin:0;">Design system</h1>
+  </div>
+  <div id="styleGuideContent"></div>
 </div>
 
 <div id="accountEditView" class="page-fullbleed" style="display:none;padding-bottom:110px;">
@@ -605,6 +620,7 @@
       account_default_servings: 'Personnes par défaut', account_default_variant: 'Version préférée',
       account_recipe_display: 'Affichage recettes', account_language: 'Langue', account_update: 'Mise à jour',
       account_feedback: 'Envoyer un feedback', account_update_app: "Mettre à jour l'application",
+      account_design_system: 'Design system', design_system_title: 'Design system',
       account_version_prefix: 'Version du',
       lang_french: 'Français', lang_english: 'English',
       home_empty_title: 'Ton carnet est encore vide.',
@@ -740,6 +756,7 @@
       account_default_servings: 'Default servings', account_default_variant: 'Preferred version',
       account_recipe_display: 'Recipe display', account_language: 'Language', account_update: 'Update',
       account_feedback: 'Send feedback', account_update_app: 'Update the app',
+      account_design_system: 'Design system', design_system_title: 'Design system',
       account_version_prefix: 'Version of',
       lang_french: 'Français', lang_english: 'English',
       home_empty_title: 'Your cookbook is still empty.',
@@ -1854,6 +1871,7 @@
     document.getElementById('planningView').style.display = 'none';
     document.getElementById('accountView').style.display = 'none';
     document.getElementById('accountEditView').style.display = 'none';
+    document.getElementById('styleGuideView').style.display = 'none';
     document.getElementById('accountEditFooter').style.display = 'none';
     document.getElementById('coursesEditFooter').style.display = 'none';
     document.getElementById('sharedRecipeView').style.display = 'none';
@@ -2399,6 +2417,142 @@
     else showHome();
   }
 
+  // ---- Design system (page de référence, Compte > Design system) ----
+  // Lit les tokens directement depuis le CSS chargé (getComputedStyle sur
+  // :root) plutôt que de dupliquer leurs valeurs ici : toujours à jour
+  // avec tokens.css sans rien à resynchroniser à la main.
+  function showStyleGuide() {
+    window.scrollTo(0, 0);
+    hideAllViews();
+    document.getElementById('styleGuideView').style.display = 'block';
+    renderStyleGuide();
+    sessionStorage.setItem('lastView', 'account');
+  }
+
+  function closeStyleGuide() {
+    document.getElementById('styleGuideView').style.display = 'none';
+    showAccount();
+  }
+
+  function renderStyleGuide() {
+    const root = getComputedStyle(document.documentElement);
+    const tokenVal = name => root.getPropertyValue(`--${name}`).trim();
+
+    const sectionTitle = label => `<h2 style="margin:0 0 12px;">${escapeHtml(label)}</h2>`;
+    const subLabel = label => `<p class="section-label" style="margin:24px 0 12px;">${escapeHtml(label)}</p>`;
+
+    function colorSwatches(names) {
+      return `<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(84px, 1fr));gap:12px;">${names.map(name => `
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="aspect-ratio:1;border-radius:var(--corner-radius-default);border:1px solid var(--border-divider);background:var(--${name});"></div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-default);word-break:break-all;">--${name}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);">${escapeHtml(tokenVal(name))}</span>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    const primitiveGroups = [
+      ['Vert', ['green-100', 'green-200', 'green-300', 'green-700', 'green-800']],
+      ['Gris', ['grey-400', 'grey-500', 'grey-700', 'grey-900']],
+      ['Clairs', ['light-50', 'light-100', 'light-150', 'light-200', 'light-300', 'light-400', 'light-500']],
+      ['Autres', ['red-500', 'red-700', 'white']]
+    ];
+    const semanticColors = [
+      'border-accent', 'border-default', 'border-divider', 'status-error', 'status-success',
+      'interaction-primary', 'interaction-secondary', 'interaction-tertiary', 'interaction-inverted',
+      'surface-high', 'surface-highest', 'surface-low', 'surface-lowest',
+      'text-icon-accent', 'text-icon-accent-strong', 'text-icon-default', 'text-icon-disabled',
+      'text-icon-error', 'text-icon-on-primary', 'text-icon-secondary'
+    ];
+
+    const sizeTokens = [
+      'corner-radius-small', 'corner-radius-default', 'corner-radius-large', 'corner-radius-xlarge', 'corner-radius-round',
+      'gap-xsmall', 'gap-default', 'gap-large', 'gap-vertical-section',
+      'height-default',
+      'padding-horizontal-contained', 'padding-horizontal-app', 'padding-horizontal-default', 'padding-horizontal-menu',
+      'padding-vertical-control', 'padding-vertical-large', 'padding-vertical-list-item', 'padding-vertical-menu'
+    ];
+    function sizeRows(names) {
+      return `<div style="display:flex;flex-direction:column;gap:12px;">${names.map(name => `
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:80px;flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);">${escapeHtml(tokenVal(name))}</div>
+          <div style="height:16px;width:var(--${name});max-width:200px;background:var(--interaction-primary);border-radius:2px;flex-shrink:0;"></div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-default);">--${name}</div>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    const radiusTokens = ['corner-radius-small', 'corner-radius-default', 'corner-radius-large', 'corner-radius-xlarge', 'corner-radius-round'];
+    function radiusSwatches(names) {
+      return `<div style="display:flex;gap:16px;flex-wrap:wrap;">${names.map(name => `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <div style="width:56px;height:56px;background:var(--interaction-tertiary);border:1px solid var(--border-divider);border-radius:var(--${name});"></div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);">${escapeHtml(tokenVal(name))}</span>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    const typeSamples = [
+      ['.brand-title (logo, italique)', 'brand-title', 'Blou Mint'],
+      ['h1', '', 'Titre d’écran'],
+      ['.text-headline', 'text-headline', 'Repas prévus'],
+      ['.section-label (repère de section)', 'section-label', 'Mes recettes'],
+      ['.text-body-medium', 'text-body-medium', 'Shakshuka végétarienne'],
+      ['.text-body', 'text-body', 'Texte courant'],
+      ['.text-quantity-mono', 'text-quantity-mono', '250 g'],
+      ['.text-small-medium', 'text-small-medium', 'Libellé secondaire'],
+      ['.text-small', 'text-small', 'Texte petit']
+    ];
+    function typeRows() {
+      return typeSamples.map(([label, cls, sample]) => `
+        <div style="padding:12px 0;border-bottom:1px solid var(--border-divider);">
+          <p style="margin:0 0 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);">${escapeHtml(label)}</p>
+          <${cls ? 'p' : 'h1'} class="${cls}" style="margin:0;">${escapeHtml(sample)}</${cls ? 'p' : 'h1'}>
+        </div>
+      `).join('');
+    }
+
+    const html = `
+      ${sectionTitle('Couleurs')}
+      ${primitiveGroups.map(([label, names]) => subLabel(label) + colorSwatches(names)).join('')}
+      ${subLabel('Sémantiques')}
+      ${colorSwatches(semanticColors)}
+
+      ${sectionTitle('Typographie')}
+      ${typeRows()}
+
+      ${sectionTitle('Espacements')}
+      ${sizeRows(sizeTokens)}
+
+      ${sectionTitle('Rayons')}
+      ${radiusSwatches(radiusTokens)}
+
+      ${sectionTitle('Boutons')}
+      <div style="display:flex;flex-direction:column;gap:16px;align-items:flex-start;">
+        <button type="button" class="primary-btn" style="margin-top:0;width:auto;padding-left:20px;padding-right:20px;">Bouton primaire</button>
+        <button type="button" class="secondary-btn" style="margin-top:0;width:auto;padding-left:20px;padding-right:20px;">Bouton secondaire</button>
+        <button type="button" class="settings-pill-btn">Réglages</button>
+        <button type="button" class="text-link-action">Modifier</button>
+        <button type="button" class="icon-btn glass-surface"><svg class="icon-svg icon"><use href="#icon-settings-outline"/></svg></button>
+      </div>
+
+      ${subLabel('Chips')}
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="filter-chip">Inactive</button>
+        <button type="button" class="filter-chip active">Active</button>
+      </div>
+
+      ${subLabel('Badges flottants sur photo (fond sombre pour contexte)')}
+      <div style="position:relative;width:120px;height:120px;border-radius:6px;overflow:hidden;background:var(--interaction-inverted);">
+        <span class="card-grid-badge" style="top:8px;right:8px;"><svg class="icon-svg"><use href="#icon-check-outline"/></svg></span>
+      </div>
+      <div style="position:relative;width:120px;height:120px;border-radius:6px;overflow:hidden;background:var(--interaction-inverted);margin-top:8px;">
+        <span class="card-grid-plus" style="top:8px;right:8px;"><svg class="icon-svg"><use href="#icon-plus-outline"/></svg></span>
+      </div>
+    `;
+    document.getElementById('styleGuideContent').innerHTML = html;
+  }
+
   // Capture la vue courante (toujours l'un des 3 onglets, seuls à afficher
   // le bouton réglages) avant de l'écraser par showAccount('account').
   document.getElementById('navAccount').onclick = () => showAccount(sessionStorage.getItem('lastView'));
@@ -2621,7 +2775,7 @@
   // partagées avec le pull-to-refresh ci-dessous, pour qu'il ne se déclenche
   // ni pendant un geste de retour, ni sur une sous-page (voir isRefreshAllowed).
   const EDGE_SWIPE_ZONE_PX = 24;
-  const EDGE_SWIPE_PAGE_IDS = ['detailView', 'sharedRecipeView', 'savedRecipesView', 'accountEditView', 'formView'];
+  const EDGE_SWIPE_PAGE_IDS = ['detailView', 'sharedRecipeView', 'savedRecipesView', 'accountEditView', 'formView', 'styleGuideView'];
 
   // ---- Tirer pour rafraîchir (pull-to-refresh) ----
   (function setupPullToRefresh() {
@@ -2891,6 +3045,7 @@
       { id: 'sharedRecipeView', back: () => goBackFromSharedRecipe(), hasPhoto: true, reveal: 'listView' },
       { id: 'savedRecipesView', back: () => showHome(), reveal: 'listView' },
       { id: 'accountEditView', back: () => closeAccountEdit(), reveal: 'accountView' },
+      { id: 'styleGuideView', back: () => closeStyleGuide(), reveal: 'accountView' },
       { id: 'accountView', back: () => goBackFromAccount() },
       // cond : wizardGoBack() ne fait rien à l'étape 1 (pas d'étape avant) —
       // sans ce garde-fou, le geste ferait glisser le formulaire puis le
