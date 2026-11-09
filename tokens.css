@@ -12,8 +12,8 @@
 :root {
   /* ---- Primitives ---- */
   --green-100: #dde5da;
-  --green-200: #eaf6ad;
   --green-300: #c0c6b2;
+  --lime-300: #eaf6ad;
   --green-700: #244d3b;
   --green-800: #293b2e;
   --grey-400: #aaa59b;
@@ -38,7 +38,7 @@
   --status-error: #B3261E;
   --status-success: #3D5A34;
   --interaction-primary: var(--green-700);
-  --interaction-secondary: var(--green-200);
+  --interaction-secondary: var(--lime-300);
   --interaction-tertiary: var(--green-100);
   --interaction-inverted: var(--green-800);
   /* Voile derrière un bottom sheet ou un dialogue de confirmation : vert
@@ -103,9 +103,13 @@
 .text-headline { font-family: 'Inter', sans-serif; font-size: 24px; line-height: 100%; font-weight: 600; }
 .text-body { font-family: 'Inter', sans-serif; font-size: 18px; line-height: 120%; font-weight: 400; }
 .text-body-medium { font-family: 'Inter', sans-serif; font-size: 18px; line-height: 120%; font-weight: 500; }
-.text-quantity-mono { font-family: 'IBM Plex Mono', monospace; font-size: 18px; line-height: 120%; font-weight: 400; }
 .text-small { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 120%; font-weight: 400; }
 .text-small-medium { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 120%; font-weight: 500; }
+/* Retour du 2026-11-09 : remplace .text-quantity-mono (fusionné dans
+   .text-body, même taille 18px, la police mono n'apportait rien de plus
+   dans les 2 usages réels) et les 11px ad hoc de .text-link-action /
+   .settings-pill-btn (uniformisés à 12px, voir components.css). */
+.text-micro-mono { font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 120%; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 500; }
 
 /* ---- Base / reset ---- */
 * { box-sizing: border-box; touch-action: manipulation; }
@@ -156,6 +160,11 @@ body {
   padding: calc(var(--padding-horizontal-app) + env(safe-area-inset-top) + 8px) var(--padding-horizontal-app) calc(env(safe-area-inset-bottom) + var(--padding-vertical-large));
 }
 .serif { font-family: 'Spectral', Georgia, serif; }
-h1 { font-family: 'Spectral', Georgia, serif; font-size: 40px; line-height: 100%; font-weight: 400; margin: 0 0 var(--gap-vertical-section); color: var(--text-icon-default); }
+/* Retour du 2026-11-09 : "pourquoi a-t-on h1 ET .brand-title ?" — fusionnés
+   en un seul concept (h1 = titre d'écran, y compris "Blou Mint" sur
+   Choisir/Acheter/Cuisiner) ; taille reprise de l'ancienne .brand-title
+   (32px, plus petite que les 40px d'avant la fusion). .brand-title
+   (pages.css) ne fait plus qu'ajouter l'italique pour ce cas-là. */
+h1 { font-family: 'Spectral', Georgia, serif; font-size: 32px; line-height: 100%; font-weight: 400; margin: 0 0 var(--gap-vertical-section); color: var(--text-icon-default); }
 h2 { font-family: 'Inter', sans-serif; font-size: 24px; line-height: 120%; font-weight: 600; margin: var(--gap-vertical-section) 0 12px; color: var(--text-icon-default); }
 .count { font-size: 14px; color: var(--text-icon-secondary); margin-bottom: 14px; }

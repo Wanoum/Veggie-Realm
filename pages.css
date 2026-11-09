@@ -11,14 +11,12 @@
 /* "Blou Mint" est le seul h1 de l'app qui est aussi le logo — contrairement
    aux titres d'écran classiques ("Compte", "Nouvelle recette"...), qui
    restent droits. Classe partagée par les 3 écrans (Choisir/Acheter/
-   Cuisiner), pas seulement #listViewTitle (retour du 2026-11-08 : "mettre
-   en italique sur tous les écrans"). Taille propre, dissociée du h1
-   générique : 32px, plus petite que les titres d'écran classiques
-   (toujours 40px), et sans letter-spacing (retiré). */
+   Cuisiner), pas seulement #listViewTitle. Retour du 2026-11-09 : h1 et
+   .brand-title fusionnés (même taille, voir tokens.css) — cette classe
+   n'ajoute plus que l'italique qui distingue le logo d'un titre d'écran
+   classique. */
 .brand-title {
-  font-size: 32px;
   font-style: italic;
-  letter-spacing: normal;
 }
 
 /* ---- Fiche recette ---- */
@@ -346,13 +344,16 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   gap: var(--gap-vertical-section);
   padding: 0 var(--padding-horizontal-app) var(--padding-vertical-large);
 }
+/* Retour du 2026-11-09 : remplace la taille isolée (48px) par celle du h1
+   (voir tokens.css) — même rôle (titre), pas de raison d'avoir sa propre
+   taille. */
 #f_title {
   display: block;
   width: 100%;
   border: none;
   background: none;
   padding: 0;
-  font-size: 48px;
+  font-size: 32px;
   line-height: 100%;
   color: var(--text-icon-default);
   resize: none;

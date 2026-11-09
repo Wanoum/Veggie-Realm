@@ -102,7 +102,7 @@
   border: none;
   padding: 0;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-weight: 500;
@@ -130,21 +130,6 @@
   text-decoration: underline;
 }
 .text-link .icon-svg { font-size: 20px; text-decoration: none; }
-
-/* ---- Repère de section (eyebrow discret au-dessus d'une liste) ----
-   Un <h2> de section ("Repas prévus", "Mes recettes"...) a la même taille/
-   couleur que les titres du contenu en dessous (titre de recette sur une
-   carte, par ex.) — les deux se valent visuellement alors que le repère de
-   section devrait s'effacer derrière le contenu qu'il introduit. Réutilise
-   .text-small-medium (déjà définie, jamais encore appliquée) + le token de
-   couleur "secondaire" existant plutôt que d'en ajouter un nouveau. */
-.section-label {
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  line-height: 120%;
-  font-weight: 500;
-  color: var(--text-icon-secondary);
-}
 
 /* ---- Pastille d'action colorée (icône seule, fond teinté arrondi) ----
    Un seul composant, décliné en 2 variantes de couleur : danger (supprimer)
@@ -488,7 +473,7 @@
      pixel près, donc une seule et même déclaration pour les deux plutôt que
      deux copies qui pourraient diverger. */
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
 }
 .floating-search input {
@@ -681,7 +666,7 @@
    pour rester cohérent avec les autres actions pleines de l'app. */
 .settings-pill-btn {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   font-weight: 600;
@@ -754,30 +739,6 @@
 .skeleton-block { border-radius: var(--corner-radius-default); }
 
 /* ---- Cards recette ---- */
-.card { cursor: pointer; }
-.mini-card {
-  flex: 0 0 120px;
-  cursor: pointer;
-}
-.mini-card-photo {
-  height: 90px;
-  border-radius: var(--corner-radius-default);
-  background: var(--surface-low);
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-.mini-card-photo img { width: 100%; height: 100%; object-fit: cover; }
-.mini-card p { font-size: 12px; font-weight: 600; margin: 0; line-height: 1.3; color: var(--text-icon-default); }
-.card-photo {
-  aspect-ratio: 3 / 4;
-  border-radius: var(--corner-radius-default);
-  background: var(--surface-low);
-  margin-bottom: 8px;
-  overflow: hidden;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 30px;
-}
-.card-photo img { width: 100%; height: 100%; object-fit: cover; }
 .photo-empty {
   width: 100%; height: 100%;
   background: var(--surface-lowest);
@@ -790,8 +751,6 @@
    l'icône par simple héritage — une règle ici qui la fixerait directement
    sur le svg primerait toujours sur ce style inline du parent. */
 .photo-empty i, .photo-empty svg { font-size: 32px; }
-.card h3 { margin: 0 0 8px; font-family: 'Inter', sans-serif; font-size: 18px; line-height: 120%; font-weight: 500; color: var(--text-icon-default); }
-.card-thumb { display: none; }
 
 /* Card recette pleine largeur de l'accueil : photo + bandeau de texte
    superposé sur sa moitié gauche (dégradé sombre, coins asymétriques). */
@@ -892,7 +851,7 @@
   font-family: 'Inter', sans-serif;
   font-size: 14px;
   line-height: 1.25;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-icon-on-primary);
   display: -webkit-box;
   -webkit-line-clamp: 2;

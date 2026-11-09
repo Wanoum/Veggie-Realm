@@ -159,13 +159,13 @@
 
   <div id="plannedMealsSection" style="display:none;margin-bottom:var(--gap-vertical-section);">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <h2 data-i18n="tab_planned" class="section-label" style="margin:0;">Repas prévus</h2>
+      <h2 data-i18n="tab_planned" class="text-headline" style="margin:0;">Repas prévus</h2>
       <button type="button" class="text-link-action" onclick="resetMealPlanning()" data-i18n="btn_clear_planned">Vider</button>
     </div>
     <div id="plannedRecipeList"></div>
   </div>
 
-  <h2 data-i18n="my_recipes_title" class="section-label" style="margin:0 0 12px;">Mes recettes</h2>
+  <h2 data-i18n="my_recipes_title" class="text-headline" style="margin:0 0 12px;">Mes recettes</h2>
 
   <div id="tagFilters" class="tag-filters"></div>
 
@@ -2452,10 +2452,15 @@
         ${body}
       </div>
     `;
-    const subLabel = label => `<p class="section-label" style="margin:24px 0 12px;">${escapeHtml(label)}</p>`;
+    // Retour du 2026-11-09 : .section-label ne sert plus nulle part dans
+    // l'app (voir plus bas) — repris ici avec .text-small-medium, qui est
+    // le vrai style réutilisé partout ailleurs, plutôt que de garder une
+    // classe qui n'existerait plus que pour ce seul outil.
+    const subLabel = label => `<p class="text-small-medium" style="margin:24px 0 12px;color:var(--text-icon-secondary);">${escapeHtml(label)}</p>`;
 
     const primitiveGroups = [
-      ['Vert', ['green-100', 'green-200', 'green-300', 'green-700', 'green-800']],
+      ['Vert', ['green-100', 'green-300', 'green-700', 'green-800']],
+      ['Lime', ['lime-300']],
       ['Gris', ['grey-400', 'grey-500', 'grey-700', 'grey-900']],
       ['Clairs', ['light-50', 'light-100', 'light-150', 'light-200', 'light-300', 'light-400', 'light-500']],
       ['Autres', ['red-500', 'red-700', 'white']]
@@ -2467,7 +2472,7 @@
     const semanticGroups = [
       ['Bordures', [['border-accent', 'green-700'], ['border-default', 'grey-500'], ['border-divider', 'light-500']]],
       ['Statuts', [['status-error', null], ['status-success', null]]],
-      ['Interaction', [['interaction-primary', 'green-700'], ['interaction-secondary', 'green-200'], ['interaction-tertiary', 'green-100'], ['interaction-inverted', 'green-800']]],
+      ['Interaction', [['interaction-primary', 'green-700'], ['interaction-secondary', 'lime-300'], ['interaction-tertiary', 'green-100'], ['interaction-inverted', 'green-800']]],
       ['Voiles', [['overlay-default', null], ['overlay-error', null], ['overlay-button', null]]],
       ['Surfaces', [['surface-high', 'light-50'], ['surface-highest', 'white'], ['surface-low', 'light-200'], ['surface-lowest', 'light-300']]],
       ['Texte / icône', [['text-icon-accent', 'green-700'], ['text-icon-accent-strong', 'green-800'], ['text-icon-default', 'grey-900'], ['text-icon-disabled', 'grey-400'], ['text-icon-error', 'red-500'], ['text-icon-on-primary', 'white'], ['text-icon-secondary', 'grey-700']]]
@@ -2483,9 +2488,9 @@
       return `<div style="overflow-x:auto;"><div style="display:flex;flex-direction:column;min-width:min-content;">${pairs.map(([name, primitive]) => `
         <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-divider);white-space:nowrap;">
           <div data-color-resolve="${name}" style="width:32px;height:32px;border-radius:4px;border:1px solid var(--border-divider);background:var(--${name});flex-shrink:0;"></div>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-default);width:160px;flex-shrink:0;">--${name}</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);width:140px;flex-shrink:0;">${primitive ? `→ --${primitive}` : ''}</span>
-          <span data-color-hex="${name}" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);width:140px;flex-shrink:0;text-align:right;"></span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-default);width:160px;flex-shrink:0;text-align:left;">--${name}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);width:140px;flex-shrink:0;text-align:left;">${primitive ? `→ --${primitive}` : ''}</span>
+          <span data-color-hex="${name}" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);width:220px;flex-shrink:0;text-align:left;"></span>
         </div>
       `).join('')}</div></div>`;
     }
@@ -2549,26 +2554,33 @@
       `).join('')}</div>`;
     }
 
+    // Retour du 2026-11-09 : "pourquoi h1 ET .brand-title ?" — fusionnés
+    // (même taille, voir tokens.css), présentés ici comme 2 variantes du
+    // même h1 plutôt que 2 styles différents. .section-label retiré (plus
+    // utilisé nulle part dans l'app, voir subLabel ci-dessous) ;
+    // .text-quantity-mono retiré (fusionné dans .text-body) ; ajout de
+    // .text-micro-mono (remplace les 11px ad hoc) et .cooking-step-text
+    // (mode cuisine, 28px, absent jusqu'ici du design system).
     const typeSamples = [
-      ['.brand-title (logo, italique)', 'brand-title', 'Blou Mint'],
-      ['h1', '', 'Titre d’écran'],
-      ['.text-headline', 'text-headline', 'Repas prévus'],
-      ['.section-label (repère de section)', 'section-label', 'Mes recettes'],
-      ['.text-body-medium', 'text-body-medium', 'Shakshuka végétarienne'],
-      ['.text-body', 'text-body', 'Texte courant'],
-      ['.text-quantity-mono', 'text-quantity-mono', '250 g'],
-      ['.text-small-medium', 'text-small-medium', 'Libellé secondaire'],
-      ['.text-small', 'text-small', 'Texte petit']
+      ['h1', '', 'Titre d’écran', 'h1'],
+      ['h1.brand-title (Choisir/Acheter/Cuisiner)', 'brand-title', 'Blou Mint', 'h1'],
+      ['.text-headline', 'text-headline', 'Repas prévus', 'p'],
+      ['.text-body-medium', 'text-body-medium', 'Shakshuka végétarienne', 'p'],
+      ['.text-body', 'text-body', 'Texte courant', 'p'],
+      ['.text-micro-mono', 'text-micro-mono', 'Modifier', 'p'],
+      ['.cooking-step-text (mode cuisine)', 'cooking-step-text', 'Casser les œufs', 'p'],
+      ['.text-small-medium', 'text-small-medium', 'Libellé secondaire', 'p'],
+      ['.text-small', 'text-small', 'Texte petit', 'p']
     ];
     // Retour du 2026-11-08 : "exemples à gauche, valeurs à droite, en
     // tableau" — remplace l'empilement label/exemple/détail par deux
     // colonnes.
     function typeRows() {
-      return `<div style="display:flex;flex-direction:column;">${typeSamples.map(([label, cls, sample], i) => `
+      return `<div style="display:flex;flex-direction:column;">${typeSamples.map(([label, cls, sample, tag], i) => `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-divider);">
           <div>
             <p style="margin:0 0 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);">${escapeHtml(label)}</p>
-            <${cls ? 'p' : 'h1'} class="${cls}" data-type-sample="${i}" style="margin:0;">${escapeHtml(sample)}</${cls ? 'p' : 'h1'}>
+            <${tag} class="${cls}" data-type-sample="${i}" style="margin:0;">${escapeHtml(sample)}</${tag}>
           </div>
           <p data-type-detail="${i}" style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);line-height:1.5;"></p>
         </div>
@@ -2789,10 +2801,19 @@
     // Valeur résolue (hex/rgba) de chaque token sémantique du tableau
     // vertical — lue sur le petit carré de couleur une fois rendu, jamais
     // recalculée à la main.
+    // Retour du 2026-11-09 : "fiche aussi la valeur hex, pas juste le RGB" —
+    // reconverti depuis la couleur calculée (toujours rgb/rgba), jamais
+    // dupliqué à la main.
+    const rgbToHex = rgb => {
+      const m = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      if (!m) return '';
+      return '#' + m.slice(1, 4).map(n => Number(n).toString(16).padStart(2, '0')).join('');
+    };
     document.querySelectorAll('[data-color-resolve]').forEach(swatch => {
       const hexEl = document.querySelector(`[data-color-hex="${swatch.dataset.colorResolve}"]`);
       if (!hexEl) return;
-      hexEl.textContent = getComputedStyle(swatch).backgroundColor;
+      const resolved = getComputedStyle(swatch).backgroundColor;
+      hexEl.textContent = `${rgbToHex(resolved)} (${resolved})`;
     });
   }
 
@@ -3505,11 +3526,19 @@
     if (document.getElementById('listView').style.display !== 'none') renderPlanningRecipes();
   }
 
+  // Retour du 2026-11-09 : "le design system disparaît dès que je change
+  // d'application" — styleGuideView (et les autres sous-pages plein écran)
+  // n'étaient pas dans cette liste ; rien ne les protégeait explicitement
+  // d'un refresh déclenché par un retour au premier plan.
   function isResumeRefreshAllowed() {
     return !!currentUser
       && document.getElementById('cookingModeView').style.display === 'none'
       && document.getElementById('authView').style.display === 'none'
-      && document.getElementById('formView').style.display === 'none';
+      && document.getElementById('formView').style.display === 'none'
+      && document.getElementById('styleGuideView').style.display === 'none'
+      && document.getElementById('accountEditView').style.display === 'none'
+      && document.getElementById('sharedRecipeView').style.display === 'none'
+      && document.getElementById('savedRecipesView').style.display === 'none';
   }
 
   let lastResumeRefresh = 0;
@@ -5350,10 +5379,10 @@
     const valueEl = document.getElementById('courseQtyValue');
     valueEl.dataset.rawValue = clamped;
     // Le chiffre qu'on possède reste la grande valeur ; la quantité cible
-    // ("/besoin unité") est affichée plus petite, en style quantity-mono
+    // ("/besoin unité") est affichée plus petite, en style text-body
     // text-icon-secondary, alignée sur sa ligne de base.
     const target = `/${formatQuantityFr(courseQtySheetNeeded)}${courseQtySheetUnit}`;
-    valueEl.innerHTML = `${escapeHtml(formatQuantityFr(clamped))}<span class="course-qty-target text-quantity-mono">${escapeHtml(target)}</span>`;
+    valueEl.innerHTML = `${escapeHtml(formatQuantityFr(clamped))}<span class="course-qty-target text-body">${escapeHtml(target)}</span>`;
   }
 
   document.getElementById('courseQtyMinus').onclick = () => {
@@ -5634,7 +5663,7 @@
         <div class="course-item course-item-edit" data-course-row="${escapeHtml(item.key)}">
           <span class="step-drag-handle"><i class="bi bi-grip-vertical"></i></span>
           <span class="text-body course-item-name">${escapeHtml(item.displayName)}</span>
-          <span class="text-quantity-mono" style="opacity:0.3;">${displayQtyText(item)}</span>
+          <span class="text-body" style="opacity:0.3;">${displayQtyText(item)}</span>
         </div>
       `;
       }
