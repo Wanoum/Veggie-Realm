@@ -296,11 +296,12 @@
 .filter-chip { border-radius: var(--corner-radius-round); }
 /* Retour du 2026-11-08 : "les chips utilisent le même fond que les tabs
    non sélectionnés. Si sélectionné, même vert que le tab sélectionné,
-   texte blanc (même style que réglages)" — neutre (surface-high, comme
-   les boutons icône non colorés) plutôt que le vert pâle
+   texte blanc (même style que réglages)" — neutre plutôt que le vert pâle
    interaction-tertiary ; l'état actif (vert plein + texte blanc) était
-   déjà exactement ça. */
-.filter-chip { background: var(--surface-high); }
+   déjà exactement ça. Blanc pur (--white) plutôt que surface-high
+   (light-50, légèrement crème) : "essaye un fond blanc, au lieu de
+   l'espèce de beige qu'on a". */
+.filter-chip { background: var(--white); }
 /* ---- Stepper (portions / quantité) ---- */
 .servings-stepper { display: flex; gap: 2px; }
 .servings-stepper button {
