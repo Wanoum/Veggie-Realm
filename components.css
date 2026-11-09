@@ -245,6 +245,14 @@
   gap: 4px;
   margin: 0 0 var(--gap-vertical-section);
 }
+/* Retour du 2026-11-08 : "entre les chips et les cards, pas un espace de
+   section, mais le même espace qu'entre Mes recettes et les chips" —
+   .tag-filters n'est pas une section à part entière, juste un repère
+   secondaire sous le titre "Mes recettes" : même écart en dessous (12px,
+   margin du h2 juste au-dessus) qu'au-dessus, plutôt que le grand
+   espacement de section (32px) hérité du même partagé avec .subtabs/
+   .segmented. */
+.tag-filters { margin-bottom: 12px; }
 /* .tag-filters a un nombre variable de chips (4 types de repas, + la chip
    "Partagées" si l'utilisatrice a des recettes partagées) : défile plutôt
    que force un flex:1 à 5 colonnes égales, trop étroit pour "Petit-déj"
