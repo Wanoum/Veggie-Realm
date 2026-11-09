@@ -2429,16 +2429,29 @@
     sessionStorage.setItem('lastView', 'account');
   }
 
+  // Retour du 2026-11-08 : "quand je quitte le design system, je
+  // réatterris sur le compte, ce n'est pas voulu" — c'est un outil de dev,
+  // pas une vraie sous-page de réglages : revient directement à l'onglet
+  // d'origine (goBackFromAccount, comme le ferait Compte lui-même) plutôt
+  // que de s'arrêter sur Compte au passage.
   function closeStyleGuide() {
     document.getElementById('styleGuideView').style.display = 'none';
-    showAccount();
+    goBackFromAccount();
   }
 
   function renderStyleGuide() {
     const root = getComputedStyle(document.documentElement);
     const tokenVal = name => root.getPropertyValue(`--${name}`).trim();
 
-    const sectionTitle = label => `<h2 style="margin:0 0 12px;">${escapeHtml(label)}</h2>`;
+    // Retour du 2026-11-08 : "un peu d'espace entre les sections, 32px" —
+    // chaque section est une div à part avec cette marge en bas, plutôt
+    // qu'un simple titre qui s'enchaînait directement sur la précédente.
+    const section = (label, body) => `
+      <div style="margin-bottom:32px;">
+        <h2 style="margin:0 0 12px;">${escapeHtml(label)}</h2>
+        ${body}
+      </div>
+    `;
     const subLabel = label => `<p class="section-label" style="margin:24px 0 12px;">${escapeHtml(label)}</p>`;
 
     function colorSwatches(names) {
@@ -2472,10 +2485,15 @@
       'padding-horizontal-contained', 'padding-horizontal-app', 'padding-horizontal-default', 'padding-horizontal-menu',
       'padding-vertical-control', 'padding-vertical-large', 'padding-vertical-list-item', 'padding-vertical-menu'
     ];
+    // Retour du 2026-11-08 : "je m'en fous des REM, je veux les valeurs en
+    // pixels" — la barre (déjà dimensionnée en width:var(--token)) est
+    // mesurée une fois rendue (getComputedStyle renvoie toujours du px,
+    // quelle que soit l'unité déclarée dans tokens.css) plutôt que
+    // d'afficher la chaîne brute ("1.5rem").
     function sizeRows(names) {
       return `<div style="display:flex;flex-direction:column;gap:12px;">${names.map(name => `
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:80px;flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);">${escapeHtml(tokenVal(name))}</div>
+        <div style="display:flex;align-items:center;gap:12px;" data-size-row="${name}">
+          <div data-size-value style="width:56px;flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);"></div>
           <div style="height:16px;width:var(--${name});max-width:200px;background:var(--interaction-primary);border-radius:2px;flex-shrink:0;"></div>
           <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-default);">--${name}</div>
         </div>
@@ -2503,56 +2521,57 @@
       ['.text-small-medium', 'text-small-medium', 'Libellé secondaire'],
       ['.text-small', 'text-small', 'Texte petit']
     ];
+    // Retour du 2026-11-08 : "exemples à gauche, valeurs à droite, en
+    // tableau" — remplace l'empilement label/exemple/détail par deux
+    // colonnes.
     function typeRows() {
-      return typeSamples.map(([label, cls], i) => {
-        const [, , sample] = typeSamples[i];
-        return `
-        <div style="padding:12px 0;border-bottom:1px solid var(--border-divider);">
-          <p style="margin:0 0 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);">${escapeHtml(label)}</p>
-          <${cls ? 'p' : 'h1'} class="${cls}" data-type-sample="${i}" style="margin:0;">${escapeHtml(sample)}</${cls ? 'p' : 'h1'}>
-          <p data-type-detail="${i}" style="margin:6px 0 0;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);"></p>
+      return `<div style="display:flex;flex-direction:column;">${typeSamples.map(([label, cls, sample], i) => `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-divider);">
+          <div>
+            <p style="margin:0 0 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);">${escapeHtml(label)}</p>
+            <${cls ? 'p' : 'h1'} class="${cls}" data-type-sample="${i}" style="margin:0;">${escapeHtml(sample)}</${cls ? 'p' : 'h1'}>
+          </div>
+          <p data-type-detail="${i}" style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);line-height:1.5;"></p>
         </div>
-      `;
-      }).join('');
+      `).join('')}</div>`;
     }
 
     const html = `
-      ${sectionTitle('Couleurs')}
-      ${primitiveGroups.map(([label, names]) => subLabel(label) + colorSwatches(names)).join('')}
-      ${subLabel('Sémantiques')}
-      ${colorSwatches(semanticColors)}
+      ${section('Couleurs', `
+        ${primitiveGroups.map(([label, names]) => subLabel(label) + colorSwatches(names)).join('')}
+        ${subLabel('Sémantiques')}
+        ${colorSwatches(semanticColors)}
+      `)}
 
-      ${sectionTitle('Typographie')}
-      ${typeRows()}
+      ${section('Typographie', typeRows())}
 
-      ${sectionTitle('Espacements')}
-      ${sizeRows(sizeTokens)}
+      ${section('Espacements', sizeRows(sizeTokens))}
 
-      ${sectionTitle('Rayons')}
-      ${radiusSwatches(radiusTokens)}
+      ${section('Rayons', radiusSwatches(radiusTokens))}
 
-      ${sectionTitle('Boutons')}
-      <div style="display:flex;flex-direction:column;gap:16px;align-items:flex-start;">
-        <button type="button" class="primary-btn" style="margin-top:0;width:auto;padding-left:20px;padding-right:20px;">Bouton primaire</button>
-        <button type="button" class="secondary-btn" style="margin-top:0;width:auto;padding-left:20px;padding-right:20px;">Bouton secondaire</button>
-        <button type="button" class="settings-pill-btn">Réglages</button>
-        <button type="button" class="text-link-action">Modifier</button>
-        <button type="button" class="icon-btn glass-surface"><svg class="icon-svg icon"><use href="#icon-settings-outline"/></svg></button>
-      </div>
+      ${section('Boutons', `
+        <div style="display:flex;flex-direction:column;gap:16px;align-items:flex-start;">
+          <button type="button" class="primary-btn" style="margin-top:0;width:auto;padding-left:20px;padding-right:20px;">Bouton primaire</button>
+          <button type="button" class="secondary-btn" style="margin-top:0;width:auto;padding-left:20px;padding-right:20px;">Bouton secondaire</button>
+          <button type="button" class="settings-pill-btn">Réglages</button>
+          <button type="button" class="text-link-action">Modifier</button>
+          <button type="button" class="icon-btn glass-surface"><svg class="icon-svg icon"><use href="#icon-settings-outline"/></svg></button>
+        </div>
 
-      ${subLabel('Chips')}
-      <div style="display:flex;gap:8px;">
-        <button type="button" class="filter-chip">Inactive</button>
-        <button type="button" class="filter-chip active">Active</button>
-      </div>
+        ${subLabel('Chips')}
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="filter-chip">Inactive</button>
+          <button type="button" class="filter-chip active">Active</button>
+        </div>
 
-      ${subLabel('Badges flottants sur photo (fond sombre pour contexte)')}
-      <div style="position:relative;width:120px;height:120px;border-radius:6px;overflow:hidden;background:var(--interaction-inverted);">
-        <span class="card-grid-badge" style="top:8px;right:8px;"><svg class="icon-svg"><use href="#icon-check-outline"/></svg></span>
-      </div>
-      <div style="position:relative;width:120px;height:120px;border-radius:6px;overflow:hidden;background:var(--interaction-inverted);margin-top:8px;">
-        <span class="card-grid-plus" style="top:8px;right:8px;"><svg class="icon-svg"><use href="#icon-plus-outline"/></svg></span>
-      </div>
+        ${subLabel('Badges flottants sur photo (fond sombre pour contexte)')}
+        <div style="position:relative;width:120px;height:120px;border-radius:6px;overflow:hidden;background:var(--interaction-inverted);">
+          <span class="card-grid-badge" style="top:8px;right:8px;"><svg class="icon-svg"><use href="#icon-check-outline"/></svg></span>
+        </div>
+        <div style="position:relative;width:120px;height:120px;border-radius:6px;overflow:hidden;background:var(--interaction-inverted);margin-top:8px;">
+          <span class="card-grid-plus" style="top:8px;right:8px;"><svg class="icon-svg"><use href="#icon-plus-outline"/></svg></span>
+        </div>
+      `)}
     `;
     document.getElementById('styleGuideContent').innerHTML = html;
 
@@ -2565,8 +2584,24 @@
       const detailEl = document.querySelector(`[data-type-detail="${el.dataset.typeSample}"]`);
       if (!detailEl) return;
       const family = cs.fontFamily.split(',')[0].replace(/['"]/g, '');
-      detailEl.textContent =
-        `${family} · ${parseFloat(cs.fontSize)}px · ${cs.fontWeight} · line-height ${cs.lineHeight === 'normal' ? 'normal' : parseFloat(cs.lineHeight) + 'px'} · ${cs.color}`;
+      const lineHeight = cs.lineHeight === 'normal' ? 'normal' : `${parseFloat(cs.lineHeight)}px`;
+      detailEl.innerHTML = [
+        `taille : ${parseFloat(cs.fontSize)}px`,
+        `line-height : ${lineHeight}`,
+        `graisse : ${cs.fontWeight}`,
+        `famille : ${escapeHtml(family)}`,
+        `couleur : ${cs.color}`
+      ].join('<br>');
+    });
+
+    // Espacements en pixels (pas en rem) : la barre est déjà dimensionnée
+    // avec width:var(--token) ; getComputedStyle résout toujours en px,
+    // quelle que soit l'unité déclarée dans tokens.css.
+    document.querySelectorAll('[data-size-row]').forEach(row => {
+      const bar = row.children[1];
+      const valueEl = row.querySelector('[data-size-value]');
+      if (!bar || !valueEl) return;
+      valueEl.textContent = `${Math.round(parseFloat(getComputedStyle(bar).width))}px`;
     });
   }
 
