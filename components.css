@@ -102,7 +102,7 @@
   border: none;
   padding: 0;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-weight: 500;
@@ -148,7 +148,6 @@
 }
 .icon-pill-btn i, .icon-pill-btn svg { font-size: 20px; }
 .icon-pill-btn-danger { background: rgba(162, 34, 5, 0.12); color: var(--text-icon-error); }
-.icon-pill-btn-accent { background: var(--interaction-tertiary); color: var(--text-icon-accent); }
 
 /* Retour du 2026-11-09 : boutons primaire/secondaire sur .text-micro-mono
    (Plex Mono majuscule, déjà utilisé par .text-link-action/.settings-pill-
@@ -165,7 +164,7 @@
   background: var(--interaction-secondary);
   font-family: 'IBM Plex Mono', monospace;
   color: var(--text-icon-accent);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 120%;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -189,7 +188,7 @@
   background: var(--interaction-primary);
   color: var(--text-icon-on-primary);
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 120%;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -317,6 +316,10 @@
    complète même non actif, pas seulement à l'état actif (scope à
    .filter-chip seul, .subtab-btn garde son rayon par défaut). */
 .filter-chip { border-radius: var(--corner-radius-round); }
+/* Retour du 2026-11-09 : "dans les chips, utiliser également text-micro-
+   mono" — Plex Mono majuscule plutôt que l'Inter partagé avec .subtab-btn ;
+   la taille (14px) correspond déjà à .text-micro-mono. */
+.filter-chip { font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 500; }
 /* Retour du 2026-11-08 : "les chips utilisent le même fond que les tabs
    non sélectionnés. Si sélectionné, même vert que le tab sélectionné,
    texte blanc (même style que réglages)" — neutre plutôt que le vert pâle
@@ -665,7 +668,7 @@
 .nav-btn.active .nav-seg { background: var(--interaction-primary); }
 .nav-label {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   font-weight: 500;
@@ -679,7 +682,7 @@
    pour rester cohérent avec les autres actions pleines de l'app. */
 .settings-pill-btn {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   font-weight: 600;
@@ -689,6 +692,13 @@
   border-radius: var(--corner-radius-round);
   padding: 8px 12px;
   line-height: 1;
+  /* Retour du 2026-11-09 : "icon-btn glass-surface / icon-pill-btn-accent
+     remplacé par settings-pill-btn" — cette classe sert maintenant aussi
+     des boutons icône seule (pas seulement "Réglages" en texte), d'où le
+     centrage flex en plus. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Positionnement flottant top-right générique — utilisé par le bouton de

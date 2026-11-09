@@ -105,8 +105,11 @@
 /* Retour du 2026-11-09 : remplace .text-quantity-mono (fusionné dans
    .text-body, même taille 18px, la police mono n'apportait rien de plus
    dans les 2 usages réels) et les 11px ad hoc de .text-link-action /
-   .settings-pill-btn (uniformisés à 12px, voir components.css). */
-.text-micro-mono { font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 120%; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 500; }
+   .settings-pill-btn (uniformisés, puis repassés à 14px — voir
+   components.css pour les usages qui dupliquent encore ces valeurs faute
+   de porter la classe elle-même : .text-link-action, .settings-pill-btn,
+   .primary-btn/.secondary-btn, .filter-chip actif). */
+.text-micro-mono { font-family: 'IBM Plex Mono', monospace; font-size: 14px; line-height: 120%; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 500; }
 
 /* ---- Base / reset ---- */
 * { box-sizing: border-box; touch-action: manipulation; }
