@@ -154,7 +154,7 @@
 
 <div id="listView" style="display:none;">
   <div id="listViewTitleRow" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);">
-    <h1 id="listViewTitle" style="margin:0;">Blou Mint</h1>
+    <h1 id="listViewTitle" class="brand-title" style="margin:0;">Blou Mint</h1>
   </div>
 
   <div id="plannedMealsSection" style="display:none;margin-bottom:var(--gap-vertical-section);">
@@ -449,7 +449,7 @@
 
 <div id="planningView" style="display:none;">
   <div id="planningViewTitleRow" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);position:relative;">
-    <h1 style="margin:0;">Blou Mint</h1>
+    <h1 class="brand-title" style="margin:0;">Blou Mint</h1>
     <div id="planningViewActions" style="display:flex;align-items:center;gap:8px;">
       <button type="button" class="icon-btn glass-surface" id="coursesMenuBtn" onclick="openCoursesActionsSheet()"><svg class="icon-svg"><use href="#icon-more-horizontal-outline"/></svg></button>
     </div>
@@ -469,7 +469,7 @@
 
 <div id="cuisinerView" style="display:none;">
   <div id="cuisinerViewTitleRow" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);">
-    <h1 id="cuisinerViewTitle" style="margin:0;">Blou Mint</h1>
+    <h1 id="cuisinerViewTitle" class="brand-title" style="margin:0;">Blou Mint</h1>
   </div>
   <div id="cuisinerList"></div>
 </div>
@@ -626,7 +626,7 @@
       toast_added_to_meals: 'Ajouté aux repas', toast_meal_updated: 'Repas mis à jour',
       toast_removed_from_meals: 'Retiré des repas', toast_marked_cooked: 'Marqué comme cuisiné',
       toast_already_planned: 'Déjà prévu dans les repas',
-      card_quick_plan: 'Planifier ce repas',
+      card_quick_plan: 'Planifier ce repas', card_quick_unplan: 'Retirer du planning',
       btn_save: 'Enregistrer', btn_cancel: 'Annuler', btn_undo: 'Annuler', btn_send: 'Envoyer',
       btn_delete: 'Supprimer', btn_reset: 'Réinitialiser', btn_confirm: 'Confirmer', btn_clear_planned: 'Vider',
       confirm_delete_version: 'Voulez-vous supprimer définitivement la version "{label}" ?',
@@ -761,7 +761,7 @@
       toast_added_to_meals: 'Added to meals', toast_meal_updated: 'Meal updated',
       toast_removed_from_meals: 'Removed from meals', toast_marked_cooked: 'Marked as cooked',
       toast_already_planned: 'Already planned in meals',
-      card_quick_plan: 'Plan this meal',
+      card_quick_plan: 'Plan this meal', card_quick_unplan: 'Remove from plan',
       btn_save: 'Save', btn_cancel: 'Cancel', btn_undo: 'Undo', btn_send: 'Send',
       btn_delete: 'Delete', btn_reset: 'Reset', btn_confirm: 'Confirm', btn_clear_planned: 'Clear',
       confirm_delete_version: 'Permanently delete the "{label}" version?',
@@ -1077,10 +1077,17 @@
   }
 
   let activeTagFilter = null;
+  // Valeur spéciale d'activeTagFilter (pas un vrai type de repas) : la chip
+  // "Partagées" est un filtre comme les autres, pas une navigation à part —
+  // retour du 2026-11-08 : "les recettes partagées doivent apparaître comme
+  // les autres éléments de chips, en dessous des chips", même vue que les
+  // filtres de type de repas plutôt que l'ancienne vue séparée.
+  const SHARED_FILTER = '__shared__';
+
   function renderTagFilters() {
     const container = document.getElementById('tagFilters');
     const sharedChip = savedRecipes.length > 0
-      ? `<button type="button" class="filter-chip" data-shared="1"><svg class="icon-svg" style="font-size:18px;"><use href="#icon-share-outline"/></svg>${escapeHtml(t('saved_recipes_chip'))}</button>`
+      ? `<button type="button" class="filter-chip ${activeTagFilter === SHARED_FILTER ? 'active' : ''}" data-tag="${SHARED_FILTER}"><svg class="icon-svg" style="font-size:18px;"><use href="#icon-share-outline"/></svg>${escapeHtml(t('saved_recipes_chip'))}</button>`
       : '';
     container.innerHTML = MEAL_TYPES.map(mt => `
       <button type="button" class="filter-chip ${activeTagFilter === mt ? 'active' : ''}" data-tag="${mt}"><svg class="icon-svg" style="font-size:18px;"><use href="#${MEAL_TYPE_ICONS[mt]}"/></svg>${escapeHtml(mealTypeLabel(mt))}</button>
@@ -1092,8 +1099,6 @@
         renderList();
       };
     });
-    const shared = container.querySelector('[data-shared]');
-    if (shared) shared.onclick = showSavedRecipes;
   }
 
   function matchesQuery(r, query) {
@@ -1149,9 +1154,7 @@
       return;
     }
 
-    const filteredIndices = getFilteredIndices();
-
-    if (recipes.length === 0) {
+    if (recipes.length === 0 && activeTagFilter !== SHARED_FILTER) {
       cardsEl.innerHTML = `
         <div class="empty-state-large">
           <img src="src/groceries.png" alt="" />
@@ -1160,22 +1163,34 @@
         </div>`;
       return;
     }
-    if (filteredIndices.length === 0) {
+
+    // Retour du 2026-11-08 : la chip "Partagées" est un filtre comme les
+    // autres (voir SHARED_FILTER/renderTagFilters), pas une navigation à
+    // part — même grille "Mes recettes" en dessous des chips, mais la
+    // source change (savedRecipes, pas recipes) et le clic ouvre la
+    // recette via son share_token plutôt qu'un index dans `recipes`.
+    const cardRecipes = activeTagFilter === SHARED_FILTER
+      ? savedRecipes.map(row => row.recipe).filter(r => matchesQuery(r, searchQuery))
+      : getFilteredIndices().map(i => recipes[i]);
+
+    if (cardRecipes.length === 0) {
       cardsEl.innerHTML = `<div class="empty">${t('no_results')}</div>`;
       return;
     }
-    cardsEl.innerHTML = filteredIndices.map(i => {
-      const r = recipes[i];
+    cardsEl.innerHTML = cardRecipes.map(r => {
       const planned = getOccurrences(r.id).length > 0;
+      const openOnclick = activeTagFilter === SHARED_FILTER
+        ? `loadSharedRecipe('${escapeHtml(r.share_token)}', 'home')`
+        : `openRecipeDetail(${recipes.indexOf(r)})`;
       return `
-      <div class="card-grid" onclick="openRecipeDetail(${i})">
+      <div class="card-grid" onclick="${openOnclick}">
         <div class="card-grid-photo">
           ${safeUrl(r.photo_url)
             ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML=emptyPhotoHtml('${r.id}','big','background:var(--interaction-primary);color:var(--text-icon-on-primary);')" />`
             : emptyPhotoHtml(r.id, 'big', 'background:var(--interaction-primary);color:var(--text-icon-on-primary);')}
           <div class="card-grid-scrim"></div>
           ${planned
-            ? `<span class="card-grid-badge" aria-label="${escapeHtml(t('toast_already_planned'))}"><svg class="icon-svg"><use href="#icon-check-outline"/></svg></span>`
+            ? `<button type="button" class="card-grid-badge" aria-label="${escapeHtml(t('card_quick_unplan'))}" onclick="event.stopPropagation(); removeRecipeFromPlanning('${r.id}')"><svg class="icon-svg"><use href="#icon-check-outline"/></svg></button>`
             : `<button type="button" class="card-grid-plus" aria-label="${escapeHtml(t('card_quick_plan'))}" onclick="event.stopPropagation(); addCurrentRecipeToPlanning('${r.id}')"><svg class="icon-svg"><use href="#icon-plus-outline"/></svg></button>`}
           <h3 class="card-grid-title">${escapeHtml(r.title)}</h3>
         </div>
@@ -1557,6 +1572,24 @@
         renderPlanningRecipes();
         // Bascule le bouton "+" de la carte (grille "Mes recettes") en
         // badge "déjà planifiée" sans attendre un prochain chargement.
+        renderList();
+      }
+    });
+  }
+
+  // Retour du 2026-11-08 : "quand on clique à nouveau sur le check [badge]
+  // sur les cards, on devrait pouvoir le retirer de la liste des repas
+  // prévus" — contrepartie du + : une card ne distingue pas les versions,
+  // donc retire toutes les occurrences de cette recette plutôt qu'une
+  // seule (cohérent avec le badge, qui s'affiche dès qu'il y en a au
+  // moins une).
+  function removeRecipeFromPlanning(recipeId) {
+    const occs = getOccurrences(recipeId);
+    if (occs.length === 0) return;
+    Promise.all(occs.map(o => deleteMealPlanOccurrence(o.id))).then(() => {
+      showToast(t('toast_removed_from_meals'));
+      if (document.getElementById('listView').style.display !== 'none') {
+        renderPlanningRecipes();
         renderList();
       }
     });
