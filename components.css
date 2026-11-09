@@ -216,7 +216,7 @@
 /* ---- Chips / tags / segmented control ---- */
 .meta-pill {
   font-size: 14px;
-  padding: 3px 9px;
+  padding: 4px 8px;
   border-radius: var(--corner-radius-round);
   background: var(--surface-lowest);
   color: var(--text-icon-default);
@@ -227,14 +227,14 @@
 .meta-pill--on-dark {
   background: rgba(255, 255, 255, 0.18);
   color: var(--text-icon-on-primary);
-  padding: 8px 14px;
+  padding: 8px 12px;
 }
 .tags { display: flex; gap: 5px; flex-wrap: wrap; }
 .tag {
   font-size: 14px;
   background: var(--surface-lowest);
   color: var(--text-icon-default);
-  padding: 3px 9px;
+  padding: 4px 8px;
   border-radius: var(--corner-radius-round);
   display: inline-flex;
   align-items: center;
@@ -277,7 +277,7 @@
 .subtab-btn, .filter-chip {
   flex: 1;
   height: 48px;
-  padding: 0 10px;
+  padding: 0 8px;
   border: none;
   background: var(--interaction-tertiary);
   border-radius: var(--corner-radius-default);
@@ -537,7 +537,7 @@
 .field-input-icon {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   height: var(--height-default);
   padding: 0 var(--padding-horizontal-default);
   border: 1px solid var(--border-default);
@@ -571,7 +571,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   padding: var(--padding-vertical-large) 0;
   border-bottom: 1px solid var(--border-divider);
   background: none;
@@ -668,7 +668,7 @@
   background: var(--interaction-primary);
   border: none;
   border-radius: var(--corner-radius-round);
-  padding: 9px 14px;
+  padding: 8px 12px;
   line-height: 1;
 }
 
@@ -806,7 +806,7 @@
   align-items: flex-start;
   justify-content: flex-end;
   gap: 8px;
-  padding: 18px;
+  padding: 16px;
 }
 .card-v2-content h3 {
   margin: 0;
@@ -866,7 +866,7 @@
 .card-grid-plus svg { font-size: 13px; }
 .card-grid-title {
   position: absolute;
-  left: 10px; right: 10px; bottom: 9px;
+  left: 8px; right: 8px; bottom: 8px;
   margin: 0;
   font-family: 'Inter', sans-serif;
   font-size: 14px;
@@ -891,7 +891,7 @@
   overflow-y: auto;
 }
 .autocomplete-item {
-  padding: 9px 12px;
+  padding: 8px 12px;
   font-size: 14px;
   cursor: pointer;
 }
@@ -959,7 +959,7 @@
   position: fixed;
   bottom: 0; left: 0; right: 0;
   display: flex;
-  gap: 10px;
+  gap: 8px;
   padding: 40px 16px calc(16px + env(safe-area-inset-bottom));
   background: linear-gradient(to bottom,
     rgba(255, 253, 248, 0) 0px,
