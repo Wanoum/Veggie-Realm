@@ -2308,7 +2308,8 @@
     document.getElementById('planningView').style.display = 'block';
     placeAndShowNav('planningViewTitleRow');
     showSettingsBtn('planningViewActions');
-    document.getElementById('navAdd').style.display = 'flex';
+    // Pas de "+" sur Acheter : réservé à Choisir (décision déjà actée sur
+    // Variant27-Acheter). hideAllViews() l'a déjà masqué, rien à refaire.
     document.getElementById('navPlanning').classList.add('active');
     renderCoursesList();
     sessionStorage.setItem('lastView', 'planning');
@@ -2320,7 +2321,7 @@
     document.getElementById('cuisinerView').style.display = 'block';
     placeAndShowNav('cuisinerViewTitleRow');
     showSettingsBtn('cuisinerViewTitleRow');
-    document.getElementById('navAdd').style.display = 'flex';
+    // Pas de "+" sur Cuisiner non plus, même règle que Acheter.
     document.getElementById('navCuisiner').classList.add('active');
     renderCuisinerList();
     sessionStorage.setItem('lastView', 'cuisiner');
