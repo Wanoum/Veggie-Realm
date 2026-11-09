@@ -229,7 +229,7 @@
   color: var(--text-icon-on-primary);
   padding: 8px 12px;
 }
-.tags { display: flex; gap: 5px; flex-wrap: wrap; }
+.tags { display: flex; gap: 4px; flex-wrap: wrap; }
 .tag {
   font-size: 14px;
   background: var(--surface-lowest);
@@ -289,7 +289,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   white-space: nowrap;
 }
 .subtab-btn.active, .filter-chip.active {
@@ -447,7 +447,7 @@
   transform: translateX(-50%);
   width: fit-content;
   bottom: calc(var(--height-default) + 12px + env(safe-area-inset-bottom) + 8px);
-  height: 30px;
+  height: 32px;
   box-sizing: border-box;
   border-radius: var(--corner-radius-round);
   background: var(--surface-highest);
@@ -455,8 +455,8 @@
   box-shadow: 0 4px 14px rgba(41, 59, 46, 0.1);
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
+  gap: 4px;
+  padding: 8px 12px;
   z-index: 90;
 }
 .floating-search i, .floating-search svg { font-size: 14px; color: var(--text-icon-secondary); flex-shrink: 0; }
@@ -517,7 +517,7 @@
 }
 
 /* ---- Champs de formulaire ---- */
-.field-label { display:block; font-size:14px; color:var(--text-icon-secondary); margin:14px 0 4px; }
+.field-label { display:block; font-size:14px; color:var(--text-icon-secondary); margin:12px 0 4px; }
 .field-input {
   width: 100%;
   height: var(--height-default);
@@ -620,7 +620,7 @@
 #bottomNav {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
+  gap: 4px;
   margin: 0 0 var(--gap-vertical-section);
 }
 .nav-btn {
@@ -632,14 +632,14 @@
      dans la colonne (V27 ne pose aucun text-align sur .stepLabels span,
      donc hérite de l'alignement par défaut à gauche). */
   align-items: flex-start;
-  gap: 6px;
+  gap: 4px;
   background: none;
   border: none;
   padding: 0;
 }
 .nav-seg {
   align-self: stretch;
-  height: 3px;
+  height: 4px;
   border-radius: 2px;
   background: var(--border-divider);
 }
@@ -743,7 +743,7 @@
   border-radius: var(--corner-radius-default);
   background: var(--surface-low);
   overflow: hidden;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 .mini-card-photo img { width: 100%; height: 100%; object-fit: cover; }
 .mini-card p { font-size: 12px; font-weight: 600; margin: 0; line-height: 1.3; color: var(--text-icon-default); }
@@ -769,7 +769,7 @@
    l'icône par simple héritage — une règle ici qui la fixerait directement
    sur le svg primerait toujours sur ce style inline du parent. */
 .photo-empty i, .photo-empty svg { font-size: 32px; }
-.card h3 { margin: 0 0 6px; font-family: 'Inter', sans-serif; font-size: 18px; line-height: 120%; font-weight: 500; color: var(--text-icon-default); }
+.card h3 { margin: 0 0 8px; font-family: 'Inter', sans-serif; font-size: 18px; line-height: 120%; font-weight: 500; color: var(--text-icon-default); }
 .card-thumb { display: none; }
 
 /* Card recette pleine largeur de l'accueil : photo + bandeau de texte
