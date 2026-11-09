@@ -156,6 +156,6 @@ body {
   padding: calc(var(--padding-horizontal-app) + env(safe-area-inset-top) + 8px) var(--padding-horizontal-app) calc(env(safe-area-inset-bottom) + var(--padding-vertical-large));
 }
 .serif { font-family: 'Spectral', Georgia, serif; }
-h1 { font-family: 'Spectral', Georgia, serif; font-size: 48px; line-height: 100%; font-weight: 400; margin: 0 0 var(--gap-vertical-section); color: var(--text-icon-default); }
+h1 { font-family: 'Spectral', Georgia, serif; font-size: 40px; line-height: 100%; font-weight: 400; margin: 0 0 var(--gap-vertical-section); color: var(--text-icon-default); }
 h2 { font-family: 'Inter', sans-serif; font-size: 24px; line-height: 120%; font-weight: 600; margin: var(--gap-vertical-section) 0 12px; color: var(--text-icon-default); }
 .count { font-size: 14px; color: var(--text-icon-secondary); margin-bottom: 14px; }
