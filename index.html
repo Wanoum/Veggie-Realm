@@ -434,8 +434,8 @@
     </div>
 
     <p style="text-align:center;margin-top:16px;">
-      <button type="button" onclick="location.reload()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;padding:0;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-icon-accent);text-decoration:underline;">
-        <svg class="icon-svg" style="font-size:20px;"><use href="#icon-refresh-outline"/></svg> <span data-i18n="account_update_app">Mettre à jour l'application</span>
+      <button type="button" class="text-link" onclick="location.reload()">
+        <svg class="icon-svg"><use href="#icon-refresh-outline"/></svg> <span data-i18n="account_update_app">Mettre à jour l'application</span>
       </button>
     </p>
   </div>
@@ -2470,13 +2470,28 @@
       ['Clairs', ['light-50', 'light-100', 'light-150', 'light-200', 'light-300', 'light-400', 'light-500']],
       ['Autres', ['red-500', 'red-700', 'white']]
     ];
-    const semanticColors = [
-      'border-accent', 'border-default', 'border-divider', 'status-error', 'status-success',
-      'interaction-primary', 'interaction-secondary', 'interaction-tertiary', 'interaction-inverted',
-      'surface-high', 'surface-highest', 'surface-low', 'surface-lowest',
-      'text-icon-accent', 'text-icon-accent-strong', 'text-icon-default', 'text-icon-disabled',
-      'text-icon-error', 'text-icon-on-primary', 'text-icon-secondary'
+    // Retour du 2026-11-08 : "vers quel token primitif il renvoie, en
+    // tableau vertical, couleurs plus petites, ordonné par groupe" — paire
+    // [nom, primitif] plutôt qu'une simple liste de noms ; `null` = valeur
+    // directe (pas une référence à un primitif), voir tokens.css.
+    const semanticGroups = [
+      ['Bordures', [['border-accent', 'green-700'], ['border-default', 'grey-500'], ['border-divider', 'light-500']]],
+      ['Statuts', [['status-error', null], ['status-success', null]]],
+      ['Interaction', [['interaction-primary', 'green-700'], ['interaction-secondary', 'green-200'], ['interaction-tertiary', 'green-100'], ['interaction-inverted', 'green-800']]],
+      ['Voiles', [['overlay-default', null], ['overlay-error', null], ['overlay-button', null]]],
+      ['Surfaces', [['surface-high', 'light-50'], ['surface-highest', 'white'], ['surface-low', 'light-200'], ['surface-lowest', 'light-300']]],
+      ['Texte / icône', [['text-icon-accent', 'green-700'], ['text-icon-accent-strong', 'green-800'], ['text-icon-default', 'grey-900'], ['text-icon-disabled', 'grey-400'], ['text-icon-error', 'red-500'], ['text-icon-on-primary', 'white'], ['text-icon-secondary', 'grey-700']]]
     ];
+    function semanticTable(pairs) {
+      return `<div style="display:flex;flex-direction:column;">${pairs.map(([name, primitive]) => `
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-divider);">
+          <div data-color-resolve="${name}" style="width:16px;height:16px;border-radius:3px;border:1px solid var(--border-divider);background:var(--${name});flex-shrink:0;"></div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-default);flex:1;min-width:0;">--${name}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);flex-shrink:0;">${primitive ? `→ --${primitive}` : 'valeur directe'}</span>
+          <span data-color-hex="${name}" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);width:92px;text-align:right;flex-shrink:0;"></span>
+        </div>
+      `).join('')}</div>`;
+    }
 
     const sizeTokens = [
       'corner-radius-small', 'corner-radius-default', 'corner-radius-large', 'corner-radius-xlarge', 'corner-radius-round',
@@ -2536,11 +2551,21 @@
       `).join('')}</div>`;
     }
 
+    // Retour du 2026-11-08 : "un design system complet et un peu mieux
+    // organisé" — groupe Fondations (valeurs brutes) / Composants
+    // (assemblages réels de l'app), chacun introduit par un repère en
+    // majuscules plutôt qu'un simple enchaînement de sections à plat.
+    const metaGroup = label => `<p style="margin:0 0 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-icon-secondary);border-bottom:1px solid var(--border-divider);padding-bottom:8px;">${escapeHtml(label)}</p>`;
+
     const html = `
+      ${metaGroup('Fondations')}
       ${section('Couleurs', `
         ${primitiveGroups.map(([label, names]) => subLabel(label) + colorSwatches(names)).join('')}
         ${subLabel('Sémantiques')}
-        ${colorSwatches(semanticColors)}
+        ${semanticGroups.map(([label, pairs]) => `
+          <p style="margin:16px 0 4px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--text-icon-secondary);">${escapeHtml(label)}</p>
+          ${semanticTable(pairs)}
+        `).join('')}
       `)}
 
       ${section('Typographie', typeRows())}
@@ -2549,13 +2574,20 @@
 
       ${section('Rayons', radiusSwatches(radiusTokens))}
 
+      ${metaGroup('Composants')}
       ${section('Boutons', `
         <div style="display:flex;flex-direction:column;gap:16px;align-items:flex-start;">
           <button type="button" class="primary-btn" style="margin-top:0;width:auto;padding-left:20px;padding-right:20px;">Bouton primaire</button>
           <button type="button" class="secondary-btn" style="margin-top:0;width:auto;padding-left:20px;padding-right:20px;">Bouton secondaire</button>
           <button type="button" class="settings-pill-btn">Réglages</button>
-          <button type="button" class="text-link-action">Modifier</button>
           <button type="button" class="icon-btn glass-surface"><svg class="icon-svg icon"><use href="#icon-settings-outline"/></svg></button>
+          <button type="button" class="icon-pill-btn icon-pill-btn-accent" aria-label="Lancer le mode cuisine"><svg class="icon-svg"><use href="#icon-play-outline"/></svg></button>
+        </div>
+
+        ${subLabel('Liens (soulignés, navigation) vs actions texte (Plex Mono, pas de soulignement)')}
+        <div style="display:flex;flex-direction:column;gap:12px;align-items:flex-start;">
+          <button type="button" class="text-link"><svg class="icon-svg"><use href="#icon-refresh-outline"/></svg> Mettre à jour l'application</button>
+          <button type="button" class="text-link-action">Modifier</button>
         </div>
 
         ${subLabel('Chips')}
@@ -2572,6 +2604,67 @@
           <span class="card-grid-plus" style="top:8px;right:8px;"><svg class="icon-svg"><use href="#icon-plus-outline"/></svg></span>
         </div>
       `)}
+
+      ${section('Recherche', `
+        <div style="position:relative;height:40px;">
+          <div class="floating-search" style="position:absolute;left:0;top:0;transform:none;bottom:auto;width:fit-content;">
+            <svg class="icon-svg"><use href="#icon-search-outline"/></svg>
+            <span>Recherche</span>
+          </div>
+        </div>
+      `)}
+
+      ${section('Tab bar (step bar)', `
+        <nav style="display:flex;gap:6px;">
+          <button type="button" class="nav-btn active"><span class="nav-seg"></span><span class="nav-label">Choisir</span></button>
+          <button type="button" class="nav-btn"><span class="nav-seg"></span><span class="nav-label">Acheter</span></button>
+          <button type="button" class="nav-btn"><span class="nav-seg"></span><span class="nav-label">Cuisiner</span></button>
+        </nav>
+      `)}
+
+      ${section('Sélection unique (radio)', `
+        <div class="settings-list">
+          <button type="button" class="settings-row"><span>Français</span><svg class="icon-svg"><use href="#icon-check-outline"/></svg></button>
+          <button type="button" class="settings-row" style="border-bottom:none;"><span>English</span><svg class="icon-svg" style="visibility:hidden;"><use href="#icon-check-outline"/></svg></button>
+        </div>
+      `)}
+
+      ${section('Listes', `
+        ${subLabel('Settings-list (Compte, menus)')}
+        <div class="settings-list">
+          <button type="button" class="settings-row"><span>Email</span><svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg></button>
+          <button type="button" class="settings-row" style="border-bottom:none;"><span>Pseudo</span><svg class="icon-svg"><use href="#icon-chevron-right-outline"/></svg></button>
+        </div>
+
+        ${subLabel('Liste de courses (checkbox + quantité)')}
+        <div>
+          <div class="course-item">
+            <div class="course-checkbox-visual"><svg class="icon-svg" style="font-size:14px;"><use href="#icon-check-outline"/></svg></div>
+            <div class="course-item-name">Chou-fleur</div>
+            <span class="course-qty">1</span>
+          </div>
+        </div>
+
+        ${subLabel('Repas prévus (miniature + nom + action)')}
+        <div class="plan-recipe-row">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:48px;height:48px;border-radius:var(--corner-radius-default);background:var(--interaction-tertiary);flex-shrink:0;"></div>
+            <div>
+              <div class="plan-recipe-name">Shakshuka végétarienne</div>
+              <div class="plan-recipe-tags">2 personnes</div>
+            </div>
+          </div>
+          <button type="button" class="text-link-action">Modifier</button>
+        </div>
+      `)}
+
+      ${section('Dialogue de confirmation', `
+        <div style="max-width:320px;background:var(--surface-highest);border:1px solid var(--border-divider);border-radius:var(--corner-radius-large);padding:var(--padding-horizontal-app);">
+          <p class="text-body" style="margin:0 0 20px;color:var(--text-icon-default);">Vider le planning de la semaine ?</p>
+          <button type="button" class="primary-btn" style="margin-top:0;">Confirmer</button>
+          <button type="button" class="secondary-btn"><svg class="icon-svg"><use href="#icon-close-outline"/></svg> Annuler</button>
+        </div>
+      `)}
     `;
     document.getElementById('styleGuideContent').innerHTML = html;
 
@@ -2585,9 +2678,11 @@
       if (!detailEl) return;
       const family = cs.fontFamily.split(',')[0].replace(/['"]/g, '');
       const lineHeight = cs.lineHeight === 'normal' ? 'normal' : `${parseFloat(cs.lineHeight)}px`;
+      const letterSpacing = cs.letterSpacing === 'normal' ? 'normal' : `${parseFloat(cs.letterSpacing)}px`;
       detailEl.innerHTML = [
         `taille : ${parseFloat(cs.fontSize)}px`,
         `line-height : ${lineHeight}`,
+        `letter-spacing : ${letterSpacing}`,
         `graisse : ${cs.fontWeight}`,
         `famille : ${escapeHtml(family)}`,
         `couleur : ${cs.color}`
@@ -2602,6 +2697,15 @@
       const valueEl = row.querySelector('[data-size-value]');
       if (!bar || !valueEl) return;
       valueEl.textContent = `${Math.round(parseFloat(getComputedStyle(bar).width))}px`;
+    });
+
+    // Valeur résolue (hex/rgba) de chaque token sémantique du tableau
+    // vertical — lue sur le petit carré de couleur une fois rendu, jamais
+    // recalculée à la main.
+    document.querySelectorAll('[data-color-resolve]').forEach(swatch => {
+      const hexEl = document.querySelector(`[data-color-hex="${swatch.dataset.colorResolve}"]`);
+      if (!hexEl) return;
+      hexEl.textContent = getComputedStyle(swatch).backgroundColor;
     });
   }
 

@@ -110,6 +110,27 @@
   flex-shrink: 0;
 }
 
+/* ---- Lien (navigation) ----
+   Contrepartie soulignée de .text-link-action : réservée à une vraie
+   navigation (ex. "Mettre à jour l'application"), jamais à une action
+   secondaire sur place — même règle d'audit que ci-dessus. Plusieurs
+   endroits du code répétaient ce même style en inline avant cette classe
+   (ex. le lien de mise à jour dans Compte). */
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-icon-accent);
+  text-decoration: underline;
+}
+.text-link .icon-svg { font-size: 20px; text-decoration: none; }
+
 /* ---- Repère de section (eyebrow discret au-dessus d'une liste) ----
    Un <h2> de section ("Repas prévus", "Mes recettes"...) a la même taille/
    couleur que les titres du contenu en dessous (titre de recette sur une
