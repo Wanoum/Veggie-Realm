@@ -140,14 +140,6 @@
   <div id="sharedRecipeContent"></div>
 </div>
 
-<div id="savedRecipesView" class="page-fullbleed" style="display:none;">
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--gap-vertical-section);">
-    <button type="button" class="icon-btn icon-btn-lg glass-surface" onclick="playBackButtonAnimation('savedRecipesView')"><svg class="icon-svg icon"><use href="#icon-arrow-left-outline"/></svg></button>
-    <h1 class="text-headline" data-i18n="saved_recipes_title" style="margin:0;">Recettes partagées</h1>
-  </div>
-  <div id="savedRecipesList" style="display:grid;grid-template-columns:1fr;gap:var(--gap-large);"></div>
-</div>
-
 <div id="pullIndicator" style="display:flex;justify-content:center;align-items:center;height:0;overflow:hidden;transition:height 0.15s;">
   <svg class="icon-svg" id="pullIcon" style="font-size:20px;color:var(--text-icon-secondary);"><use href="#icon-refresh-outline"/></svg>
 </div>
@@ -345,11 +337,6 @@
   <svg class="icon-svg"><use href="#icon-search-outline"/></svg>
   <input id="recipeSearchInput" data-i18n-placeholder="search_placeholder" placeholder="Recherche" oninput="handleRecipeSearchInput()" />
 </div>
-<div id="savedSearchBar" class="floating-search" style="display:none;">
-  <svg class="icon-svg"><use href="#icon-search-outline"/></svg>
-  <input id="savedSearchInput" data-i18n-placeholder="search_placeholder" placeholder="Recherche" oninput="handleSavedSearchInput()" />
-</div>
-
 <nav id="bottomNav" style="display:none;">
   <button id="navHome" class="nav-btn active">
     <span class="nav-seg"></span>
@@ -982,7 +969,7 @@
       document.body.appendChild(measurer);
       sizeFloatingSearchInputs._measurer = measurer;
     }
-    ['recipeSearchInput', 'savedSearchInput'].forEach(id => {
+    ['recipeSearchInput'].forEach(id => {
       const input = document.getElementById(id);
       if (!input) return;
       measurer.textContent = input.placeholder || '';
@@ -1875,10 +1862,8 @@
     document.getElementById('accountEditFooter').style.display = 'none';
     document.getElementById('coursesEditFooter').style.display = 'none';
     document.getElementById('sharedRecipeView').style.display = 'none';
-    document.getElementById('savedRecipesView').style.display = 'none';
     document.getElementById('edgeSwipeScrim').style.display = 'none';
     document.getElementById('recipeSearchBar').style.display = 'none';
-    document.getElementById('savedSearchBar').style.display = 'none';
     document.getElementById('detailView').style.position = '';
     document.getElementById('detailView').style.inset = '';
     document.getElementById('detailView').style.transform = '';
@@ -2345,56 +2330,6 @@
     sessionStorage.setItem('lastView', 'cuisiner');
   }
 
-  function showSavedRecipes() {
-    window.scrollTo(0, 0);
-    hideAllViews();
-    document.getElementById('savedRecipesView').style.display = 'block';
-    document.getElementById('savedSearchBar').style.display = 'flex';
-    sizeFloatingSearchInputs();
-    document.getElementById('bottomNav').style.display = 'none';
-    animatePageEnter(document.getElementById('savedRecipesView'));
-    sessionStorage.setItem('lastView', 'saved');
-    renderSavedRecipesList();
-  }
-
-  let savedSearchQuery = '';
-  function handleSavedSearchInput() {
-    savedSearchQuery = normalize(document.getElementById('savedSearchInput').value);
-    renderSavedRecipesList();
-  }
-
-  function renderSavedRecipesList() {
-    const list = document.getElementById('savedRecipesList');
-    if (!list) return;
-    if (savedRecipes.length === 0) {
-      list.innerHTML = '<div class="empty">Aucune recette partagée pour le moment.</div>';
-      return;
-    }
-    const filtered = savedSearchQuery ? savedRecipes.filter(row => matchesQuery(row.recipe, savedSearchQuery)) : savedRecipes;
-    if (filtered.length === 0) {
-      list.innerHTML = '<div class="empty">Aucun résultat pour ces critères.</div>';
-      return;
-    }
-    list.innerHTML = filtered.map(row => {
-      const r = row.recipe;
-      return `
-      <div class="card-v2" onclick="loadSharedRecipe('${r.share_token}', 'saved')">
-        <div class="card-v2-photo">
-          ${safeUrl(r.photo_url)
-            ? `<img src="${escapeHtml(safeUrl(r.photo_url))}" alt="" onerror="this.parentElement.innerHTML=emptyPhotoHtml('${r.id}','big','background:var(--interaction-primary);color:var(--text-icon-on-primary);')" />`
-            : emptyPhotoHtml(r.id, 'big', 'background:var(--interaction-primary);color:var(--text-icon-on-primary);')}
-        </div>
-        <div class="card-v2-textwrap">
-          <div class="card-v2-gradient"></div>
-        </div>
-        <div class="card-v2-content">
-          <h3>${escapeHtml(r.title)}</h3>
-        </div>
-      </div>
-      `;
-    }).join('');
-  }
-
   let accountProfileCache = null;
 
   async function showAccount(returnView) {
@@ -2647,20 +2582,13 @@
       `)}
 
       ${section('Cartes', `
-        ${subLabel('card-grid (grille "Mes recettes")')}
+        ${subLabel('card-grid (grille "Mes recettes" et recettes partagées)')}
         <div class="card-grid" style="width:160px;cursor:default;">
           <div class="card-grid-photo" style="background:var(--interaction-primary);">
             <div class="card-grid-scrim"></div>
             <span class="card-grid-plus" style="top:8px;right:8px;"><svg class="icon-svg"><use href="#icon-plus-outline"/></svg></span>
             <h3 class="card-grid-title">Shakshuka végétarienne</h3>
           </div>
-        </div>
-
-        ${subLabel('card-v2 (recettes partagées)')}
-        <div class="card-v2" style="width:280px;cursor:default;">
-          <div class="card-v2-photo" style="background:var(--interaction-primary);"></div>
-          <div class="card-v2-textwrap"><div class="card-v2-gradient"></div></div>
-          <div class="card-v2-content"><h3>Shakshuka végétarienne</h3></div>
         </div>
       `)}
 
@@ -3060,7 +2988,7 @@
   // partagées avec le pull-to-refresh ci-dessous, pour qu'il ne se déclenche
   // ni pendant un geste de retour, ni sur une sous-page (voir isRefreshAllowed).
   const EDGE_SWIPE_ZONE_PX = 24;
-  const EDGE_SWIPE_PAGE_IDS = ['detailView', 'sharedRecipeView', 'savedRecipesView', 'accountEditView', 'formView', 'styleGuideView'];
+  const EDGE_SWIPE_PAGE_IDS = ['detailView', 'sharedRecipeView', 'accountEditView', 'formView', 'styleGuideView'];
 
   // ---- Tirer pour rafraîchir (pull-to-refresh) ----
   (function setupPullToRefresh() {
@@ -3328,7 +3256,6 @@
     const EDGE_SWIPE_VIEWS = [
       { id: 'detailView', back: () => goBackFromDetail(), hasPhoto: true, reveal: 'listView' },
       { id: 'sharedRecipeView', back: () => goBackFromSharedRecipe(), hasPhoto: true, reveal: 'listView' },
-      { id: 'savedRecipesView', back: () => showHome(), reveal: 'listView' },
       { id: 'accountEditView', back: () => closeAccountEdit(), reveal: 'accountView' },
       { id: 'styleGuideView', back: () => closeStyleGuide(), reveal: 'accountView' },
       { id: 'accountView', back: () => goBackFromAccount() },
@@ -3558,8 +3485,7 @@
       && document.getElementById('formView').style.display === 'none'
       && document.getElementById('styleGuideView').style.display === 'none'
       && document.getElementById('accountEditView').style.display === 'none'
-      && document.getElementById('sharedRecipeView').style.display === 'none'
-      && document.getElementById('savedRecipesView').style.display === 'none';
+      && document.getElementById('sharedRecipeView').style.display === 'none';
   }
 
   let lastResumeRefresh = 0;
@@ -5963,7 +5889,6 @@
       if (draft) resumeFormFromDraft(draft); else showForm();
     }
     else if (lastView === 'account') showAccount();
-    else if (lastView === 'saved') showSavedRecipes();
     else showHome();
 
     loadMealPlan();
@@ -6096,11 +6021,10 @@
 
   // ---- Recette partagée publique (accessible sans compte) ----
   let currentSharedRecipe = null;
-  let sharedRecipeReturnView = 'home'; // où revenir depuis la recette partagée : 'home', 'saved', 'planning' ou 'cuisiner'
+  let sharedRecipeReturnView = 'home'; // où revenir depuis la recette partagée : 'home', 'planning' ou 'cuisiner'
 
   function goBackFromSharedRecipe() {
-    if (sharedRecipeReturnView === 'saved') showSavedRecipes();
-    else if (sharedRecipeReturnView === 'planning') showPlanning();
+    if (sharedRecipeReturnView === 'planning') showPlanning();
     else if (sharedRecipeReturnView === 'cuisiner') showCuisiner();
     else showHome();
   }
@@ -6208,7 +6132,6 @@
     document.getElementById('planningView').style.display = 'none';
     document.getElementById('accountView').style.display = 'none';
     document.getElementById('authView').style.display = 'none';
-    document.getElementById('savedRecipesView').style.display = 'none';
     document.getElementById('bottomNav').style.display = 'none';
   }
 
@@ -6270,18 +6193,13 @@
       .order('saved_at', { ascending: false });
     if (error) { console.error(error); return; }
     savedRecipes = (data || []).filter(row => row.recipe);
-    renderSavedRecipesSection();
-    renderSavedRecipesList();
-    renderPlanningRecipes();
-  }
-
-  // "Recettes partagées" vit maintenant comme chip dans #tagFilters (voir
-  // renderTagFilters), plus dans sa propre section à part — on relance
-  // juste ce rendu pour que la chip apparaisse/disparaisse une fois
-  // savedRecipes chargé (son nombre n'est pas connu au premier rendu de
-  // la grille, qui a lieu avant la fin de loadSavedRecipes).
-  function renderSavedRecipesSection() {
+    // "Recettes partagées" vit comme chip dans #tagFilters (voir
+    // renderTagFilters) — on relance juste ce rendu pour qu'elle
+    // apparaisse/disparaisse une fois savedRecipes chargé (son nombre
+    // n'est pas connu au premier rendu de la grille, qui a lieu avant la
+    // fin de loadSavedRecipes).
     renderTagFilters();
+    renderPlanningRecipes();
   }
 
   // ---- Point d'entrée ----
