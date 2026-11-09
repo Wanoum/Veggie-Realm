@@ -194,7 +194,7 @@
 .btn-square { width: var(--height-default); flex: 0 0 var(--height-default); padding: 0; }
 /* Variante destructive du bouton primaire (dialogues de confirmation —
    suppression, réinitialisation). */
-.primary-btn-danger { background: var(--red-700); }
+.primary-btn-danger { background: var(--interaction-danger); }
 .primary-btn:disabled, .primary-btn.disabled-look, .secondary-btn:disabled {
   background: var(--surface-lowest);
   color: var(--text-icon-disabled);
@@ -790,9 +790,12 @@
 }
 .card-v2-content h3 {
   margin: 0;
+  /* Retour du 2026-11-09 : "harmonise les deux tailles, même style" — reprend
+     exactement .card-grid-title (famille, taille, line-height, graisse)
+     plutôt qu'une déclaration dupliquée qui dérivait (24px vs 14px). */
   font-family: 'Inter', sans-serif;
-  font-size: 24px;
-  line-height: 1.15;
+  font-size: 14px;
+  line-height: 1.25;
   font-weight: 700;
   color: var(--text-icon-on-primary);
 }

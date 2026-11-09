@@ -8,17 +8,6 @@
    ========================================================================== */
 
 /* ---- Choisir (accueil) ---- */
-/* "Blou Mint" est le seul h1 de l'app qui est aussi le logo — contrairement
-   aux titres d'écran classiques ("Compte", "Nouvelle recette"...), qui
-   restent droits. Classe partagée par les 3 écrans (Choisir/Acheter/
-   Cuisiner), pas seulement #listViewTitle. Retour du 2026-11-09 : h1 et
-   .brand-title fusionnés (même taille, voir tokens.css) — cette classe
-   n'ajoute plus que l'italique qui distingue le logo d'un titre d'écran
-   classique. */
-.brand-title {
-  font-style: italic;
-}
-
 /* ---- Fiche recette ---- */
 .detail-photo {
   position: fixed;

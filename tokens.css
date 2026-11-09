@@ -12,7 +12,6 @@
 :root {
   /* ---- Primitives ---- */
   --green-100: #dde5da;
-  --green-300: #c0c6b2;
   --lime-300: #eaf6ad;
   --green-700: #244d3b;
   --green-800: #293b2e;
@@ -20,11 +19,8 @@
   --grey-500: #8e897f;
   --grey-700: #6f6e66;
   --grey-900: #191a17;
-  --light-100: #f7f5ed;
-  --light-150: #f7f3eb;
   --light-200: #f4f6f0;
   --light-300: #eae4d8;
-  --light-400: #e8e3d6;
   --light-50: #fffdf8;
   --light-500: #ddd7cc;
   --red-500: #a22205;
@@ -41,6 +37,7 @@
   --interaction-secondary: var(--lime-300);
   --interaction-tertiary: var(--green-100);
   --interaction-inverted: var(--green-800);
+  --interaction-danger: var(--red-700);
   /* Voile derrière un bottom sheet ou un dialogue de confirmation : vert
      foncé semi-transparent (pas noir) — reprend la maquette Figma
      (interaction/inverted à 40%). --overlay-error (red-700 à 20%) habille
@@ -160,11 +157,10 @@ body {
   padding: calc(var(--padding-horizontal-app) + env(safe-area-inset-top) + 8px) var(--padding-horizontal-app) calc(env(safe-area-inset-bottom) + var(--padding-vertical-large));
 }
 .serif { font-family: 'Spectral', Georgia, serif; }
-/* Retour du 2026-11-09 : "pourquoi a-t-on h1 ET .brand-title ?" — fusionnés
-   en un seul concept (h1 = titre d'écran, y compris "Blou Mint" sur
-   Choisir/Acheter/Cuisiner) ; taille reprise de l'ancienne .brand-title
-   (32px, plus petite que les 40px d'avant la fusion). .brand-title
-   (pages.css) ne fait plus qu'ajouter l'italique pour ce cas-là. */
-h1 { font-family: 'Spectral', Georgia, serif; font-size: 32px; line-height: 100%; font-weight: 400; margin: 0 0 var(--gap-vertical-section); color: var(--text-icon-default); }
+/* Retour du 2026-11-09 : "pourquoi a-t-on h1 ET .brand-title ?" puis
+   "le nouveau h1 devra aussi être en italique" — entièrement fusionnés :
+   .brand-title n'existe plus, tous les h1 reprennent sa taille (32px) et
+   son italique. */
+h1 { font-family: 'Spectral', Georgia, serif; font-size: 32px; font-style: italic; line-height: 100%; font-weight: 400; margin: 0 0 var(--gap-vertical-section); color: var(--text-icon-default); }
 h2 { font-family: 'Inter', sans-serif; font-size: 24px; line-height: 120%; font-weight: 600; margin: var(--gap-vertical-section) 0 12px; color: var(--text-icon-default); }
 .count { font-size: 14px; color: var(--text-icon-secondary); margin-bottom: 14px; }

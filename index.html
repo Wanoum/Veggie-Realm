@@ -154,7 +154,7 @@
 
 <div id="listView" style="display:none;">
   <div id="listViewTitleRow" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);">
-    <h1 id="listViewTitle" class="brand-title" style="margin:0;">Blou Mint</h1>
+    <h1 id="listViewTitle" style="margin:0;">Blou Mint</h1>
   </div>
 
   <div id="plannedMealsSection" style="display:none;margin-bottom:var(--gap-vertical-section);">
@@ -464,7 +464,7 @@
 
 <div id="planningView" style="display:none;">
   <div id="planningViewTitleRow" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);position:relative;">
-    <h1 class="brand-title" style="margin:0;">Blou Mint</h1>
+    <h1 style="margin:0;">Blou Mint</h1>
     <div id="planningViewActions" style="display:flex;align-items:center;gap:8px;">
       <button type="button" class="icon-btn glass-surface" id="coursesMenuBtn" onclick="openCoursesActionsSheet()"><svg class="icon-svg"><use href="#icon-more-horizontal-outline"/></svg></button>
     </div>
@@ -484,7 +484,7 @@
 
 <div id="cuisinerView" style="display:none;">
   <div id="cuisinerViewTitleRow" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);">
-    <h1 id="cuisinerViewTitle" class="brand-title" style="margin:0;">Blou Mint</h1>
+    <h1 id="cuisinerViewTitle" style="margin:0;">Blou Mint</h1>
   </div>
   <div id="cuisinerList"></div>
 </div>
@@ -2458,11 +2458,14 @@
     // classe qui n'existerait plus que pour ce seul outil.
     const subLabel = label => `<p class="text-small-medium" style="margin:24px 0 12px;color:var(--text-icon-secondary);">${escapeHtml(label)}</p>`;
 
+    // Retour du 2026-11-09 : "supprime les couleurs mortes" —
+    // green-300/light-100/light-150/light-400 retirées (ni référencées par
+    // un token sémantique, ni utilisées ailleurs, voir tokens.css).
     const primitiveGroups = [
-      ['Vert', ['green-100', 'green-300', 'green-700', 'green-800']],
+      ['Vert', ['green-100', 'green-700', 'green-800']],
       ['Lime', ['lime-300']],
       ['Gris', ['grey-400', 'grey-500', 'grey-700', 'grey-900']],
-      ['Clairs', ['light-50', 'light-100', 'light-150', 'light-200', 'light-300', 'light-400', 'light-500']],
+      ['Clairs', ['light-50', 'light-200', 'light-300', 'light-500']],
       ['Autres', ['red-500', 'red-700', 'white']]
     ];
     // Retour du 2026-11-08 : "vers quel token primitif il renvoie, en
@@ -2472,7 +2475,7 @@
     const semanticGroups = [
       ['Bordures', [['border-accent', 'green-700'], ['border-default', 'grey-500'], ['border-divider', 'light-500']]],
       ['Statuts', [['status-error', null], ['status-success', null]]],
-      ['Interaction', [['interaction-primary', 'green-700'], ['interaction-secondary', 'lime-300'], ['interaction-tertiary', 'green-100'], ['interaction-inverted', 'green-800']]],
+      ['Interaction', [['interaction-primary', 'green-700'], ['interaction-secondary', 'lime-300'], ['interaction-tertiary', 'green-100'], ['interaction-inverted', 'green-800'], ['interaction-danger', 'red-700']]],
       ['Voiles', [['overlay-default', null], ['overlay-error', null], ['overlay-button', null]]],
       ['Surfaces', [['surface-high', 'light-50'], ['surface-highest', 'white'], ['surface-low', 'light-200'], ['surface-lowest', 'light-300']]],
       ['Texte / icône', [['text-icon-accent', 'green-700'], ['text-icon-accent-strong', 'green-800'], ['text-icon-default', 'grey-900'], ['text-icon-disabled', 'grey-400'], ['text-icon-error', 'red-500'], ['text-icon-on-primary', 'white'], ['text-icon-secondary', 'grey-700']]]
@@ -2554,16 +2557,15 @@
       `).join('')}</div>`;
     }
 
-    // Retour du 2026-11-09 : "pourquoi h1 ET .brand-title ?" — fusionnés
-    // (même taille, voir tokens.css), présentés ici comme 2 variantes du
-    // même h1 plutôt que 2 styles différents. .section-label retiré (plus
-    // utilisé nulle part dans l'app, voir subLabel ci-dessous) ;
+    // Retour du 2026-11-09 : "pourquoi h1 ET .brand-title ?" puis "le
+    // nouveau h1 devra aussi être en italique" — entièrement fusionnés,
+    // .brand-title n'existe plus (voir tokens.css). .section-label retiré
+    // (plus utilisé nulle part dans l'app, voir subLabel ci-dessous) ;
     // .text-quantity-mono retiré (fusionné dans .text-body) ; ajout de
     // .text-micro-mono (remplace les 11px ad hoc) et .cooking-step-text
     // (mode cuisine, 28px, absent jusqu'ici du design system).
     const typeSamples = [
-      ['h1', '', 'Titre d’écran', 'h1'],
-      ['h1.brand-title (Choisir/Acheter/Cuisiner)', 'brand-title', 'Blou Mint', 'h1'],
+      ['h1 (italique, titre d’écran y compris "Blou Mint")', '', 'Blou Mint', 'h1'],
       ['.text-headline', 'text-headline', 'Repas prévus', 'p'],
       ['.text-body-medium', 'text-body-medium', 'Shakshuka végétarienne', 'p'],
       ['.text-body', 'text-body', 'Texte courant', 'p'],
@@ -2616,6 +2618,7 @@
       ${section('Boutons', `
         <div style="display:flex;flex-direction:column;gap:16px;align-items:flex-start;">
           <button type="button" class="primary-btn" style="margin-top:0;width:auto;padding-left:20px;padding-right:20px;">Bouton primaire</button>
+          <button type="button" class="primary-btn primary-btn-danger" style="margin-top:0;width:auto;padding-left:20px;padding-right:20px;">Bouton destructif</button>
           <button type="button" class="secondary-btn" style="margin-top:0;width:auto;padding-left:20px;padding-right:20px;">Bouton secondaire</button>
           <button type="button" class="settings-pill-btn">Réglages</button>
           <button type="button" class="icon-btn glass-surface"><svg class="icon-svg icon"><use href="#icon-settings-outline"/></svg></button>
@@ -2640,6 +2643,24 @@
         </div>
         <div style="position:relative;width:120px;height:120px;border-radius:6px;overflow:hidden;background:var(--interaction-inverted);margin-top:8px;">
           <span class="card-grid-plus" style="top:8px;right:8px;"><svg class="icon-svg"><use href="#icon-plus-outline"/></svg></span>
+        </div>
+      `)}
+
+      ${section('Cartes', `
+        ${subLabel('card-grid (grille "Mes recettes")')}
+        <div class="card-grid" style="width:160px;cursor:default;">
+          <div class="card-grid-photo" style="background:var(--interaction-primary);">
+            <div class="card-grid-scrim"></div>
+            <span class="card-grid-plus" style="top:8px;right:8px;"><svg class="icon-svg"><use href="#icon-plus-outline"/></svg></span>
+            <h3 class="card-grid-title">Shakshuka végétarienne</h3>
+          </div>
+        </div>
+
+        ${subLabel('card-v2 (recettes partagées)')}
+        <div class="card-v2" style="width:280px;cursor:default;">
+          <div class="card-v2-photo" style="background:var(--interaction-primary);"></div>
+          <div class="card-v2-textwrap"><div class="card-v2-gradient"></div></div>
+          <div class="card-v2-content"><h3>Shakshuka végétarienne</h3></div>
         </div>
       `)}
 
@@ -6050,14 +6071,24 @@
     await sb.auth.signOut();
   };
 
+  // Retour du 2026-11-09 : "le design system disparaît en changeant de
+  // fenêtre" — reproductible même sur ordinateur (Chrome/Claude), donc pas
+  // un souci de mémoire iOS. Cause réelle : Supabase écoute lui-même le
+  // focus/visibilitychange pour rafraîchir le token, et refire
+  // onAuthStateChange à chaque retour sur l'onglet (TOKEN_REFRESHED).
+  // startApp() était rappelé à chaque fois, qui renavigue vers `lastView`
+  // (sessionStorage) — écrasant la vue courante (ex. styleGuideView) sans
+  // qu'aucune vraie reconnexion n'ait eu lieu. Ne (re)lancer startApp()
+  // que lors d'une transition déconnecté → connecté, pas à chaque event.
   sb.auth.onAuthStateChange((event, session) => {
+    const wasLoggedIn = !!currentUser;
     currentUser = session ? session.user : null;
     if (event === 'PASSWORD_RECOVERY') {
       showResetPasswordView();
       return;
     }
     if (currentUser) {
-      startApp();
+      if (!wasLoggedIn) startApp();
     } else if (!new URLSearchParams(location.search).get('recipe')) {
       showAuthView();
     }
