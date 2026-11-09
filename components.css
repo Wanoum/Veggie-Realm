@@ -701,6 +701,11 @@
   justify-content: center;
   gap: 6px;
 }
+/* .icon fixe sa propre couleur (text-icon-default, sombre) directement sur
+   le svg : une couleur posée sur l'élément lui-même gagne toujours sur
+   l'héritage du parent, quel que soit l'ordre des règles — sans ce
+   correctif les icônes restaient sombres sur le fond vert plein. */
+.settings-pill-btn .icon { color: inherit; }
 
 /* Positionnement flottant top-right générique — utilisé par le bouton de
    fermeture du formulaire d'ajout (#wizardCloseBtn), qui n'a pas de ligne
