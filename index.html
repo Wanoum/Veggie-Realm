@@ -2504,12 +2504,16 @@
       ['.text-small', 'text-small', 'Texte petit']
     ];
     function typeRows() {
-      return typeSamples.map(([label, cls, sample]) => `
+      return typeSamples.map(([label, cls], i) => {
+        const [, , sample] = typeSamples[i];
+        return `
         <div style="padding:12px 0;border-bottom:1px solid var(--border-divider);">
           <p style="margin:0 0 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);">${escapeHtml(label)}</p>
-          <${cls ? 'p' : 'h1'} class="${cls}" style="margin:0;">${escapeHtml(sample)}</${cls ? 'p' : 'h1'}>
+          <${cls ? 'p' : 'h1'} class="${cls}" data-type-sample="${i}" style="margin:0;">${escapeHtml(sample)}</${cls ? 'p' : 'h1'}>
+          <p data-type-detail="${i}" style="margin:6px 0 0;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);"></p>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     const html = `
@@ -2551,6 +2555,19 @@
       </div>
     `;
     document.getElementById('styleGuideContent').innerHTML = html;
+
+    // Détail de chaque échantillon de typo (taille, hauteur de ligne,
+    // graisse, famille, couleur) : lu sur l'élément une fois rendu plutôt
+    // que recalculé à la main, pour refléter la cascade réelle (y compris
+    // un éventuel changement à venir dans tokens.css/components.css).
+    document.querySelectorAll('[data-type-sample]').forEach(el => {
+      const cs = getComputedStyle(el);
+      const detailEl = document.querySelector(`[data-type-detail="${el.dataset.typeSample}"]`);
+      if (!detailEl) return;
+      const family = cs.fontFamily.split(',')[0].replace(/['"]/g, '');
+      detailEl.textContent =
+        `${family} · ${parseFloat(cs.fontSize)}px · ${cs.fontWeight} · line-height ${cs.lineHeight === 'normal' ? 'normal' : parseFloat(cs.lineHeight) + 'px'} · ${cs.color}`;
+    });
   }
 
   // Capture la vue courante (toujours l'un des 3 onglets, seuls à afficher
