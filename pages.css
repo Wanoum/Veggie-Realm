@@ -528,7 +528,8 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   background: var(--border-divider);
 }
 .plan-recipe-row:first-child { padding-top: 0; }
-.plan-recipe-row:last-child::after { display: none; }
+/* Retour du 2026-11-08 : "le dernier élément doit aussi avoir une bordure
+   vers le bas" — le dernier n'est plus exclu. */
 .plan-recipe-row .plan-recipe-name { font-size: 16px; font-weight: 500; }
 .plan-recipe-row .plan-recipe-tags { font-size: 14px; color: var(--text-icon-default); margin-top: 2px; }
 

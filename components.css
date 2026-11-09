@@ -427,45 +427,39 @@
 
 /* ---- Recherche flottante ----
    Composant unique réutilisé partout où il y a une recherche (accueil,
-   Repas prévus) : pilule en verre dépoli, fixée 8px au-dessus de la nav du
-   bas, pour flotter au-dessus du contenu qui défile derrière plutôt que de
-   prendre sa place dans le flux de la page. */
+   Repas prévus). Retour du 2026-11-08 : "le style du bouton recherche et
+   ajouter n'est pas encore bon, comme sur la maquette" — duoton (fond
+   clair + anneau ink), compact, comme Variant27 (.searchBox), pas le
+   verre dépoli de Variant41 (une exploration à part, jamais retenue comme
+   référence principale). */
 .floating-search {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
   width: fit-content;
   bottom: calc(var(--height-default) + 12px + env(safe-area-inset-bottom) + 8px);
+  height: 30px;
+  box-sizing: border-box;
   border-radius: var(--corner-radius-round);
+  background: var(--surface-highest);
+  border: 1.5px solid var(--interaction-inverted);
+  box-shadow: 0 4px 14px rgba(41, 59, 46, 0.1);
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
+  gap: 6px;
+  padding: 7px 14px;
   z-index: 90;
 }
-/* Ellipse plus étirée que le ::before générique de .glass-surface — la
-   pilule est beaucoup plus large que haute, le dégradé doit s'étirer pareil. */
-.floating-search::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: radial-gradient(ellipse 60% 100% at center, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 100%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-.floating-search i, .floating-search svg { font-size: 18px; color: var(--text-icon-default); flex-shrink: 0; }
+.floating-search i, .floating-search svg { font-size: 14px; color: var(--text-icon-secondary); flex-shrink: 0; }
 .floating-search input,
 .search-width-measure {
   /* Même règle de police pour l'input et son "miroir" de mesure (voir
      sizeFloatingSearchInputs dans index.html) : ils doivent matcher au
      pixel près, donc une seule et même déclaration pour les deux plutôt que
      deux copies qui pourraient diverger. */
-  font-family: 'Inter', sans-serif;
-  font-size: 16px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11.5px;
+  font-weight: 600;
 }
 .floating-search input {
   /* Largeur de repli avant que le JS ne mesure le texte exact du placeholder
@@ -855,10 +849,12 @@
 }
 /* Tailles reprises telles quelles de Variant27 (.badge 22px, .plusBtn
    26px — pas la même, volontairement). */
-.card-grid-badge { width: 22px; height: 22px; background: var(--interaction-inverted); color: var(--text-icon-on-primary); }
-.card-grid-badge svg { font-size: 12px; }
-.card-grid-plus { width: 26px; height: 26px; background: var(--interaction-secondary); color: var(--interaction-inverted); }
-.card-grid-plus svg { font-size: 14px; }
+/* Retour du 2026-11-08 : "24px, aucune ombre portée" — remplace les
+   tailles 22/26 reprises telles quelles de Variant27. */
+.card-grid-badge { width: 24px; height: 24px; background: var(--interaction-inverted); color: var(--text-icon-on-primary); }
+.card-grid-badge svg { font-size: 13px; }
+.card-grid-plus { width: 24px; height: 24px; background: var(--interaction-secondary); color: var(--interaction-inverted); }
+.card-grid-plus svg { font-size: 13px; }
 .card-grid-title {
   position: absolute;
   left: 10px; right: 10px; bottom: 9px;
