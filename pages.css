@@ -531,7 +531,10 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
 /* Retour du 2026-11-08 : "le dernier élément doit aussi avoir une bordure
    vers le bas" — le dernier n'est plus exclu. */
 .plan-recipe-row .plan-recipe-name { font-size: 16px; font-weight: 500; }
-.plan-recipe-row .plan-recipe-tags { font-size: 14px; color: var(--text-icon-default); margin-top: 2px; }
+/* Retour du 2026-11-08 : "utiliser grey-500 pour le sous-titre (2
+   personnes, Originale...)" — était en text-icon-default (plein contraste,
+   le même poids que le titre juste au-dessus). */
+.plan-recipe-row .plan-recipe-tags { font-size: 14px; color: var(--grey-500); margin-top: 2px; }
 
 /* ---- Cuisiner ---- */
 /* Badge "tous les ingrédients prêts" sous le nom d'une occurrence. */
