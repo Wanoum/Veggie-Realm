@@ -2668,6 +2668,37 @@
     `;
     document.getElementById('styleGuideContent').innerHTML = html;
 
+    // Retour du 2026-11-08 : "je veux voir les tokens utilisés [pour la
+    // couleur des typographies], s'il y en a plusieurs les lister" — la
+    // couleur calculée (cs.color) ne dit pas quel token CSS l'a posée ;
+    // reconstruit la correspondance en resolvant chaque token connu
+    // (primitifs + sémantiques) sur un élément jetable, puis en
+    // retrouvant tous les noms dont la valeur résolue correspond. Plus
+    // d'un nom possible quand deux tokens partagent la même couleur
+    // (ex. --text-icon-accent et --interaction-primary, tous deux
+    // green-700) — normal, pas un bug : on liste tout ce qui correspond.
+    function buildColorTokenMap() {
+      const allNames = [
+        ...primitiveGroups.flatMap(([, names]) => names),
+        ...semanticGroups.flatMap(([, pairs]) => pairs.map(([name]) => name))
+      ];
+      const probe = document.createElement('div');
+      probe.style.position = 'absolute';
+      probe.style.visibility = 'hidden';
+      probe.style.pointerEvents = 'none';
+      document.body.appendChild(probe);
+      const map = new Map();
+      allNames.forEach(name => {
+        probe.style.color = `var(--${name})`;
+        const resolved = getComputedStyle(probe).color;
+        if (!map.has(resolved)) map.set(resolved, []);
+        map.get(resolved).push(`--${name}`);
+      });
+      probe.remove();
+      return map;
+    }
+    const colorTokenMap = buildColorTokenMap();
+
     // Détail de chaque échantillon de typo (taille, hauteur de ligne,
     // graisse, famille, couleur) : lu sur l'élément une fois rendu plutôt
     // que recalculé à la main, pour refléter la cascade réelle (y compris
@@ -2679,13 +2710,15 @@
       const family = cs.fontFamily.split(',')[0].replace(/['"]/g, '');
       const lineHeight = cs.lineHeight === 'normal' ? 'normal' : `${parseFloat(cs.lineHeight)}px`;
       const letterSpacing = cs.letterSpacing === 'normal' ? 'normal' : `${parseFloat(cs.letterSpacing)}px`;
+      const tokenNames = colorTokenMap.get(cs.color);
+      const colorLabel = tokenNames ? tokenNames.join(', ') : cs.color;
       detailEl.innerHTML = [
         `taille : ${parseFloat(cs.fontSize)}px`,
         `line-height : ${lineHeight}`,
         `letter-spacing : ${letterSpacing}`,
         `graisse : ${cs.fontWeight}`,
         `famille : ${escapeHtml(family)}`,
-        `couleur : ${cs.color}`
+        `couleur : ${escapeHtml(colorLabel)} (${cs.color})`
       ].join('<br>');
     });
 
