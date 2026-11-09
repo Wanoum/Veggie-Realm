@@ -95,7 +95,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 0 28px;
+  padding: 0 24px;
   transform: translateY(0);
   transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
@@ -134,7 +134,7 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 20px 24px;
+  padding: 12px 24px 24px;
   flex-shrink: 0;
 }
 .cooking-counter {

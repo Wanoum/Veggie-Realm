@@ -915,7 +915,7 @@
   gap: var(--gap-xsmall);
   width: max-content;
   max-width: calc(100% - (2 * var(--padding-horizontal-app)));
-  min-height: 34px;
+  min-height: 32px;
   padding: 4px 6px 4px var(--padding-horizontal-contained);
   background: var(--interaction-inverted);
   color: var(--text-icon-on-primary);
