@@ -150,18 +150,25 @@
 .icon-pill-btn-danger { background: rgba(162, 34, 5, 0.12); color: var(--text-icon-error); }
 .icon-pill-btn-accent { background: var(--interaction-tertiary); color: var(--text-icon-accent); }
 
+/* Retour du 2026-11-09 : boutons primaire/secondaire sur .text-micro-mono
+   (Plex Mono majuscule, déjà utilisé par .text-link-action/.settings-pill-
+   btn) plutôt que sur .text-body — hauteur ramenée à 48px (dissociée de
+   --height-default, partagé avec les champs de formulaire) et coins en
+   corner-radius-round (pilule) au lieu des coins asymétriques. */
 .secondary-btn {
   width: 100%;
-  height: var(--height-default);
+  height: 48px;
   padding: 0 var(--padding-horizontal-default);
   margin-top: 8px;
   border: 1px solid var(--border-default);
-  border-radius: var(--corner-radius-default) var(--corner-radius-large) var(--corner-radius-default) var(--corner-radius-large);
+  border-radius: var(--corner-radius-round);
   background: var(--interaction-secondary);
-  font-family: 'Inter', sans-serif;
+  font-family: 'IBM Plex Mono', monospace;
   color: var(--text-icon-accent);
-  font-size: 18px;
+  font-size: 12px;
   line-height: 120%;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -169,21 +176,23 @@
   gap: var(--gap-default);
   box-shadow: none;
 }
-/* Icône plus grande que le texte (18px) dans les boutons primaire/
-   secondaire — reprend la taille des boutons-icône (icon-btn) de l'app. */
+/* Icône plus grande que le texte dans les boutons primaire/secondaire —
+   reprend la taille des boutons-icône (icon-btn) de l'app. */
 .secondary-btn .icon-svg, .primary-btn .icon-svg { font-size: 24px; }
 .primary-btn {
   width: 100%;
-  height: var(--height-default);
+  height: 48px;
   padding: 0 var(--padding-horizontal-default);
   margin-top: var(--gap-vertical-section);
   border: none;
-  border-radius: var(--corner-radius-large) var(--corner-radius-default) var(--corner-radius-large) var(--corner-radius-default);
+  border-radius: var(--corner-radius-round);
   background: var(--interaction-primary);
   color: var(--text-icon-on-primary);
-  font-family: 'Inter', sans-serif;
-  font-size: 18px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
   line-height: 120%;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -360,8 +369,12 @@
 .servings-stepper-lg.servings-stepper-tertiary .servings-value {
   background: var(--interaction-tertiary);
 }
-.servings-stepper-lg .servings-minus { border-radius: 64px var(--corner-radius-small) var(--corner-radius-small) 64px; }
-.servings-stepper-lg .servings-plus { border-radius: var(--corner-radius-small) 64px 64px var(--corner-radius-small); }
+/* Retour du 2026-11-09 : "uniformise le corner radius" — 64px (valeur en
+   dur) et var(--corner-radius-round) (999px+) donnent le même rendu ici
+   (bouton de 86px de haut, tout radius ≥ sa moitié plafonne en demi-
+   cercle) ; reprend le token plutôt que la valeur en dur. */
+.servings-stepper-lg .servings-minus { border-radius: var(--corner-radius-round) var(--corner-radius-small) var(--corner-radius-small) var(--corner-radius-round); }
+.servings-stepper-lg .servings-plus { border-radius: var(--corner-radius-small) var(--corner-radius-round) var(--corner-radius-round) var(--corner-radius-small); }
 .course-qty-target { color: var(--text-icon-secondary); }
 /* Courses > corriger une quantité : le champ texte (mode sans stepper) suit
    le même centrage horizontal que le stepper, pour que la valeur reste au
@@ -646,7 +659,7 @@
 .nav-seg {
   align-self: stretch;
   height: 4px;
-  border-radius: 2px;
+  border-radius: var(--corner-radius-round);
   background: var(--border-divider);
 }
 .nav-btn.active .nav-seg { background: var(--interaction-primary); }

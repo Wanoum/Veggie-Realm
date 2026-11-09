@@ -2484,10 +2484,14 @@
     // Retour du 2026-11-09 : "je veux la valeur en pixels, pas en REM" —
     // même logique que sizeRows : on mesure le border-radius calculé sur
     // l'élément une fois rendu plutôt que d'afficher la chaîne brute.
+    // Retour du 2026-11-09 : "afficher la valeur et le token correspondant"
+    // — le nom du token (--corner-radius-...) était absent, seule la
+    // valeur mesurée apparaissait.
     function radiusSwatches(names) {
       return `<div style="display:flex;gap:16px;flex-wrap:wrap;">${names.map(name => `
         <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
           <div data-radius-swatch="${name}" style="width:56px;height:56px;background:var(--interaction-tertiary);border:1px solid var(--border-divider);border-radius:var(--${name});"></div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-default);">--${name}</span>
           <span data-radius-value="${name}" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);"></span>
         </div>
       `).join('')}</div>`;
