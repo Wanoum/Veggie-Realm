@@ -228,8 +228,9 @@ ol li { margin-bottom: 10px; line-height: 1.6; font-family: 'Inter', sans-serif;
   flex-direction: column;
   justify-content: flex-end;
   background: var(--interaction-inverted);
-  /* Coins asymétriques, 32/8/32/8. */
-  border-radius: var(--corner-radius-xlarge) var(--corner-radius-default) var(--corner-radius-xlarge) var(--corner-radius-default);
+  /* Retour du 2026-11-09 : "unifier le corner radius à large sur tous les
+     angles" — remplace les coins asymétriques 32/8/32/8. */
+  border-radius: var(--corner-radius-large);
   padding: 0 var(--padding-horizontal-contained) 16px;
   margin: var(--gap-vertical-section) 0 20px;
 }
