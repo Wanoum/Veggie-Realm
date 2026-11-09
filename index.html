@@ -2454,16 +2454,6 @@
     `;
     const subLabel = label => `<p class="section-label" style="margin:24px 0 12px;">${escapeHtml(label)}</p>`;
 
-    function colorSwatches(names) {
-      return `<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(84px, 1fr));gap:12px;">${names.map(name => `
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <div style="aspect-ratio:1;border-radius:var(--corner-radius-default);border:1px solid var(--border-divider);background:var(--${name});"></div>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-default);word-break:break-all;">--${name}</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);">${escapeHtml(tokenVal(name))}</span>
-        </div>
-      `).join('')}</div>`;
-    }
-
     const primitiveGroups = [
       ['Vert', ['green-100', 'green-200', 'green-300', 'green-700', 'green-800']],
       ['Gris', ['grey-400', 'grey-500', 'grey-700', 'grey-900']],
@@ -2482,15 +2472,22 @@
       ['Surfaces', [['surface-high', 'light-50'], ['surface-highest', 'white'], ['surface-low', 'light-200'], ['surface-lowest', 'light-300']]],
       ['Texte / icône', [['text-icon-accent', 'green-700'], ['text-icon-accent-strong', 'green-800'], ['text-icon-default', 'grey-900'], ['text-icon-disabled', 'grey-400'], ['text-icon-error', 'red-500'], ['text-icon-on-primary', 'white'], ['text-icon-secondary', 'grey-700']]]
     ];
-    function semanticTable(pairs) {
-      return `<div style="display:flex;flex-direction:column;">${pairs.map(([name, primitive]) => `
-        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-divider);">
-          <div data-color-resolve="${name}" style="width:16px;height:16px;border-radius:3px;border:1px solid var(--border-divider);background:var(--${name});flex-shrink:0;"></div>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-default);flex:1;min-width:0;">--${name}</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);flex-shrink:0;">${primitive ? `→ --${primitive}` : 'valeur directe'}</span>
-          <span data-color-hex="${name}" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);width:92px;text-align:right;flex-shrink:0;"></span>
+    // Retour du 2026-11-08 : "même manière de montrer les primitifs que
+    // les sémantiques, mêmes valeurs partout (RGB, pas un mélange avec le
+    // hex déclaré), une seule ligne par ligne de tableau, couleur à au
+    // moins 32px" — une seule fonction pour les deux familles de tokens.
+    // `pairs` : [nom, primitif-référencé-ou-null]. La ligne ne retombe pas
+    // à la ligne (white-space:nowrap) ; le tableau défile horizontalement
+    // si ça ne tient pas plutôt que de wrapper.
+    function tokenTable(pairs) {
+      return `<div style="overflow-x:auto;"><div style="display:flex;flex-direction:column;min-width:min-content;">${pairs.map(([name, primitive]) => `
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-divider);white-space:nowrap;">
+          <div data-color-resolve="${name}" style="width:32px;height:32px;border-radius:4px;border:1px solid var(--border-divider);background:var(--${name});flex-shrink:0;"></div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-default);width:160px;flex-shrink:0;">--${name}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);width:140px;flex-shrink:0;">${primitive ? `→ --${primitive}` : ''}</span>
+          <span data-color-hex="${name}" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);width:140px;flex-shrink:0;text-align:right;"></span>
         </div>
-      `).join('')}</div>`;
+      `).join('')}</div></div>`;
     }
 
     const sizeTokens = [
@@ -2515,12 +2512,39 @@
       `).join('')}</div>`;
     }
 
+    // Retour du 2026-11-09 : "décortique la structure des pages, padding de
+    // la page et des sections" — chaque ligne décrit une composition de
+    // tokens plutôt qu'une simple valeur isolée ; la partie fixe est
+    // mesurée (comme sizeRows), la partie liée à la zone de sécurité iOS
+    // (env(safe-area-inset-*), non mesurable ici) reste annotée en texte.
+    const pageStructureRows = [
+      ['Page (body) — horizontal', 'padding-horizontal-app', null],
+      ['Page (body) — haut', 'padding-horizontal-app', '+ env(safe-area-inset-top) + 8px'],
+      ['Page (body) — bas', 'padding-vertical-large', '+ env(safe-area-inset-bottom)'],
+      ['Entre sections (h2)', 'gap-vertical-section', null],
+      ['Carte / contenu (contained)', 'padding-horizontal-contained', null],
+      ['Ligne de liste (vertical)', 'padding-vertical-list-item', null],
+      ['Menu / sheet (vertical)', 'padding-vertical-menu', null],
+      ['Menu / sheet (horizontal)', 'padding-horizontal-menu', null]
+    ];
+    function pageStructureTable(rows) {
+      return `<div style="display:flex;flex-direction:column;">${rows.map(([label, token, extra], i) => `
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-divider);">
+          <span style="flex:1;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-default);">${escapeHtml(label)}</span>
+          <span data-structure-value="${i}" data-structure-token="${token}" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);text-align:right;white-space:nowrap;"></span>
+        </div>
+      `).join('')}</div>`;
+    }
+
     const radiusTokens = ['corner-radius-small', 'corner-radius-default', 'corner-radius-large', 'corner-radius-xlarge', 'corner-radius-round'];
+    // Retour du 2026-11-09 : "je veux la valeur en pixels, pas en REM" —
+    // même logique que sizeRows : on mesure le border-radius calculé sur
+    // l'élément une fois rendu plutôt que d'afficher la chaîne brute.
     function radiusSwatches(names) {
       return `<div style="display:flex;gap:16px;flex-wrap:wrap;">${names.map(name => `
         <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
-          <div style="width:56px;height:56px;background:var(--interaction-tertiary);border:1px solid var(--border-divider);border-radius:var(--${name});"></div>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);">${escapeHtml(tokenVal(name))}</span>
+          <div data-radius-swatch="${name}" style="width:56px;height:56px;background:var(--interaction-tertiary);border:1px solid var(--border-divider);border-radius:var(--${name});"></div>
+          <span data-radius-value="${name}" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);"></span>
         </div>
       `).join('')}</div>`;
     }
@@ -2560,11 +2584,11 @@
     const html = `
       ${metaGroup('Fondations')}
       ${section('Couleurs', `
-        ${primitiveGroups.map(([label, names]) => subLabel(label) + colorSwatches(names)).join('')}
+        ${primitiveGroups.map(([label, names]) => subLabel(label) + tokenTable(names.map(name => [name, null]))).join('')}
         ${subLabel('Sémantiques')}
         ${semanticGroups.map(([label, pairs]) => `
           <p style="margin:16px 0 4px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--text-icon-secondary);">${escapeHtml(label)}</p>
-          ${semanticTable(pairs)}
+          ${tokenTable(pairs)}
         `).join('')}
       `)}
 
@@ -2573,6 +2597,8 @@
       ${section('Espacements', sizeRows(sizeTokens))}
 
       ${section('Rayons', radiusSwatches(radiusTokens))}
+
+      ${section('Structure de page', pageStructureTable(pageStructureRows))}
 
       ${metaGroup('Composants')}
       ${section('Boutons', `
@@ -2659,10 +2685,12 @@
       `)}
 
       ${section('Dialogue de confirmation', `
-        <div style="max-width:320px;background:var(--surface-highest);border:1px solid var(--border-divider);border-radius:var(--corner-radius-large);padding:var(--padding-horizontal-app);">
-          <p class="text-body" style="margin:0 0 20px;color:var(--text-icon-default);">Vider le planning de la semaine ?</p>
-          <button type="button" class="primary-btn" style="margin-top:0;">Confirmer</button>
-          <button type="button" class="secondary-btn"><svg class="icon-svg"><use href="#icon-close-outline"/></svg> Annuler</button>
+        <div style="position:relative;padding:32px;border-radius:var(--corner-radius-default);background:var(--overlay-default);display:flex;align-items:center;justify-content:center;">
+          <div style="max-width:320px;width:100%;background:var(--surface-highest);border:1px solid var(--border-divider);border-radius:var(--corner-radius-large);padding:var(--padding-horizontal-app);">
+            <p class="text-body" style="margin:0 0 20px;color:var(--text-icon-default);">Vider le planning de la semaine ?</p>
+            <button type="button" class="primary-btn" style="margin-top:0;">Confirmer</button>
+            <button type="button" class="secondary-btn"><svg class="icon-svg"><use href="#icon-close-outline"/></svg> Annuler</button>
+          </div>
         </div>
       `)}
     `;
@@ -2731,6 +2759,32 @@
       if (!bar || !valueEl) return;
       valueEl.textContent = `${Math.round(parseFloat(getComputedStyle(bar).width))}px`;
     });
+
+    // Rayons en pixels (pas en rem) : border-radius calculé lu sur le
+    // carré une fois rendu, même logique que les espacements ci-dessus.
+    document.querySelectorAll('[data-radius-swatch]').forEach(swatch => {
+      const valueEl = document.querySelector(`[data-radius-value="${swatch.dataset.radiusSwatch}"]`);
+      if (!valueEl) return;
+      const radius = parseFloat(getComputedStyle(swatch).borderRadius);
+      valueEl.textContent = radius > 999 ? '∞ (round)' : `${Math.round(radius)}px`;
+    });
+
+    // Structure de page : même mesure que les espacements (sonde width:var)
+    // pour la partie fixe ; la partie safe-area reste en texte, elle ne
+    // peut pas être résolue hors d'un vrai appareil iOS.
+    const structureProbe = document.createElement('div');
+    structureProbe.style.position = 'absolute';
+    structureProbe.style.visibility = 'hidden';
+    structureProbe.style.height = '0';
+    document.body.appendChild(structureProbe);
+    document.querySelectorAll('[data-structure-value]').forEach(el => {
+      const i = Number(el.dataset.structureValue);
+      const extra = pageStructureRows[i][2];
+      structureProbe.style.width = `var(--${el.dataset.structureToken})`;
+      const px = Math.round(parseFloat(getComputedStyle(structureProbe).width));
+      el.textContent = extra ? `${px}px ${extra}` : `${px}px`;
+    });
+    structureProbe.remove();
 
     // Valeur résolue (hex/rgba) de chaque token sémantique du tableau
     // vertical — lue sur le petit carré de couleur une fois rendu, jamais
