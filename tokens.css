@@ -84,12 +84,10 @@
    Format : taille / line-height (% de la taille)
    H1              : 40px, 100%   — Spectral
    Display Numeric : 40px, 40%    — IBM Plex Mono
-   Headline        : 20px, 100%   — Inter, 600
+   Headline        : 20px, 100%   — Inter, 600 (fusion Headline/Body Medium)
    Body            : 16px, 120%   — Inter, 400
-   Body Medium     : 16px, 120%   — Inter, 500
    Quantity Mono   : 16px, 120%   — IBM Plex Mono, 400
    Small           : 12px, 120%   — Inter, 400
-   Small Medium    : 12px, 120%   — Inter, 500
 
    Note : la maquette indique "Body · 16/20" (20% de line-height, soit ~3px),
    ce qui écraserait le texte. On applique 120% comme les autres styles Inter
@@ -97,11 +95,13 @@
 */
 .text-h1 { font-family: 'Spectral', Georgia, serif; font-size: 48px; line-height: 100%; font-weight: 400; }
 .text-display-numeric { font-family: 'IBM Plex Mono', monospace; font-size: 40px; line-height: 40%; font-weight: 400; }
-.text-headline { font-family: 'Inter', sans-serif; font-size: 24px; line-height: 100%; font-weight: 600; }
+/* Retour du 2026-11-09 : "faisons un mix entre les deux" — .text-headline
+   et .text-body-medium fusionnés (20px/600, entre les 24px/600 et 18px/500
+   d'origine) ; .text-body-medium n'existe plus, ses usages reprennent
+   .text-headline. */
+.text-headline { font-family: 'Inter', sans-serif; font-size: 20px; line-height: 100%; font-weight: 600; }
 .text-body { font-family: 'Inter', sans-serif; font-size: 18px; line-height: 120%; font-weight: 400; }
-.text-body-medium { font-family: 'Inter', sans-serif; font-size: 18px; line-height: 120%; font-weight: 500; }
 .text-small { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 120%; font-weight: 400; }
-.text-small-medium { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 120%; font-weight: 500; }
 /* Retour du 2026-11-09 : remplace .text-quantity-mono (fusionné dans
    .text-body, même taille 18px, la police mono n'apportait rien de plus
    dans les 2 usages réels) et les 11px ad hoc de .text-link-action /

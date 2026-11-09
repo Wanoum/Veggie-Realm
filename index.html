@@ -258,7 +258,7 @@
       <img id="photoPreview" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />
       <div id="photoPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:var(--gap-large);pointer-events:none;">
         <img src="src/create-new-recipe.png" alt="" />
-        <span class="text-body-medium" data-i18n="add_photo" style="color:var(--text-icon-accent);">Ajouter une photo</span>
+        <span class="text-headline" data-i18n="add_photo" style="color:var(--text-icon-accent);">Ajouter une photo</span>
       </div>
 
       <div id="photoMenu" class="course-sort-menu photo-menu" style="display:none;">
@@ -327,7 +327,7 @@
       <div id="variantsListContainer"></div>
       <button type="button" class="add-variant-card" onclick="addVariantRow()">
         <span class="add-variant-card-icon"><svg class="icon-svg"><use href="#icon-plus-outline"/></svg></span>
-        <span class="text-body-medium" data-i18n="add_version_title">Ajouter une version</span>
+        <span class="text-headline" data-i18n="add_version_title">Ajouter une version</span>
         <span class="text-small" data-i18n="add_version_subtitle" style="color:var(--text-icon-secondary);">La même recette avec des ingrédients ou étapes différents pour une version sans gluten, vegan…</span>
       </button>
     </div>
@@ -2452,11 +2452,11 @@
         ${body}
       </div>
     `;
-    // Retour du 2026-11-09 : .section-label ne sert plus nulle part dans
-    // l'app (voir plus bas) — repris ici avec .text-small-medium, qui est
-    // le vrai style réutilisé partout ailleurs, plutôt que de garder une
-    // classe qui n'existerait plus que pour ce seul outil.
-    const subLabel = label => `<p class="text-small-medium" style="margin:24px 0 12px;color:var(--text-icon-secondary);">${escapeHtml(label)}</p>`;
+    // Retour du 2026-11-09 : .section-label puis .text-small-medium ne
+    // servaient plus nulle part dans l'app, seulement à ce repère interne
+    // — repris avec .text-small, le seul style "petit" qui reste réellement
+    // utilisé ailleurs dans l'app.
+    const subLabel = label => `<p class="text-small" style="margin:24px 0 12px;color:var(--text-icon-secondary);">${escapeHtml(label)}</p>`;
 
     // Retour du 2026-11-09 : "supprime les couleurs mortes" —
     // green-300/light-100/light-150/light-400 retirées (ni référencées par
@@ -2559,19 +2559,19 @@
 
     // Retour du 2026-11-09 : "pourquoi h1 ET .brand-title ?" puis "le
     // nouveau h1 devra aussi être en italique" — entièrement fusionnés,
-    // .brand-title n'existe plus (voir tokens.css). .section-label retiré
-    // (plus utilisé nulle part dans l'app, voir subLabel ci-dessous) ;
-    // .text-quantity-mono retiré (fusionné dans .text-body) ; ajout de
-    // .text-micro-mono (remplace les 11px ad hoc) et .cooking-step-text
-    // (mode cuisine, 28px, absent jusqu'ici du design system).
+    // .brand-title n'existe plus (voir tokens.css). .section-label puis
+    // .text-small-medium retirés (plus utilisés nulle part dans l'app,
+    // voir subLabel ci-dessous). .text-quantity-mono retiré (fusionné dans
+    // .text-body). .text-headline et .text-body-medium fusionnés (20px/600,
+    // .text-body-medium n'existe plus). Ajout de .text-micro-mono (remplace
+    // les 11px ad hoc) et .cooking-step-text (mode cuisine, 28px, absent
+    // jusqu'ici du design system).
     const typeSamples = [
       ['h1 (italique, titre d’écran y compris "Blou Mint")', '', 'Blou Mint', 'h1'],
       ['.text-headline', 'text-headline', 'Repas prévus', 'p'],
-      ['.text-body-medium', 'text-body-medium', 'Shakshuka végétarienne', 'p'],
       ['.text-body', 'text-body', 'Texte courant', 'p'],
       ['.text-micro-mono', 'text-micro-mono', 'Modifier', 'p'],
       ['.cooking-step-text (mode cuisine)', 'cooking-step-text', 'Casser les œufs', 'p'],
-      ['.text-small-medium', 'text-small-medium', 'Libellé secondaire', 'p'],
       ['.text-small', 'text-small', 'Texte petit', 'p']
     ];
     // Retour du 2026-11-08 : "exemples à gauche, valeurs à droite, en
@@ -2923,7 +2923,7 @@
         const labelRow = (label) => `
           <button type="button" class="course-item" style="width:100%;border:none;text-align:left;" data-label-choice="${escapeHtml(label)}">
             <span class="course-checkbox-visual${selectedLabels.includes(label) ? ' checked' : ''}"><svg class="icon-svg"><use href="#icon-check-outline"/></svg></span>
-            <span class="text-body-medium">${escapeHtml(label)}</span>
+            <span class="text-headline">${escapeHtml(label)}</span>
           </button>`;
         contentEl.innerHTML = `
           <p class="text-body" style="color:var(--text-icon-secondary);margin:0 0 16px;">${t('default_variant_explainer')}</p>
