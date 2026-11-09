@@ -690,12 +690,15 @@
   background: var(--interaction-primary);
   border: none;
   border-radius: var(--corner-radius-round);
-  padding: 8px 12px;
+  padding: 0 12px;
   line-height: 1;
   /* Retour du 2026-11-09 : "icon-btn glass-surface / icon-pill-btn-accent
      remplacé par settings-pill-btn" — cette classe sert maintenant aussi
      des boutons icône seule (pas seulement "Réglages" en texte), d'où le
-     centrage flex en plus ; gap pour la variante icône + texte. */
+     centrage flex en plus ; gap pour la variante icône + texte. Hauteur
+     fixe (36px) plutôt que déterminée par le padding, pour que la variante
+     icône seule et la variante texte aient la même taille. */
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
