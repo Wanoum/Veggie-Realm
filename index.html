@@ -357,12 +357,9 @@
 </button>
 
 <div id="accountView" class="page-fullbleed" style="display:none;">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--gap-vertical-section);">
-    <div style="display:flex;align-items:center;gap:12px;">
-      <button type="button" class="icon-btn icon-btn-lg glass-surface" onclick="playBackButtonAnimation('accountView')"><svg class="icon-svg icon"><use href="#icon-arrow-left-outline"/></svg></button>
-      <h1 data-i18n="account_title" style="margin:0;">Compte</h1>
-    </div>
-    <button type="button" id="logoutBtn" class="icon-btn icon-btn-lg glass-surface" style="color:var(--text-icon-error);"><svg class="icon-svg icon"><use href="#icon-logout-outline"/></svg></button>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--gap-vertical-section);">
+    <button type="button" class="settings-pill-btn" onclick="playBackButtonAnimation('accountView')"><svg class="icon-svg icon"><use href="#icon-arrow-left-outline"/></svg></button>
+    <h1 data-i18n="account_title" style="margin:0;">Compte</h1>
   </div>
   <p class="text-small" style="color:var(--text-icon-secondary);margin:0 0 var(--gap-vertical-section);"><span data-i18n="account_version_prefix">Version du</span> <span id="appBuildTime"></span></p>
   <div>
@@ -425,12 +422,19 @@
         <svg class="icon-svg"><use href="#icon-refresh-outline"/></svg> <span data-i18n="account_update_app">Mettre à jour l'application</span>
       </button>
     </p>
+
+    <div class="settings-list">
+      <button type="button" id="logoutBtn" class="settings-row" style="border-bottom:none;color:var(--text-icon-error);">
+        <span data-i18n="account_logout">Déconnexion</span>
+        <svg class="icon-svg" style="color:var(--text-icon-error);font-size:20px;"><use href="#icon-logout-outline"/></svg>
+      </button>
+    </div>
   </div>
 </div>
 
 <div id="styleGuideView" class="page-fullbleed" style="display:none;padding-bottom:40px;">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--gap-vertical-section);">
-    <button type="button" class="icon-btn icon-btn-lg glass-surface" onclick="playBackButtonAnimation('styleGuideView')"><svg class="icon-svg icon"><use href="#icon-arrow-left-outline"/></svg></button>
+    <button type="button" class="settings-pill-btn" onclick="playBackButtonAnimation('styleGuideView')"><svg class="icon-svg icon"><use href="#icon-arrow-left-outline"/></svg></button>
     <h1 data-i18n="design_system_title" style="margin:0;">Design system</h1>
   </div>
   <div id="styleGuideContent"></div>
@@ -438,7 +442,7 @@
 
 <div id="accountEditView" class="page-fullbleed" style="display:none;padding-bottom:110px;">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--gap-vertical-section);">
-    <button type="button" class="icon-btn icon-btn-lg glass-surface" onclick="playBackButtonAnimation('accountEditView')"><svg class="icon-svg icon"><use href="#icon-arrow-left-outline"/></svg></button>
+    <button type="button" class="settings-pill-btn" onclick="playBackButtonAnimation('accountEditView')"><svg class="icon-svg icon"><use href="#icon-arrow-left-outline"/></svg></button>
     <h1 id="accountEditTitle" class="text-headline" style="margin:0;"></h1>
   </div>
   <div id="accountEditContent"></div>
@@ -607,6 +611,7 @@
       account_default_servings: 'Personnes par défaut', account_default_variant: 'Version préférée',
       account_recipe_display: 'Affichage recettes', account_language: 'Langue', account_update: 'Mise à jour',
       account_feedback: 'Envoyer un feedback', account_update_app: "Mettre à jour l'application",
+      account_logout: 'Déconnexion',
       account_design_system: 'Design system', design_system_title: 'Design system',
       account_version_prefix: 'Version du',
       lang_french: 'Français', lang_english: 'English',
@@ -743,6 +748,7 @@
       account_default_servings: 'Default servings', account_default_variant: 'Preferred version',
       account_recipe_display: 'Recipe display', account_language: 'Language', account_update: 'Update',
       account_feedback: 'Send feedback', account_update_app: 'Update the app',
+      account_logout: 'Log out',
       account_design_system: 'Design system', design_system_title: 'Design system',
       account_version_prefix: 'Version of',
       lang_french: 'Français', lang_english: 'English',
