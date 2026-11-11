@@ -2475,7 +2475,9 @@
       ['Carte / contenu (contained)', 'padding-horizontal-contained', null],
       ['Ligne de liste (vertical)', 'padding-vertical-list-item', null],
       ['Menu / sheet (vertical)', 'padding-vertical-menu', null],
-      ['Menu / sheet (horizontal)', 'padding-horizontal-menu', null]
+      ['Menu / sheet (horizontal)', 'padding-horizontal-menu', null],
+      ['Grille de cartes (entre cartes)', 'gap-large', null],
+      ['Chips (entre chips)', 'gap-xsmall', null]
     ];
     function pageStructureTable(rows) {
       return `<div style="display:flex;flex-direction:column;">${rows.map(([label, token, extra], i) => `
@@ -2501,6 +2503,73 @@
           <span data-radius-value="${name}" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);"></span>
         </div>
       `).join('')}</div>`;
+    }
+
+    // Retour du 2026-11-10 : "structures de page, taille iPhone 16 Pro,
+    // remplies de lorem ipsum, afficher tous les espacements" — un cadre à
+    // la largeur réelle d'un iPhone 16 Pro (393px CSS), construit avec les
+    // vraies classes de l'app (pas une image), suivi d'un relevé des
+    // espacements qui s'y appliquent — même mécanique de mesure
+    // (probe + data-attribute) que pageStructureTable, dans un espace de
+    // noms différent (data-mockup-*) pour ne pas entrer en collision avec
+    // ses index. Un seul type d'écran pour l'instant (Choisir) ; les
+    // autres (Acheter, Cuisiner, fiche recette...) suivront le même moule.
+    const IPHONE_16_PRO_WIDTH = 393;
+    function phoneFrame(innerHtml) {
+      return `
+        <div style="width:${IPHONE_16_PRO_WIDTH}px;max-width:100%;border:1px solid var(--border-divider);border-radius:16px;overflow:hidden;background:var(--surface-low);box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+          ${innerHtml}
+        </div>
+      `;
+    }
+    const choisirMockupRows = [
+      ['Bord de page (haut/côtés)', 'padding-horizontal-app', null],
+      ['Logo → "Repas prévus"', 'gap-vertical-section', null],
+      ['Titre de section → contenu', null, '12px (margin du h2, pas un token)'],
+      ['"Repas prévus" → "Mes recettes"', 'gap-vertical-section', null],
+      ['Chips → grille de cartes', null, '12px (margin-bottom de .tag-filters)'],
+      ['Entre les cartes', 'gap-large', null]
+    ];
+    function mockupAnnotationTable(rows) {
+      return `<div style="display:flex;flex-direction:column;margin-top:12px;">${rows.map(([label, token, extra], i) => `
+        <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border-divider);">
+          <span style="flex:1;font-family:'Inter',sans-serif;font-size:14px;color:var(--text-icon-default);">${escapeHtml(label)}</span>
+          <span ${token ? `data-mockup-value="${i}" data-mockup-token="${token}"` : ''} style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-icon-secondary);text-align:right;white-space:nowrap;">${token ? '' : escapeHtml(extra)}</span>
+        </div>
+      `).join('')}</div>`;
+    }
+    function choisirMockup() {
+      const loremTitles = ['Lorem ipsum dolor', 'Sit amet consectetur', 'Adipiscing elit sed', 'Eiusmod tempor incid'];
+      const cards = loremTitles.map(title => `
+        <div class="card-grid" style="cursor:default;">
+          <div class="card-grid-photo" style="background:var(--interaction-primary);">
+            <div class="card-grid-scrim"></div>
+            <span class="card-grid-plus"><svg class="icon-svg"><use href="#icon-plus-outline"/></svg></span>
+            <h3 class="card-grid-title">${escapeHtml(title)}</h3>
+          </div>
+        </div>
+      `).join('');
+      return phoneFrame(`
+        <div style="padding:24px 16px 16px;">
+          <h1 style="margin:0 0 32px;">Lorem Mint</h1>
+          <h2 class="text-headline" style="margin:0 0 12px;">Repas prévus</h2>
+          <div class="plan-recipe-row" style="border-bottom:none;padding-top:0;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:48px;height:48px;border-radius:var(--corner-radius-default);background:var(--interaction-tertiary);flex-shrink:0;"></div>
+              <div>
+                <div class="plan-recipe-name">Lorem ipsum dolor</div>
+                <div class="plan-recipe-tags">2 personnes</div>
+              </div>
+            </div>
+          </div>
+          <h2 class="text-headline" style="margin:32px 0 12px;">Mes recettes</h2>
+          <div class="tag-filters" style="display:flex;gap:4px;margin-bottom:12px;">
+            <button type="button" class="filter-chip active" style="flex:0 0 auto;">Déjeuner</button>
+            <button type="button" class="filter-chip" style="flex:0 0 auto;">Dîner</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:16px;">${cards}</div>
+        </div>
+      `) + mockupAnnotationTable(choisirMockupRows);
     }
 
     // Retour du 2026-11-09 : "pourquoi h1 ET .brand-title ?" puis "le
@@ -2556,6 +2625,8 @@
       ${section('Rayons', radiusSwatches(radiusTokens))}
 
       ${section('Structure de page', pageStructureTable(pageStructureRows))}
+
+      ${section('Structure de page — exemple (Choisir, iPhone 16 Pro)', choisirMockup())}
 
       ${section('Boutons', `
         <div style="display:flex;flex-direction:column;gap:16px;align-items:flex-start;">
@@ -2767,6 +2838,23 @@
       el.textContent = extra ? `${px}px ${extra}` : `${px}px`;
     });
     structureProbe.remove();
+
+    // Annotations du mockup Choisir : même sonde, espace de noms
+    // data-mockup-* séparé de data-structure-* pour ne pas collisionner
+    // (les deux tableaux indexent leurs lignes à partir de 0).
+    const mockupProbe = document.createElement('div');
+    mockupProbe.style.position = 'absolute';
+    mockupProbe.style.visibility = 'hidden';
+    mockupProbe.style.height = '0';
+    document.body.appendChild(mockupProbe);
+    document.querySelectorAll('[data-mockup-value]').forEach(el => {
+      const i = Number(el.dataset.mockupValue);
+      const extra = choisirMockupRows[i][2];
+      mockupProbe.style.width = `var(--${el.dataset.mockupToken})`;
+      const px = Math.round(parseFloat(getComputedStyle(mockupProbe).width));
+      el.textContent = extra ? `${px}px ${extra}` : `${px}px`;
+    });
+    mockupProbe.remove();
 
     // Valeur résolue (hex/rgba) de chaque token sémantique du tableau
     // vertical — lue sur le petit carré de couleur une fois rendu, jamais
