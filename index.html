@@ -2516,9 +2516,9 @@
       ['h1 (italique, titre d’écran y compris "Blou Mint")', '', 'Blou Mint', 'h1'],
       ['.text-headline', 'text-headline', 'Repas prévus', 'p'],
       ['.text-body', 'text-body', 'Texte courant', 'p'],
+      ['.text-small', 'text-small', 'Texte petit', 'p'],
       ['.text-micro-mono', 'text-micro-mono', 'Modifier', 'p'],
-      ['.cooking-step-text (mode cuisine)', 'cooking-step-text', 'Casser les œufs', 'p'],
-      ['.text-small', 'text-small', 'Texte petit', 'p']
+      ['.cooking-step-text (mode cuisine)', 'cooking-step-text', 'Casser les œufs', 'p']
     ];
     // Retour du 2026-11-08 : "exemples à gauche, valeurs à droite, en
     // tableau" — remplace l'empilement label/exemple/détail par deux
@@ -2535,17 +2535,14 @@
       `).join('')}</div>`;
     }
 
-    // Retour du 2026-11-08 : "un design system complet et un peu mieux
-    // organisé" — groupe Fondations (valeurs brutes) / Composants
-    // (assemblages réels de l'app), chacun introduit par un repère en
-    // majuscules plutôt qu'un simple enchaînement de sections à plat.
-    const metaGroup = label => `<p style="margin:0 0 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-icon-secondary);border-bottom:1px solid var(--border-divider);padding-bottom:8px;">${escapeHtml(label)}</p>`;
-
+    // Retour du 2026-11-10 : "rajoute une colonne dans le tableau
+    // sémantique, le primitif dedans, retire les primitifs en haut" — un
+    // seul tableau de couleurs (tokenTable affichait déjà le primitif
+    // référencé en 2e colonne) plutôt que deux. primitiveGroups reste
+    // utilisé par buildColorTokenMap (reconnaissance des couleurs en
+    // typographie) même sans plus être rendu ici.
     const html = `
-      ${metaGroup('Fondations')}
       ${section('Couleurs', `
-        ${primitiveGroups.map(([label, names]) => subLabel(label) + tokenTable(names.map(name => [name, null]))).join('')}
-        ${subLabel('Sémantiques')}
         ${semanticGroups.map(([label, pairs]) => `
           <p style="margin:16px 0 4px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--text-icon-secondary);">${escapeHtml(label)}</p>
           ${tokenTable(pairs)}
@@ -2560,7 +2557,6 @@
 
       ${section('Structure de page', pageStructureTable(pageStructureRows))}
 
-      ${metaGroup('Composants')}
       ${section('Boutons', `
         <div style="display:flex;flex-direction:column;gap:16px;align-items:flex-start;">
           <button type="button" class="primary-btn" style="margin-top:0;width:auto;padding-left:20px;padding-right:20px;">Bouton primaire</button>
@@ -2608,10 +2604,10 @@
       `)}
 
       ${section('Recherche', `
-        <div style="position:relative;height:40px;">
-          <div class="floating-search" style="position:absolute;left:0;top:0;transform:none;bottom:auto;width:fit-content;">
+        <div style="position:relative;height:72px;">
+          <div class="floating-search" style="position:absolute;left:0;top:50%;transform:translateY(-50%);bottom:auto;height:56px;width:fit-content;">
             <svg class="icon-svg"><use href="#icon-search-outline"/></svg>
-            <span>Recherche</span>
+            <input readonly placeholder="Recherche" style="width:90px;" />
           </div>
         </div>
       `)}
@@ -2631,8 +2627,12 @@
       `)}
 
       ${section('Sélection unique (radio)', `
+        ${subLabel('Sélectionné')}
         <div class="settings-list">
-          <button type="button" class="settings-row"><span>Français</span><svg class="icon-svg"><use href="#icon-check-outline"/></svg></button>
+          <button type="button" class="settings-row" style="border-bottom:none;"><span>Français</span><svg class="icon-svg"><use href="#icon-check-outline"/></svg></button>
+        </div>
+        ${subLabel('Non sélectionné')}
+        <div class="settings-list">
           <button type="button" class="settings-row" style="border-bottom:none;"><span>English</span><svg class="icon-svg" style="visibility:hidden;"><use href="#icon-check-outline"/></svg></button>
         </div>
       `)}
